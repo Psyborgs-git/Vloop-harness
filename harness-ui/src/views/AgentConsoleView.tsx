@@ -40,7 +40,7 @@ export default function AgentConsoleView() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [liveSteps, setLiveSteps] = useState<LiveStep[]>([]);
-  const { runs, setRuns, selectedRun, selectRun, steps, setSteps } = useAgentStore();
+  const { runs, setRuns, selectedRun, selectRun } = useAgentStore();
   const wsRef = useRef<WebSocket | null>(null);
   const activeRunId = useRef<string | null>(null);
   const stepsEndRef = useRef<HTMLDivElement>(null);

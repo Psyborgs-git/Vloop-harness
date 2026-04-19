@@ -1,6 +1,7 @@
 """ToolCall agent loop — structured tool-use with typed signatures."""
 from __future__ import annotations
 
+import json
 import dspy
 from typing import Any, Callable
 
@@ -22,7 +23,6 @@ class ToolCallLoop(dspy.Module):
         self.selector = dspy.ChainOfThought(ToolCallSignature)
 
     def forward(self, task: str) -> dspy.Prediction:
-        import json
         registry = ToolRegistry()
         steps = []
         last_result = None
