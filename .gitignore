@@ -44,3 +44,4 @@ Thumbs.db
 
 # Logs
 *.log
+harness-ui/package-lock.json
