@@ -31,7 +31,9 @@ def github_request(url: str, token: str) -> Any:
         raise RuntimeError(f"GitHub API request failed ({exc.code}) for {url}: {details}") from exc
 
 
-def extract_workflow_excerpt(workflow_path: Path, job_name: str, context: int = 16) -> str:
+def extract_workflow_excerpt(workflow_path: Path | None, job_name: str, context: int = 16) -> str:
+    if workflow_path is None:
+        return ""
     if not workflow_path.exists():
         return ""
     lines = workflow_path.read_text(encoding="utf-8").splitlines()
@@ -191,7 +193,7 @@ def main() -> int:
     repo_root = Path(os.getenv("GITHUB_WORKSPACE", ".")).resolve()
 
     workflow_rel = workflow_path_raw.split("@", 1)[0].strip()
-    workflow_file = (repo_root / workflow_rel).resolve() if workflow_rel else Path("")
+    workflow_file = (repo_root / workflow_rel).resolve() if workflow_rel else None
 
     run = github_request(f"{API_ROOT}/repos/{owner}/{name}/actions/runs/{run_id}", token)
     run_html_url = run.get("html_url", f"https://github.com/{repo}/actions/runs/{run_id}")
@@ -206,7 +208,7 @@ def main() -> int:
     analyses: list[dict[str, Any]] = []
     for job in failed_jobs:
         logs = github_request(f"{API_ROOT}/repos/{owner}/{name}/actions/jobs/{job['id']}/logs", token)
-        workflow_excerpt = extract_workflow_excerpt(workflow_file, job.get("name", "")) if workflow_file else ""
+        workflow_excerpt = extract_workflow_excerpt(workflow_file, job.get("name", ""))
         findings = analyze_job_failure(job.get("name", ""), str(logs), workflow_excerpt, repo_root)
         analyses.append(
             {
