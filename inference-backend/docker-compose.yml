@@ -1,0 +1,13 @@
+services:
+  inference-backend:
+    build: .
+    ports:
+      - "47201:47201"
+    volumes:
+      - ./modules:/app/modules
+      - ./pipelines:/app/pipelines
+    environment:
+      - LM_PROVIDER=ollama
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - HARNESS_CORE_URL=http://host.docker.internal:47200
+    restart: unless-stopped
