@@ -8,6 +8,7 @@ import re
 import sys
 from pathlib import Path
 from typing import Any
+from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 API_ROOT = "https://api.github.com"
@@ -18,12 +19,16 @@ def github_request(url: str, token: str) -> Any:
     req.add_header("Accept", "application/vnd.github+json")
     req.add_header("Authorization", f"Bearer {token}")
     req.add_header("X-GitHub-Api-Version", "2022-11-28")
-    with urlopen(req) as resp:
-        body = resp.read().decode("utf-8")
-        content_type = resp.headers.get("Content-Type", "")
-        if "application/json" in content_type:
-            return json.loads(body)
-        return body
+    try:
+        with urlopen(req) as resp:
+            body = resp.read().decode("utf-8")
+            content_type = resp.headers.get("Content-Type", "")
+            if "application/json" in content_type:
+                return json.loads(body)
+            return body
+    except HTTPError as exc:
+        details = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"GitHub API request failed ({exc.code}) for {url}: {details}") from exc
 
 
 def extract_workflow_excerpt(workflow_path: Path, job_name: str, context: int = 16) -> str:
@@ -83,7 +88,7 @@ def analyze_job_failure(job_name: str, log_text: str, workflow_excerpt: str, rep
             {
                 "title": "Python dependency/module missing",
                 "evidence": "Job logs contain `ModuleNotFoundError`/`No module named`.",
-                "fix": "Add the missing package to `inference-backend/pyproject.toml` dependencies, reinstall (`pip install -e '.[dev]'`), and rerun tests.",
+                "fix": "Add the missing package to the project dependency manifest (e.g., `pyproject.toml` or `requirements*.txt`), reinstall dependencies, and rerun tests.",
             }
         )
 
@@ -174,6 +179,10 @@ def main() -> int:
 
     if not token or not repo or not run_id:
         print("Missing required environment variables: GITHUB_TOKEN, GITHUB_REPOSITORY, TARGET_RUN_ID", file=sys.stderr)
+        return 2
+
+    if "/" not in repo:
+        print(f"Unexpected GITHUB_REPOSITORY format: {repo}", file=sys.stderr)
         return 2
 
     owner, name = repo.split("/", 1)
