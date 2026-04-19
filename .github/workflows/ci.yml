@@ -42,5 +42,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - run: cd harness-ui && npm ci
+      - run: cd harness-ui && npm install
       - run: cd harness-ui && npx tsc --noEmit

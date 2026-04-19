@@ -1,0 +1,57 @@
+name: CI Failure Agent
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  analyze-failure:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' || github.event.workflow_run.conclusion == 'action_required' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Analyze failed CI run
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_RUN_ID: ${{ github.event.workflow_run.id }}
+          TARGET_WORKFLOW_PATH: ${{ github.event.workflow_run.path }}
+        run: mkdir -p artifacts && python .github/scripts/ci_failure_agent.py | tee artifacts/ci-failure-report-live.log
+
+      - name: Upload analysis artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-failure-analysis-${{ github.event.workflow_run.id }}
+          path: artifacts/
+
+      - name: Publish summary
+        run: |
+          echo "## CI Failure Agent Report" >> "$GITHUB_STEP_SUMMARY"
+          cat artifacts/ci-failure-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment on PR (if present)
+        if: ${{ github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.pull_requests[0] }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('artifacts/ci-failure-report.md', 'utf8');
+            const pr = context.payload.workflow_run.pull_requests[0];
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              body: report
+            });
