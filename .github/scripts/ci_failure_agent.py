@@ -132,6 +132,7 @@ def build_markdown_report(
     jobs: list[dict[str, Any]],
     analyses: list[dict[str, Any]],
 ) -> str:
+    analyses_by_id = {a.get("job_id"): a for a in analyses}
     lines = [
         "# CI Failure Analysis Report",
         "",
@@ -143,8 +144,9 @@ def build_markdown_report(
         "",
     ]
 
-    for job, analysis in zip(jobs, analyses):
-        lines.append(f"### Job: {job.get('name', 'unknown')} (`{job.get('id')}`)")
+    for job in jobs:
+        analysis = analyses_by_id.get(job.get("id"), {"findings": [], "referenced_paths": []})
+        lines.append(f"### Job: {job.get('name', 'unknown')} (`{job.get('id', 'N/A')}`)")
         lines.append("")
         lines.append("**Traceability**")
         lines.append("")
