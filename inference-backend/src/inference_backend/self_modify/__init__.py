@@ -1,0 +1,1 @@
+# self_modify package
