@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import dspy
-from typing import Any
+from typing import Any, Callable
 
 from ...tools.registry import ToolRegistry
 
@@ -23,7 +23,15 @@ class ReActLoop(dspy.Module):
         return self.react(task=task)
 
 
-def run(task: str, config: dict[str, Any] | None = None) -> dict[str, Any]:
+def run(
+    task: str,
+    config: dict[str, Any] | None = None,
+    step_callback: Callable[[int, str, str], None] | None = None,
+) -> dict[str, Any]:
+    """Run ReAct loop.  ``step_callback`` is accepted for API parity but DSPy
+    ReAct is internally opaque — start/complete events are broadcast by the
+    caller (agent route handler).
+    """
     cfg = config or {}
     registry = ToolRegistry()
     tools = registry.get_all_callables()

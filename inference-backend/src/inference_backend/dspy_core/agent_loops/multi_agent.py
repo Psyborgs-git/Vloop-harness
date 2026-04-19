@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import dspy
-from typing import Any
+from typing import Any, Callable
 
 
 class OrchestratorSignature(dspy.Signature):
@@ -62,12 +62,39 @@ class MultiAgentLoop(dspy.Module):
         )
 
 
-def run(task: str, config: dict[str, Any] | None = None) -> dict[str, Any]:
+def run(
+    task: str,
+    config: dict[str, Any] | None = None,
+    step_callback: Callable[[int, str, str], None] | None = None,
+) -> dict[str, Any]:
     cfg = config or {}
-    loop = MultiAgentLoop(specialists=cfg.get("specialists"))
-    pred = loop(task=task)
+    specialists = cfg.get("specialists") or DEFAULT_SPECIALISTS
+
+    orchestrator = dspy.ChainOfThought(OrchestratorSignature)
+    specialist_lm = dspy.ChainOfThought(SpecialistSignature)
+    synthesiser = dspy.ChainOfThought(SynthesiserSignature)
+
+    # Step 0: orchestration
+    orch = orchestrator(task=task, specialists=", ".join(specialists))
+    role = orch.assigned_to.strip()
+    if role not in specialists:
+        role = specialists[0]
+    if step_callback:
+        step_callback(0, "orchestration", f"Assigned to: {role}\nSub-task: {orch.sub_task}")
+
+    # Step 1: specialist
+    spec_pred = specialist_lm(role=role, sub_task=orch.sub_task)
+    specialist_answers = f"{role}: {spec_pred.answer}"
+    if step_callback:
+        step_callback(1, "specialist", f"[{role}] {spec_pred.answer}")
+
+    # Step 2: synthesis
+    synth = synthesiser(original_task=task, specialist_answers=specialist_answers)
+    if step_callback:
+        step_callback(2, "synthesis", synth.final_answer)
+
     return {
-        "answer": pred.answer,
-        "orchestration": getattr(pred, "orchestration", {}),
+        "answer": synth.final_answer,
+        "orchestration": {"assigned_to": role, "sub_task": orch.sub_task},
         "loop": "multi_agent",
     }

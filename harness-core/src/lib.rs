@@ -40,7 +40,13 @@ pub fn run() {
             });
 
             let terminal_manager = Arc::new(TerminalManager::new(handle.clone()));
-            let fs_service = Arc::new(FsService::new(handle.clone()));
+            // Determine VFS root: VLOOP_VFS_ROOT env var, then $HOME, then /
+            let vfs_root = std::env::var("VLOOP_VFS_ROOT")
+                .map(std::path::PathBuf::from)
+                .unwrap_or_else(|_| {
+                    dirs_next::home_dir().unwrap_or_else(|| std::path::PathBuf::from("/"))
+                });
+            let fs_service = Arc::new(FsService::new(handle.clone(), vfs_root));
             let process_registry = Arc::new(ProcessRegistry::new(handle.clone()));
             let gateway_service = Arc::new(GatewayService::new(handle.clone()));
             let host_service = Arc::new(HostService::new());
@@ -87,6 +93,8 @@ pub fn run() {
             commands::fs::fs_git_diff,
             commands::fs::fs_git_commit,
             commands::fs::fs_git_branches,
+            commands::fs::fs_watch,
+            commands::fs::fs_unwatch,
             // Process
             commands::process::process_start,
             commands::process::process_stop,

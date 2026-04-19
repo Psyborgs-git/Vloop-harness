@@ -1,8 +1,9 @@
 """ToolCall agent loop — structured tool-use with typed signatures."""
 from __future__ import annotations
 
+import json
 import dspy
-from typing import Any
+from typing import Any, Callable
 
 from ...tools.registry import ToolRegistry
 
@@ -22,7 +23,6 @@ class ToolCallLoop(dspy.Module):
         self.selector = dspy.ChainOfThought(ToolCallSignature)
 
     def forward(self, task: str) -> dspy.Prediction:
-        import json
         registry = ToolRegistry()
         steps = []
         last_result = None
@@ -49,12 +49,46 @@ class ToolCallLoop(dspy.Module):
         return dspy.Prediction(answer=str(last_result), steps=steps)
 
 
-def run(task: str, config: dict[str, Any] | None = None) -> dict[str, Any]:
+def run(
+    task: str,
+    config: dict[str, Any] | None = None,
+    step_callback: Callable[[int, str, str], None] | None = None,
+) -> dict[str, Any]:
+    import json
     cfg = config or {}
-    loop = ToolCallLoop(max_steps=cfg.get("max_steps", 5))
-    pred = loop(task=task)
+    max_steps = cfg.get("max_steps", 5)
+    selector = dspy.ChainOfThought(ToolCallSignature)
+    registry = ToolRegistry()
+    steps = []
+    last_result = None
+
+    for i in range(max_steps):
+        pred = selector(task=task)
+        tool = registry.get(pred.tool_name)
+        if tool is None:
+            break
+        try:
+            inputs = json.loads(pred.tool_input)
+            result = tool(**inputs)
+        except Exception as exc:
+            result = f"Tool error: {exc}"
+        steps.append({
+            "tool": pred.tool_name,
+            "input": pred.tool_input,
+            "output": str(result),
+        })
+        if step_callback:
+            step_callback(
+                i,
+                "tool_call",
+                f"{pred.tool_name}({pred.tool_input})\n→ {result}",
+            )
+        last_result = result
+        if "done" in str(result).lower() or "answer" in pred.reasoning.lower():
+            break
+
     return {
-        "answer": pred.answer,
-        "steps": pred.steps,
+        "answer": str(last_result),
+        "steps": steps,
         "loop": "tool_call",
     }

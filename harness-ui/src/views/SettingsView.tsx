@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Divider,
@@ -13,6 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useThemeStore } from "../stores/themeStore";
+import * as tauriApi from "../api/tauri";
 
 const PRESET_COLORS = [
   "#7c6af7",
@@ -28,6 +29,46 @@ export default function SettingsView() {
   const [lmProvider, setLmProvider] = useState("ollama");
   const [lmModel, setLmModel] = useState("llama3");
   const [fontSize, setFontSize] = useState(13);
+
+  // Load persisted settings from harness-core app_config on mount
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [prov, model, size] = await Promise.all([
+          tauriApi.dbConfigGet("lm_provider"),
+          tauriApi.dbConfigGet("lm_model"),
+          tauriApi.dbConfigGet("terminal_font_size"),
+        ]);
+        if (prov) setLmProvider(prov);
+        if (model) setLmModel(model);
+        if (size) setFontSize(Number(size));
+      } catch {
+        // harness-core may not be running in dev / web preview — ignore
+      }
+    };
+    load();
+  }, []);
+
+  const handleProviderChange = async (value: string) => {
+    setLmProvider(value);
+    try {
+      await tauriApi.dbConfigSet("lm_provider", value);
+    } catch {}
+  };
+
+  const handleModelChange = async (value: string) => {
+    setLmModel(value);
+    try {
+      await tauriApi.dbConfigSet("lm_model", value);
+    } catch {}
+  };
+
+  const handleFontSizeChange = async (value: number) => {
+    setFontSize(value);
+    try {
+      await tauriApi.dbConfigSet("terminal_font_size", String(value));
+    } catch {}
+  };
 
   return (
     <Box sx={{ p: 3, height: "100%", overflow: "auto" }}>
@@ -91,7 +132,7 @@ export default function SettingsView() {
               <Select
                 label="Provider"
                 value={lmProvider}
-                onChange={(e) => setLmProvider(e.target.value)}
+                onChange={(e) => handleProviderChange(e.target.value)}
               >
                 {["ollama", "openai", "anthropic", "lmstudio"].map((p) => (
                   <MenuItem key={p} value={p}>
@@ -104,7 +145,7 @@ export default function SettingsView() {
               label="Model"
               size="small"
               value={lmModel}
-              onChange={(e) => setLmModel(e.target.value)}
+              onChange={(e) => handleModelChange(e.target.value)}
             />
           </Stack>
         </Box>
@@ -120,7 +161,7 @@ export default function SettingsView() {
             min={10}
             max={20}
             value={fontSize}
-            onChange={(_, v) => setFontSize(v as number)}
+            onChange={(_, v) => handleFontSizeChange(v as number)}
             valueLabelDisplay="auto"
             sx={{ maxWidth: 280 }}
           />

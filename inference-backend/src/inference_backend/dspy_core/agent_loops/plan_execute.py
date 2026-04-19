@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import dspy
-from typing import Any
+from typing import Any, Callable
 
 
 class PlanSignature(dspy.Signature):
@@ -39,12 +39,32 @@ class PlanAndExecuteLoop(dspy.Module):
         return dspy.Prediction(answer=final_answer, plan=plan, steps=results)
 
 
-def run(task: str, config: dict[str, Any] | None = None) -> dict[str, Any]:
-    loop = PlanAndExecuteLoop()
-    pred = loop(task=task)
+def run(
+    task: str,
+    config: dict[str, Any] | None = None,
+    step_callback: Callable[[int, str, str], None] | None = None,
+) -> dict[str, Any]:
+    planner = dspy.ChainOfThought(PlanSignature)
+    executor = dspy.ChainOfThought(ExecuteStepSignature)
+
+    # Step 0: planning phase
+    plan_pred = planner(task=task)
+    plan = plan_pred.plan
+    if step_callback:
+        step_callback(0, "plan", plan)
+
+    steps_raw = [s.strip() for s in plan.split("\n") if s.strip()]
+    results = []
+    for i, step in enumerate(steps_raw):
+        result_pred = executor(task=task, plan=plan, step=step)
+        results.append({"step": step, "result": result_pred.result})
+        if step_callback:
+            step_callback(i + 1, "execute", f"{step}\n→ {result_pred.result}")
+
+    final_answer = "\n".join(f"- {r['step']}: {r['result']}" for r in results)
     return {
-        "answer": pred.answer,
-        "plan": pred.plan,
-        "steps": pred.steps,
+        "answer": final_answer,
+        "plan": plan,
+        "steps": results,
         "loop": "plan_execute",
     }

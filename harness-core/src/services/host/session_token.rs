@@ -3,7 +3,6 @@ use chrono::{Duration, Utc};
 use hmac::{Hmac, Mac};
 use rand::Rng;
 use sha2::Sha256;
-use std::collections::HashMap;
 use uuid::Uuid;
 
 type HmacSha256 = Hmac<Sha256>;
@@ -30,8 +29,10 @@ pub fn generate_token(
     Ok(token)
 }
 
-/// Verify a token: check HMAC, expiry, and (optionally) IP match.
-pub fn verify_token(secret: &[u8], token: &str, client_ip: &str) -> Result<()> {
+/// Verify a token: check HMAC and expiry.
+/// One-time use enforcement is handled separately via the `network_sessions` DB table,
+/// which allows any LAN client to present the token (not just the originating IP).
+pub fn verify_token(secret: &[u8], token: &str) -> Result<()> {
     let (payload, sig) = token
         .rsplit_once('.')
         .ok_or_else(|| anyhow!("Malformed token"))?;
@@ -49,14 +50,9 @@ pub fn verify_token(secret: &[u8], token: &str, client_ip: &str) -> Result<()> {
         return Err(anyhow!("Malformed token payload"));
     }
 
-    let token_ip = parts[0];
     let exp: i64 = parts[2].parse().map_err(|_| anyhow!("Invalid exp"))?;
-
     if Utc::now().timestamp() > exp {
         return Err(anyhow!("Token expired"));
-    }
-    if token_ip != client_ip {
-        return Err(anyhow!("IP mismatch"));
     }
 
     Ok(())

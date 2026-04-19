@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   Box,
   Button,
+  Chip,
   CircularProgress,
   Divider,
   FormControl,
@@ -13,7 +14,6 @@ import {
   Select,
   TextField,
   Typography,
-  Chip,
 } from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import * as inferenceApi from "../api/inference";
@@ -28,13 +28,22 @@ const AGENT_LOOPS = [
   "multi_agent",
 ];
 
+interface LiveStep {
+  step_index: number;
+  step_type: string;
+  content: string;
+}
+
 export default function AgentConsoleView() {
   const [task, setTask] = useState("");
   const [selectedLoop, setSelectedLoop] = useState("chain_of_thought");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
+  const [liveSteps, setLiveSteps] = useState<LiveStep[]>([]);
   const { runs, setRuns, selectedRun, selectRun } = useAgentStore();
   const wsRef = useRef<WebSocket | null>(null);
+  const activeRunId = useRef<string | null>(null);
+  const stepsEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     tauriApi
@@ -42,9 +51,25 @@ export default function AgentConsoleView() {
       .then((r) => setRuns(r as never[]))
       .catch(() => {});
 
-    // Connect WebSocket stream
+    // Connect WebSocket stream and render live agent steps
     wsRef.current = inferenceApi.createStreamWebSocket((msg) => {
-      console.debug("ws:", msg);
+      const { type, payload } = msg as { type: string; payload: Record<string, unknown> };
+
+      if (type === "agent.step" && payload.run_id === activeRunId.current) {
+        setLiveSteps((prev) => [
+          ...prev,
+          {
+            step_index: payload.step_index as number,
+            step_type: payload.step_type as string,
+            content: payload.content as string,
+          },
+        ]);
+      } else if (
+        (type === "agent.complete" || type === "agent.error") &&
+        payload.run_id === activeRunId.current
+      ) {
+        setLoading(false);
+      }
     });
 
     return () => {
@@ -52,14 +77,22 @@ export default function AgentConsoleView() {
     };
   }, [setRuns]);
 
+  // Auto-scroll live steps
+  useEffect(() => {
+    stepsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [liveSteps]);
+
   const runAgent = async () => {
     if (!task.trim()) return;
     setLoading(true);
     setResult(null);
+    setLiveSteps([]);
     try {
       const res = await inferenceApi.agentRun(selectedLoop, task);
-      setResult(res as Record<string, unknown>);
-      // Refresh runs list
+      const data = res as Record<string, unknown>;
+      activeRunId.current = data.run_id as string;
+      setResult(data);
+      // Refresh run history sidebar
       tauriApi
         .dbGetAgentRuns(50, 0)
         .then((r) => setRuns(r as never[]))
@@ -69,6 +102,20 @@ export default function AgentConsoleView() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const stepTypeColor = (t: string) => {
+    const map: Record<string, "default" | "info" | "success" | "warning" | "error"> = {
+      start: "info",
+      reasoning: "info",
+      plan: "warning",
+      execute: "default",
+      tool_call: "warning",
+      orchestration: "info",
+      specialist: "default",
+      synthesis: "success",
+    };
+    return map[t] ?? "default";
   };
 
   return (
@@ -181,9 +228,56 @@ export default function AgentConsoleView() {
 
         <Divider sx={{ mb: 2 }} />
 
-        {/* Result */}
+        {/* Live step trace + final result */}
         <Box sx={{ flex: 1, overflowY: "auto" }}>
-          {result && (
+          {/* Live streaming steps */}
+          {(loading || liveSteps.length > 0) && (
+            <Box mb={2}>
+              <Typography variant="subtitle2" gutterBottom>
+                {loading ? "Live trace…" : "Trace"}
+              </Typography>
+              {liveSteps.map((s) => (
+                <Box
+                  key={s.step_index}
+                  sx={{
+                    display: "flex",
+                    gap: 1,
+                    alignItems: "flex-start",
+                    mb: 0.75,
+                    p: 0.75,
+                    borderRadius: 1,
+                    background: (t) => t.palette.action.hover,
+                  }}
+                >
+                  <Chip
+                    label={s.step_type}
+                    size="small"
+                    color={stepTypeColor(s.step_type)}
+                    sx={{ fontSize: 10, height: 18, flexShrink: 0, mt: 0.25 }}
+                  />
+                  <Typography
+                    variant="body2"
+                    component="pre"
+                    sx={{ whiteSpace: "pre-wrap", m: 0, wordBreak: "break-word" }}
+                  >
+                    {s.content}
+                  </Typography>
+                </Box>
+              ))}
+              {loading && (
+                <Box display="flex" alignItems="center" gap={1} mt={0.5}>
+                  <CircularProgress size={12} />
+                  <Typography variant="caption" color="text.secondary">
+                    Waiting for next step…
+                  </Typography>
+                </Box>
+              )}
+              <div ref={stepsEndRef} />
+            </Box>
+          )}
+
+          {/* Final result */}
+          {result && !loading && (
             <Box>
               {result.error ? (
                 <Typography color="error" variant="body2">

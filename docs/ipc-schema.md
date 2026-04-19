@@ -10,6 +10,8 @@
 | `db_get_agent_runs` | `{ limit: number, offset: number }` | `AgentRun[]` |
 | `db_get_logs` | `{ run_id: string, limit: number }` | `LogEntry[]` |
 | `db_list_tables` | — | `string[]` |
+| `db_config_get` | `{ key: string }` | `string \| null` |
+| `db_config_set` | `{ key: string, value: string }` | — |
 
 ### Terminal
 
@@ -22,6 +24,10 @@
 | `terminal_list` | — | `TerminalSessionInfo[]` |
 
 ### File System
+
+All FS commands resolve paths against the configured VFS root (`VLOOP_VFS_ROOT`, defaulting to
+`$HOME`).  Any path that would escape the root is rejected with an error — the caller never needs
+to sanitise paths client-side.
 
 | Command | Input | Output |
 |---------|-------|--------|
