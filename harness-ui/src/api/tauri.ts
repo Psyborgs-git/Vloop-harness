@@ -49,6 +49,12 @@ export const fsGitCommit = (path: string, message: string, paths: string[]) =>
 export const fsGitBranches = (path: string) =>
   invoke<unknown[]>("fs_git_branches", { path });
 
+export const fsWatch = (path: string) =>
+  invoke<string>("fs_watch", { path });
+
+export const fsUnwatch = (watcherId: string) =>
+  invoke<void>("fs_unwatch", { watcher_id: watcherId });
+
 // Process
 export const processStart = (manifest: unknown) =>
   invoke<string>("process_start", { manifest });

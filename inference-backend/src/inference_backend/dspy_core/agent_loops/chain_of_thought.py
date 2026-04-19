@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import dspy
-from typing import Any
+from typing import Any, Callable
 
 
 class CoTSignature(dspy.Signature):
@@ -21,11 +21,18 @@ class ChainOfThoughtLoop(dspy.Module):
         return self.cot(task=task)
 
 
-def run(task: str, config: dict[str, Any] | None = None) -> dict[str, Any]:
+def run(
+    task: str,
+    config: dict[str, Any] | None = None,
+    step_callback: Callable[[int, str, str], None] | None = None,
+) -> dict[str, Any]:
     loop = ChainOfThoughtLoop()
     pred = loop(task=task)
+    reasoning = getattr(pred, "reasoning", "")
+    if step_callback and reasoning:
+        step_callback(0, "reasoning", reasoning)
     return {
         "answer": pred.answer,
-        "reasoning": getattr(pred, "reasoning", ""),
+        "reasoning": reasoning,
         "loop": "chain_of_thought",
     }

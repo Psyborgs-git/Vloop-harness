@@ -73,7 +73,16 @@ WS /stream
 ### Message Types
 
 ```jsonc
-// Agent step (thought, action, observation, answer)
+// Agent step — emitted for every meaningful step in the agent loop.
+// step_type values:
+//   start          – run submitted (fired before DSPy loop begins)
+//   reasoning      – chain_of_thought scratchpad
+//   plan           – plan_execute decomposition output
+//   execute        – plan_execute step + result
+//   tool_call      – tool_call loop selection + output
+//   orchestration  – multi_agent orchestrator assignment
+//   specialist     – multi_agent specialist answer
+//   synthesis      – multi_agent synthesiser output
 {
   "type": "agent.step",
   "id": "<uuid>",
@@ -81,7 +90,7 @@ WS /stream
   "payload": {
     "run_id": "<uuid>",
     "step_index": 1,
-    "step_type": "thought",
+    "step_type": "reasoning",
     "content": "I need to read the file first."
   }
 }

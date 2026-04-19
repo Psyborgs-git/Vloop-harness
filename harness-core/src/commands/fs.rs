@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+use std::path::PathBuf;
 use tauri::State;
 
 use crate::{
@@ -16,10 +16,15 @@ pub struct FileEntry {
     pub modified: Option<String>,
 }
 
+/// Resolve `path` against the configured VFS root, rejecting path-escape attempts.
+fn resolve(state: &AppState, path: &str) -> Result<PathBuf, String> {
+    vfs::resolve_safe(&state.fs_service.vfs_root, path).map_err(|e| e.to_string())
+}
+
 #[tauri::command]
-pub async fn fs_list(path: String) -> Result<Vec<FileEntry>, String> {
-    let p = Path::new(&path);
-    let entries: Vec<FileEntry> = std::fs::read_dir(p)
+pub async fn fs_list(path: String, state: State<'_, AppState>) -> Result<Vec<FileEntry>, String> {
+    let safe_path = resolve(&state, &path)?;
+    let entries: Vec<FileEntry> = std::fs::read_dir(&safe_path)
         .map_err(|e| e.to_string())?
         .filter_map(|e| e.ok())
         .map(|e| {
@@ -39,33 +44,47 @@ pub async fn fs_list(path: String) -> Result<Vec<FileEntry>, String> {
 }
 
 #[tauri::command]
-pub async fn fs_read(path: String) -> Result<String, String> {
-    std::fs::read_to_string(&path).map_err(|e| e.to_string())
+pub async fn fs_read(path: String, state: State<'_, AppState>) -> Result<String, String> {
+    let safe_path = resolve(&state, &path)?;
+    std::fs::read_to_string(safe_path).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub async fn fs_write(path: String, content: String) -> Result<(), String> {
-    std::fs::write(&path, content).map_err(|e| e.to_string())
+pub async fn fs_write(
+    path: String,
+    content: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let safe_path = resolve(&state, &path)?;
+    if let Some(parent) = safe_path.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    std::fs::write(safe_path, content).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub async fn fs_delete(path: String) -> Result<(), String> {
-    let p = Path::new(&path);
-    if p.is_dir() {
-        std::fs::remove_dir_all(&path).map_err(|e| e.to_string())
+pub async fn fs_delete(path: String, state: State<'_, AppState>) -> Result<(), String> {
+    let safe_path = resolve(&state, &path)?;
+    if safe_path.is_dir() {
+        std::fs::remove_dir_all(&safe_path).map_err(|e| e.to_string())
     } else {
-        std::fs::remove_file(&path).map_err(|e| e.to_string())
+        std::fs::remove_file(&safe_path).map_err(|e| e.to_string())
     }
 }
 
 #[tauri::command]
-pub async fn fs_git_status(path: String) -> Result<git::GitStatus, String> {
-    git::status(&path).await.map_err(|e| e.to_string())
+pub async fn fs_git_status(
+    path: String,
+    state: State<'_, AppState>,
+) -> Result<git::GitStatus, String> {
+    let safe_path = resolve(&state, &path)?;
+    git::status(&safe_path.to_string_lossy()).await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub async fn fs_git_diff(path: String) -> Result<String, String> {
-    git::diff(&path).await.map_err(|e| e.to_string())
+pub async fn fs_git_diff(path: String, state: State<'_, AppState>) -> Result<String, String> {
+    let safe_path = resolve(&state, &path)?;
+    git::diff(&safe_path.to_string_lossy()).await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -73,13 +92,42 @@ pub async fn fs_git_commit(
     path: String,
     message: String,
     paths: Vec<String>,
+    state: State<'_, AppState>,
 ) -> Result<String, String> {
-    git::commit(&path, &message, paths)
+    let safe_path = resolve(&state, &path)?;
+    git::commit(&safe_path.to_string_lossy(), &message, paths)
         .await
         .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub async fn fs_git_branches(path: String) -> Result<Vec<git::GitBranch>, String> {
-    git::branches(&path).await.map_err(|e| e.to_string())
+pub async fn fs_git_branches(
+    path: String,
+    state: State<'_, AppState>,
+) -> Result<Vec<git::GitBranch>, String> {
+    let safe_path = resolve(&state, &path)?;
+    git::branches(&safe_path.to_string_lossy()).await.map_err(|e| e.to_string())
+}
+
+/// Start watching `path` for changes.  Returns a watcher ID that can be passed
+/// to `fs_unwatch` to stop watching.  Emits `fs_changed` Tauri events on change.
+#[tauri::command]
+pub async fn fs_watch(path: String, state: State<'_, AppState>) -> Result<String, String> {
+    let safe_path = resolve(&state, &path)?;
+    let w = watcher::start_watch(&safe_path, state.fs_service.app_handle.clone())
+        .map_err(|e| e.to_string())?;
+    let id = w.id.clone();
+    state.fs_service.watchers.insert(id.clone(), w);
+    Ok(id)
+}
+
+/// Stop a previously started watcher.
+#[tauri::command]
+pub async fn fs_unwatch(watcher_id: String, state: State<'_, AppState>) -> Result<(), String> {
+    state
+        .fs_service
+        .watchers
+        .remove(&watcher_id)
+        .ok_or_else(|| format!("Watcher not found: {watcher_id}"))?;
+    Ok(())
 }

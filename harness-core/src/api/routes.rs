@@ -33,7 +33,35 @@ async fn handle_query(
         }
     }
     match q.fetch_all(&db.pool).await {
-        Ok(_rows) => Json(serde_json::json!({ "rows": [], "status": "ok" })),
+        Ok(rows) => {
+            use sqlx::{Column, Row};
+            let result: Vec<serde_json::Value> = rows
+                .iter()
+                .map(|row| {
+                    let mut map = serde_json::Map::new();
+                    for col in row.columns() {
+                        let name = col.name().to_string();
+                        let val: serde_json::Value =
+                            if let Ok(v) = row.try_get::<i64, _>(col.ordinal()) {
+                                serde_json::Value::Number(v.into())
+                            } else if let Ok(v) = row.try_get::<f64, _>(col.ordinal()) {
+                                serde_json::Number::from_f64(v)
+                                    .map(serde_json::Value::Number)
+                                    .unwrap_or(serde_json::Value::Null)
+                            } else if let Ok(v) = row.try_get::<bool, _>(col.ordinal()) {
+                                serde_json::Value::Bool(v)
+                            } else if let Ok(v) = row.try_get::<String, _>(col.ordinal()) {
+                                serde_json::Value::String(v)
+                            } else {
+                                serde_json::Value::Null
+                            };
+                        map.insert(name, val);
+                    }
+                    serde_json::Value::Object(map)
+                })
+                .collect();
+            Json(serde_json::json!({ "rows": result, "status": "ok" }))
+        }
         Err(e) => Json(serde_json::json!({ "error": e.to_string() })),
     }
 }

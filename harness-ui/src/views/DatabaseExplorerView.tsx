@@ -31,7 +31,7 @@ export default function DatabaseExplorerView() {
     setError(null);
     try {
       const result = await tauriApi.dbQuery(sql);
-      setRows(result as Record<string, unknown>[]);
+      setRows(result as unknown as Record<string, unknown>[]);
     } catch (e) {
       setError(String(e));
       setRows([]);

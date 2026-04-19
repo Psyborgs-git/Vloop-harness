@@ -89,13 +89,32 @@ Agent generates Python code
 ## Security Model
 
 - **localhost-only**: harness-core and inference-backend bind to 127.0.0.1 only
-- **LAN host**: :47299 binds 0.0.0.0 but requires HMAC-signed one-time token
-- **VFS sandbox**: all fs_read/fs_write paths canonicalised and checked against project root
-- **Immutable telemetry**: SQLite BEFORE DELETE/UPDATE triggers call RAISE(ABORT)
+- **LAN host**: :47299 binds 0.0.0.0; every session token is HMAC-SHA256-signed
+  with a per-installation secret (auto-generated and persisted in `app_config`, or
+  overridden via `VLOOP_LAN_SECRET`).  Each token is single-use — harness-core
+  atomically marks it `used=1` in `network_sessions` on first redemption.  The
+  IP-binding check has been removed so tokens are usable from any LAN client
+  (the HMAC + one-time enforcement provides equivalent security without IP
+  prediction requirements).
+- **LAN server lifecycle**: `host_start` stores a `JoinHandle` and `host_stop`
+  calls `abort()` on it, giving real server teardown.  Repeated `host_start`
+  calls abort the previous instance before spawning a new one.
+- **VFS sandbox**: all `fs_*` IPC commands resolve paths via `vfs::resolve_safe`
+  against the configured root (`VLOOP_VFS_ROOT`, defaulting to `$HOME`).
+  Path-escape attempts (e.g. `../../../etc/passwd`) are rejected before any I/O.
+- **Immutable telemetry**: SQLite `BEFORE DELETE/UPDATE` triggers call `RAISE(ABORT)`
 - **Agent code safety**: AST parse + subprocess dry-run import before execution
+- **Shell sandbox**: `SANDBOX_MODE=strict` switches `shell_exec` to list-form
+  `subprocess.run(shell=False)`, blocking shell pipeline chaining, variable
+  injection, and command substitution exploits.
 
 ## Database
 
 SQLite with WAL mode + `PRAGMA synchronous=NORMAL`. Full schema in [db-schema.md](db-schema.md).
 
-Optional Postgres path: set `DB_ENGINE=postgres` in inference-backend `.env`.
+Agent run data (runs, steps, tool_calls) is written from inference-backend via
+the harness-core REST API (`POST /api/db/query`), keeping a single SQLite owner
+and allowing the Tauri IPC layer to read history without synchronisation.
+
+Optional Postgres path: set `DB_ENGINE=postgres` and `POSTGRES_URL` in
+inference-backend `.env`.  Tables are created automatically on first startup.
