@@ -95,11 +95,34 @@ class DSPyComponentDef(Base):
 
 
 class PipelineDef(Base):
-    """An ordered composition of DSPy components.
+    """An ordered composition of DSPy components and/or tool steps.
 
-    ``steps`` is a list of ``{"component_id": str, "input_map": {...}}`` dicts.
-    ``input_map`` maps the step's input field names to either a previous step's
-    output field (by name) or a literal string value.
+    ``steps`` is a list of step dicts.  Each step must have a ``"type"`` key:
+
+    Component step (default when ``"type"`` is absent)::
+
+        {
+            "type": "component",
+            "component_id": "comp_abc",
+            "config": {"input_map": {}}
+        }
+
+    Tool step::
+
+        {
+            "type": "tool",
+            "tool_name": "terminal",
+            "config": {
+                "command": "pytest {test_path}",
+                "cwd_relative": ".",
+                "timeout": 60,
+                "input_map": {"test_path": "file_path"}
+            }
+        }
+
+    ``tool_permissions`` declares the ceiling of permissions this pipeline may
+    exercise (list of ``Permission`` value strings). It acts as a cap, not an
+    escalation mechanism.
     """
 
     __tablename__ = "pipelines"
@@ -108,6 +131,7 @@ class PipelineDef(Base):
     name: Mapped[str] = mapped_column(String(255))
     description: Mapped[str] = mapped_column(Text, default="")
     steps: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    tool_permissions: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(

@@ -146,8 +146,14 @@ async def send_message(
         [{"id": p.id, "name": p.name, "description": p.description} for p in pipelines]
     )
 
-    # Call the AI engine
+    # Build tool catalog for AI context
     mp = request.app.state.main_process
+    available_tools_json = "[]"
+    try:
+        available_tools_json = json.dumps(mp.tools.catalog())
+    except Exception:
+        pass
+    # Call the AI engine
     ai_response_text = ""
     component_code = ""
     pipeline_config = ""
@@ -161,6 +167,7 @@ async def send_message(
                 user_message=body.content,
                 available_components=available_comps,
                 available_pipelines=available_pipes,
+                available_tools=available_tools_json,
             )
             ai_response_text = getattr(prediction, "response", "") or ""
             component_code = getattr(prediction, "component_code", "") or ""
@@ -204,15 +211,43 @@ async def send_message(
             pipe_data = json.loads(pipeline_config)
             from harness.data.models import PipelineDef
 
-            pipe_id = f"pipe_{uuid.uuid4().hex[:10]}"
-            pipeline = PipelineDef(
-                id=pipe_id,
-                name=pipe_data.get("name", "Generated Pipeline"),
-                description=pipe_data.get("description", ""),
-                steps=pipe_data.get("steps", []),
-            )
-            await repo.save_pipeline(pipeline)
-            saved_pipeline_id = pipe_id
+            # Validate any tool steps against the policy engine
+            try:
+                policy = mp.tools.policy
+                for step in pipe_data.get("steps", []):
+                    if step.get("type") == "tool":
+                        tool_name = step.get("tool_name", "")
+                        cfg = step.get("config", {})
+                        command = cfg.get("command", "")
+                        if tool_name == "terminal" and command:
+                            import shlex
+                            policy.check_shell_injection(command)
+                            # Strip placeholder interpolations before parsing
+                            import re as _re
+                            stripped = _re.sub(r"\{[^}]+\}", "placeholder", command)
+                            argv = shlex.split(stripped)
+                            if argv:
+                                from pathlib import Path as _Path
+                                policy.check_command(argv[0], argv[1:], mp.workspace_root)
+            except Exception as policy_exc:
+                # Do not save a pipeline with policy violations; inform via response
+                ai_response_text += (
+                    f"\n\n⚠️ Generated pipeline contains a policy violation and was not saved: "
+                    f"{policy_exc}"
+                )
+                pipeline_config = ""
+
+            if pipeline_config.strip():
+                pipe_id = f"pipe_{uuid.uuid4().hex[:10]}"
+                pipeline = PipelineDef(
+                    id=pipe_id,
+                    name=pipe_data.get("name", "Generated Pipeline"),
+                    description=pipe_data.get("description", ""),
+                    steps=pipe_data.get("steps", []),
+                    tool_permissions=pipe_data.get("tool_permissions"),
+                )
+                await repo.save_pipeline(pipeline)
+                saved_pipeline_id = pipe_id
         except Exception:
             pass
 

@@ -158,3 +158,90 @@ export const updateSettings = (settings: Record<string, unknown>) =>
     method: "PUT",
     body: JSON.stringify({ settings }),
   });
+
+// ── Tools ──────────────────────────────────────────────────────────────────
+
+import type {
+  ConfirmationRequest,
+  FilesystemEntry,
+  PolicyConfig,
+  ToolCatalogEntry,
+  ToolResult,
+} from "./types";
+
+export const listTools = () =>
+  request<ToolCatalogEntry[]>("/api/tools");
+
+export const getWorkspaceRoot = () =>
+  request<{ workspace_root: string }>("/api/tools/workspace");
+
+export const getPolicy = () =>
+  request<PolicyConfig>("/api/tools/policy");
+
+export const updatePolicy = (policy: PolicyConfig) =>
+  request<PolicyConfig>("/api/tools/policy", {
+    method: "PUT",
+    body: JSON.stringify(policy),
+  });
+
+export const executeTerminal = (
+  command: string,
+  cwdRelative = ".",
+  timeout?: number,
+) =>
+  request<ToolResult | ConfirmationRequest>("/api/tools/terminal", {
+    method: "POST",
+    body: JSON.stringify({ command, cwd_relative: cwdRelative, timeout }),
+  });
+
+export const listDirectory = (path = ".") =>
+  request<ToolResult & { metadata: { entries: FilesystemEntry[] } }>(
+    "/api/tools/filesystem/list",
+    { method: "POST", body: JSON.stringify({ path }) },
+  );
+
+export const readFile = (path: string) =>
+  request<ToolResult>("/api/tools/filesystem/read", {
+    method: "POST",
+    body: JSON.stringify({ path }),
+  });
+
+export const statPath = (path: string) =>
+  request<ToolResult>("/api/tools/filesystem/stat", {
+    method: "POST",
+    body: JSON.stringify({ path }),
+  });
+
+export const writeFile = (
+  path: string,
+  content: string,
+  createParents = false,
+) =>
+  request<ToolResult | ConfirmationRequest>("/api/tools/filesystem/write", {
+    method: "POST",
+    body: JSON.stringify({ path, content, create_parents: createParents }),
+  });
+
+export const createPath = (path: string, isDir = false) =>
+  request<ToolResult>("/api/tools/filesystem/create", {
+    method: "POST",
+    body: JSON.stringify({ path, is_dir: isDir }),
+  });
+
+export const deletePath = (path: string, recursive = false) =>
+  request<ToolResult | ConfirmationRequest>("/api/tools/filesystem/delete", {
+    method: "POST",
+    body: JSON.stringify({ path, recursive }),
+  });
+
+export const movePath = (src: string, dest: string) =>
+  request<ToolResult | ConfirmationRequest>("/api/tools/filesystem/move", {
+    method: "POST",
+    body: JSON.stringify({ src, dest }),
+  });
+
+export const confirmAction = (token: string) =>
+  request<ToolResult>(`/api/tools/confirm/${token}`, { method: "POST" });
+
+export const cancelConfirmation = (token: string) =>
+  request<void>(`/api/tools/confirm/${token}`, { method: "DELETE" });

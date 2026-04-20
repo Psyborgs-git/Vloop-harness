@@ -100,6 +100,23 @@ class BaseComponent(ABC):
         for ws in dead:
             self._ws_subscribers.discard(ws)
 
+    # ── Tool access ───────────────────────────────────────────────────────────
+
+    async def run_tool(self, tool_name: str, **params: Any) -> Any:
+        """Execute a registered tool with this component's permissions and policy context.
+
+        The component must hold the permission required by the tool; attempting
+        ``run_tool`` without it raises ``PermissionError``.
+        """
+        if self._main_process is None:
+            raise RuntimeError("Component is not registered with a MainProcess.")
+        return await self._main_process.tools.execute(
+            tool_name=tool_name,
+            component_id=self.id,
+            session_id=None,
+            params=params,
+        )
+
     # ── Resource cleanup ──────────────────────────────────────────────────────
 
     async def cleanup(self) -> None:

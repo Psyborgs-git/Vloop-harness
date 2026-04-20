@@ -24,6 +24,9 @@ uv.lock
 # Harness runtime
 .harness/
 
+# VLoop project-local data (DB, policy, logs)
+.vloop/
+
 # Pytest
 .pytest_cache/
 .coverage

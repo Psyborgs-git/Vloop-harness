@@ -20,6 +20,7 @@ import CodeIcon from "@mui/icons-material/Code";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import SettingsIcon from "@mui/icons-material/Settings";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
+import TerminalIcon from "@mui/icons-material/Terminal";
 import {
   AppBar,
   Box,
@@ -45,6 +46,7 @@ import ChatPanel from "./ChatPanel";
 import DSPyPanel from "./DSPyPanel";
 import PipelinePanel from "./PipelinePanel";
 import SettingsPanel from "./SettingsPanel";
+import ToolsPanel from "./ToolsPanel";
 import type { NavTab, Provider } from "./types";
 
 // ── MUI dark theme ────────────────────────────────────────────────────────────
@@ -124,6 +126,7 @@ const NAV_ITEMS: Array<{ tab: NavTab; label: string; icon: React.ReactNode }> = 
   { tab: "chat", label: "Chat", icon: <ChatIcon fontSize="small" /> },
   { tab: "dspy", label: "DSPy Components", icon: <CodeIcon fontSize="small" /> },
   { tab: "pipelines", label: "Pipelines", icon: <AccountTreeIcon fontSize="small" /> },
+  { tab: "tools", label: "Tools", icon: <TerminalIcon fontSize="small" /> },
   { tab: "settings", label: "Settings", icon: <SettingsIcon fontSize="small" /> },
 ];
 
@@ -264,6 +267,7 @@ export default function App() {
             )}
             {activeTab === "dspy" && <DSPyPanel />}
             {activeTab === "pipelines" && <PipelinePanel />}
+            {activeTab === "tools" && <ToolsPanel />}
             {activeTab === "settings" && (
               <Box sx={{ height: "100%", overflow: "auto" }}>
                 <SettingsPanel />

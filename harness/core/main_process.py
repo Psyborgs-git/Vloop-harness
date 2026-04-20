@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any
 
@@ -28,6 +29,12 @@ class MainProcess:
         self.component_tree = ComponentTree()
         self.process_manager = ProcessManager(logger=self.logger)
 
+        # Workspace root — captured once at startup (CWD when `harness run` is invoked)
+        self.workspace_root: Path = Path(os.getcwd()).resolve()
+
+        # Tool runtime — initialised lazily in boot()
+        self._tools: Any | None = None
+
         # AI engine reference — set by harness.engine bootstrap
         self._ai_engine: Any | None = None
 
@@ -37,6 +44,23 @@ class MainProcess:
         self.logger.info("MainProcess booting…")
         await self.state_store.open()
         self.logger.info("StateStore ready")
+
+        # Initialise tool runtime
+        from harness.tools.confirmation import ConfirmationStore
+        from harness.tools.filesystem_tool import FilesystemTool
+        from harness.tools.policy import PolicyEngine
+        from harness.tools.registry import ToolRegistry
+        from harness.tools.terminal_tool import TerminalTool
+
+        policy_engine = PolicyEngine(workspace_root=self.workspace_root)
+        confirmations = ConfirmationStore()
+        tool_registry = ToolRegistry(self)
+        tool_registry.policy = policy_engine          # type: ignore[attr-defined]
+        tool_registry.confirmations = confirmations    # type: ignore[attr-defined]
+        tool_registry.register(TerminalTool(self))
+        tool_registry.register(FilesystemTool(self))
+        self._tools = tool_registry
+        self.logger.info("Tool runtime ready", workspace=str(self.workspace_root))
 
     async def shutdown(self) -> None:
         self.logger.info("MainProcess shutting down…")
@@ -82,6 +106,14 @@ class MainProcess:
 
     def check_permission(self, component_id: str, permission: Permission) -> None:
         self.permissions.check(component_id, permission)
+
+    # ── Tool runtime accessor ─────────────────────────────────────────────────
+
+    @property
+    def tools(self) -> Any:
+        if self._tools is None:
+            raise RuntimeError("Tool runtime not initialised — call boot() first")
+        return self._tools
 
     # ── AI engine accessor ─────────────────────────────────────────────────────
 

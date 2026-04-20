@@ -25,6 +25,7 @@ from harness.server.routes import components, proxy, ws
 from harness.server.routes.chat_routes import router as chat_router
 from harness.server.routes.dspy_routes import router as dspy_router
 from harness.server.routes.settings_routes import router as settings_router
+from harness.server.routes.tool_routes import router as tool_router
 
 if TYPE_CHECKING:
     from harness.core.main_process import MainProcess
@@ -104,6 +105,9 @@ def create_app(main_process: "MainProcess", settings: "HarnessSettings") -> Fast
         # ── 7. Main process (legacy) ──────────────────────────────────────────
         await main_process.boot()
 
+        # Wire tool registry into the pipeline builder after boot
+        builder.tool_registry = main_process.tools
+
         storage.write_log("info", "VLoop Harness started", db_url=db_url)
 
         yield
@@ -136,6 +140,7 @@ def create_app(main_process: "MainProcess", settings: "HarnessSettings") -> Fast
     app.include_router(dspy_router)
     app.include_router(chat_router)
     app.include_router(settings_router)
+    app.include_router(tool_router)
     app.include_router(proxy.router)  # catch-all last
 
     @app.get("/")

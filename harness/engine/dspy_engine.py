@@ -159,8 +159,9 @@ class DSPyEngine:
         user_message: str,
         available_components: str = "[]",
         available_pipelines: str = "[]",
+        available_tools: str = "[]",
     ) -> dspy.Prediction:
-        """Multi-turn dashboard chat with DSPy component/pipeline generation."""
+        """Multi-turn dashboard chat with DSPy component/pipeline/tool generation."""
         assert self._chat, "Engine not configured — call configure() first"
         return await self.run(
             self._chat,
@@ -168,6 +169,7 @@ class DSPyEngine:
             user_message=user_message,
             available_components=available_components,
             available_pipelines=available_pipelines,
+            available_tools=available_tools,
         )
 
     # ── Direct LM access (escape hatch) ──────────────────────────────────────
