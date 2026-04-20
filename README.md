@@ -34,14 +34,20 @@
 
 ## Quick Start
 
+### Native Tauri App Development
+The app runs as a native Tauri desktop window in dev mode. `./scripts/dev.sh` starts the native Tauri window and the backend services together.
+
 ### Prerequisites
 - Rust ≥ 1.77, Node ≥ 20, Python ≥ 3.11
 - [Ollama](https://ollama.ai) (default LLM provider)
 
 ```bash
-chmod +x scripts/setup.sh && ./scripts/setup.sh
-./scripts/dev.sh
+chmod +x scripts/setup.sh scripts/native-dev.sh scripts/native-build.sh
+./scripts/setup.sh
+./scripts/native-dev.sh
 ```
+
+You can also run `./scripts/dev.sh` directly; both paths launch the Tauri native window in development mode.
 
 ## Features
 

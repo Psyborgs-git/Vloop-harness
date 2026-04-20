@@ -1,3 +1,0 @@
-[workspace]
-members = ["harness-core"]
-resolver = "2"
