@@ -30,7 +30,12 @@ from harness.server.app import create_app
 from harness.settings import HarnessSettings
 from harness.window import RootWindow
 
-app = typer.Typer(name="harness", help="Vloop Harness CLI")
+app = typer.Typer(name="harness", help="Vloop Harness CLI", no_args_is_help=True)
+
+
+@app.callback()
+def _callback() -> None:
+    """Vloop Harness — Python brain, React face."""
 
 
 def _start_vite(vite_port: int, react_dir: Path) -> subprocess.Popen[str]:
@@ -55,7 +60,9 @@ def _run_uvicorn(fastapi_app: "fastapi.FastAPI", host: str, port: int) -> None: 
 def run(
     host: str = typer.Option("localhost", envvar="HARNESS_HOST"),
     port: int = typer.Option(8000, envvar="HARNESS_PORT"),
-    no_window: bool = typer.Option(False, help="Skip opening the native window (headless mode)"),
+    no_window: bool = typer.Option(
+        False, help="Skip opening the native window (headless mode)"
+    ),
     no_ai: bool = typer.Option(False, help="Skip AI engine initialisation"),
     no_vite: bool = typer.Option(False, help="Skip starting the Vite dev server"),
 ) -> None:
@@ -72,7 +79,10 @@ def run(
             main_process.attach_ai_engine(engine)
             typer.echo(f"AI engine ready: {engine}")
         except Exception as exc:
-            typer.echo(f"Warning: AI engine failed to configure ({exc}). Running without AI.", err=True)
+            typer.echo(
+                f"Warning: AI engine failed to configure ({exc}). Running without AI.",
+                err=True,
+            )
 
     # ── FastAPI ───────────────────────────────────────────────────────────────
     fastapi_app = create_app(main_process=main_process, settings=settings)
@@ -91,7 +101,9 @@ def run(
     if not no_vite and react_dir.exists():
         try:
             vite_proc = _start_vite(settings.vite_port, react_dir)
-            typer.echo(f"Vite dev server started on http://{settings.vite_host}:{settings.vite_port}")
+            typer.echo(
+                f"Vite dev server started on http://{settings.vite_host}:{settings.vite_port}"
+            )
         except Exception as exc:
             typer.echo(f"Warning: Vite failed to start ({exc})", err=True)
 
