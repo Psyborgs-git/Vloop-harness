@@ -17,7 +17,8 @@ class MainProcess:
     """
     Boots once. Lives for the entire process lifetime.
 
-    Owns ComponentTree, ProcessManager, StateStore, PermissionsGuard, HarnessLogger.
+    Owns ComponentTree, ProcessManager, StateStore, PermissionsGuard, HarnessLogger,
+    and the new VLoop data/engine subsystems (injected by the app factory).
     """
 
     def __init__(self, state_db: Path | str = ".harness/state.db") -> None:

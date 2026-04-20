@@ -1,266 +1,277 @@
 /**
- * Root UI — window manager shell.
+ * VLoop Harness — Root Dashboard
  *
- * Fetches the component list from the Python API on mount, then renders
- * a floating View (iframe) for each running component.
+ * A modern AI-app dashboard built with Material UI dark theme.
+ *
+ * Layout:
+ *  ┌─ TopBar ──────────────────────────────────────────────────────┐
+ *  │  VLoop Harness    [provider status]  [connection]             │
+ *  ├─ Sidebar ─┬─ Content ──────────────────────────────────────────┤
+ *  │  Chat     │  <active panel>                                    │
+ *  │  DSPy     │                                                    │
+ *  │  Pipelines│                                                    │
+ *  │  Settings │                                                    │
+ *  └───────────┴────────────────────────────────────────────────────┘
  */
 
-import React, { useEffect, useRef, useState } from "react";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import ChatIcon from "@mui/icons-material/Chat";
+import CodeIcon from "@mui/icons-material/Code";
+import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
+import SettingsIcon from "@mui/icons-material/Settings";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
+import {
+  AppBar,
+  Box,
+  Chip,
+  CssBaseline,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  ThemeProvider,
+  Toolbar,
+  Tooltip,
+  Typography,
+  createTheme,
+} from "@mui/material";
+import React, { useEffect, useState } from "react";
+
 import { useHarness } from "@harness/useHarness";
+import * as api from "./api";
+import ChatPanel from "./ChatPanel";
+import DSPyPanel from "./DSPyPanel";
+import PipelinePanel from "./PipelinePanel";
+import SettingsPanel from "./SettingsPanel";
+import type { NavTab, Provider } from "./types";
 
-interface ComponentSnapshot {
-  id: string;
-  state: Record<string, unknown>;
-  props: Record<string, unknown>;
-  permissions: string[];
-}
+// ── MUI dark theme ────────────────────────────────────────────────────────────
 
-interface ViewState {
-  id: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  minimised: boolean;
-  title: string;
-}
+const darkTheme = createTheme({
+  palette: {
+    mode: "dark",
+    primary: {
+      main: "#6366f1",       // indigo-500
+      dark: "#4f46e5",
+      light: "#818cf8",
+    },
+    secondary: {
+      main: "#ec4899",
+      dark: "#db2777",
+    },
+    background: {
+      default: "#0f0f13",
+      paper: "#1a1a24",
+    },
+    divider: "rgba(255,255,255,0.08)",
+    text: {
+      primary: "#e2e8f0",
+      secondary: "#94a3b8",
+      disabled: "#475569",
+    },
+  },
+  shape: { borderRadius: 8 },
+  typography: {
+    fontFamily: '"Inter", "system-ui", sans-serif',
+    h6: { fontWeight: 600 },
+  },
+  components: {
+    MuiAppBar: {
+      defaultProps: { elevation: 0 },
+      styleOverrides: {
+        root: {
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          backgroundColor: "#0f0f13",
+        },
+      },
+    },
+    MuiDrawer: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: "#13131a",
+          border: "none",
+          borderRight: "1px solid rgba(255,255,255,0.06)",
+        },
+      },
+    },
+    MuiListItemButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          margin: "2px 8px",
+          "&.Mui-selected": {
+            backgroundColor: "rgba(99,102,241,0.2)",
+            "&:hover": { backgroundColor: "rgba(99,102,241,0.28)" },
+          },
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: { backgroundImage: "none" },
+      },
+    },
+  },
+});
 
-function View({
-  view,
-  apiBase,
-  onMinimise,
-  onClose,
-  onMove,
-}: {
-  view: ViewState;
-  apiBase: string;
-  onMinimise: (id: string) => void;
-  onClose: (id: string) => void;
-  onMove: (id: string, x: number, y: number) => void;
-}) {
-  const dragStart = useRef<{ mx: number; my: number; vx: number; vy: number } | null>(null);
+// ── Sidebar navigation ────────────────────────────────────────────────────────
 
-  function handleMouseDown(e: React.MouseEvent) {
-    dragStart.current = { mx: e.clientX, my: e.clientY, vx: view.x, vy: view.y };
+const SIDEBAR_WIDTH = 200;
 
-    function onMove(e: MouseEvent) {
-      if (!dragStart.current) return;
-      const dx = e.clientX - dragStart.current.mx;
-      const dy = e.clientY - dragStart.current.my;
-      onMoveView(dragStart.current.vx + dx, dragStart.current.vy + dy);
-    }
+const NAV_ITEMS: Array<{ tab: NavTab; label: string; icon: React.ReactNode }> = [
+  { tab: "chat", label: "Chat", icon: <ChatIcon fontSize="small" /> },
+  { tab: "dspy", label: "DSPy Components", icon: <CodeIcon fontSize="small" /> },
+  { tab: "pipelines", label: "Pipelines", icon: <AccountTreeIcon fontSize="small" /> },
+  { tab: "settings", label: "Settings", icon: <SettingsIcon fontSize="small" /> },
+];
 
-    function onUp() {
-      dragStart.current = null;
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    }
-
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-  }
-
-  function onMoveView(x: number, y: number) {
-    onMove(view.id, x, y);
-  }
-
-  return (
-    <div
-      style={{
-        position: "absolute",
-        left: view.x,
-        top: view.y,
-        width: view.w,
-        height: view.h + 32,
-        display: view.minimised ? "none" : "flex",
-        flexDirection: "column",
-        border: "1px solid #333",
-        borderRadius: 6,
-        overflow: "hidden",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
-        background: "#1a1a1a",
-      }}
-    >
-      {/* Title bar */}
-      <div
-        onMouseDown={handleMouseDown}
-        style={{
-          height: 32,
-          background: "#2a2a2a",
-          display: "flex",
-          alignItems: "center",
-          padding: "0 8px",
-          cursor: "grab",
-          userSelect: "none",
-          flexShrink: 0,
-        }}
-      >
-        <span style={{ flex: 1, fontSize: 12, color: "#ccc" }}>{view.title}</span>
-        <button
-          onClick={() => onMinimise(view.id)}
-          style={btnStyle}
-          title="Minimise"
-        >
-          −
-        </button>
-        <button
-          onClick={() => onClose(view.id)}
-          style={{ ...btnStyle, marginLeft: 4 }}
-          title="Close"
-        >
-          ✕
-        </button>
-      </div>
-      {/* Component iframe */}
-      <iframe
-        src={`/ui/${view.id}/`}
-        style={{ flex: 1, border: "none", background: "#111" }}
-        title={view.id}
-      />
-    </div>
-  );
-}
-
-const btnStyle: React.CSSProperties = {
-  background: "none",
-  border: "none",
-  color: "#aaa",
-  cursor: "pointer",
-  fontSize: 14,
-  padding: "2px 6px",
-  borderRadius: 3,
-};
+// ── Root app ──────────────────────────────────────────────────────────────────
 
 export default function App() {
   const { connected } = useHarness();
-  const [components, setComponents] = useState<ComponentSnapshot[]>([]);
-  const [views, setViews] = useState<Map<string, ViewState>>(new Map());
-  const apiBase = window.__HARNESS__?.API_URL?.replace(/\/api\/.*/, "") ?? "http://localhost:8000";
+  const [activeTab, setActiveTab] = useState<NavTab>("chat");
+  const [defaultProvider, setDefaultProvider] = useState<Provider | null>(null);
 
   useEffect(() => {
-    fetch(`${apiBase}/api/components`)
-      .then((r) => r.json())
-      .then((list: ComponentSnapshot[]) => {
-        setComponents(list.filter((c) => c.id !== "root"));
-        list.forEach((c, i) => {
-          if (c.id === "root") return;
-          setViews((prev) => {
-            if (prev.has(c.id)) return prev;
-            const next = new Map(prev);
-            next.set(c.id, {
-              id: c.id,
-              x: 40 + i * 30,
-              y: 40 + i * 30,
-              w: 480,
-              h: 360,
-              minimised: false,
-              title: c.id,
-            });
-            return next;
-          });
-        });
-      })
-      .catch(() => {});
-  }, [apiBase]);
-
-  function closeComponent(id: string) {
-    fetch(`${apiBase}/api/components/${id}`, { method: "DELETE" }).catch(() => {});
-    setViews((prev) => {
-      const next = new Map(prev);
-      next.delete(id);
-      return next;
+    api.listProviders().then((providers) => {
+      const def = providers.find((p) => p.is_default) ?? null;
+      setDefaultProvider(def);
     });
-    setComponents((prev) => prev.filter((c) => c.id !== id));
-  }
-
-  function minimiseComponent(id: string) {
-    setViews((prev) => {
-      const v = prev.get(id);
-      if (!v) return prev;
-      const next = new Map(prev);
-      next.set(id, { ...v, minimised: true });
-      return next;
-    });
-    fetch(`${apiBase}/api/${id}/event`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: "hide", payload: null }),
-    }).catch(() => {});
-  }
-
-  function moveView(id: string, x: number, y: number) {
-    setViews((prev) => {
-      const v = prev.get(id);
-      if (!v) return prev;
-      const next = new Map(prev);
-      next.set(id, { ...v, x, y });
-      return next;
-    });
-  }
+  }, []);
 
   return (
-    <div
-      style={{
-        width: "100vw",
-        height: "100vh",
-        background: "#0d0d0d",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {/* Status bar */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: 24,
-          background: "#111",
-          display: "flex",
-          alignItems: "center",
-          padding: "0 12px",
-          gap: 12,
-          fontSize: 11,
-          color: "#666",
-          zIndex: 9999,
-        }}
-      >
-        <span style={{ color: connected ? "#4ade80" : "#f87171" }}>
-          {connected ? "● connected" : "○ disconnected"}
-        </span>
-        <span>{views.size} component{views.size !== 1 ? "s" : ""}</span>
-        {/* Minimised pills */}
-        {[...views.values()]
-          .filter((v) => v.minimised)
-          .map((v) => (
-            <button
-              key={v.id}
-              onClick={() =>
-                setViews((prev) => {
-                  const next = new Map(prev);
-                  next.set(v.id, { ...v, minimised: false });
-                  return next;
-                })
-              }
-              style={{ ...btnStyle, color: "#ccc", background: "#222", border: "1px solid #333" }}
-            >
-              {v.title}
-            </button>
-          ))}
-      </div>
+    <ThemeProvider theme={darkTheme}>
+      <CssBaseline />
+      <Box sx={{ display: "flex", height: "100vh", overflow: "hidden" }}>
 
-      {/* Floating views */}
-      {[...views.values()].map((v) => (
-        <View
-          key={v.id}
-          view={v}
-          apiBase={apiBase}
-          onMinimise={minimiseComponent}
-          onClose={closeComponent}
-          onMove={moveView}
-        />
-      ))}
-    </div>
+        {/* ── Top app bar ─────────────────────────────────────────────────── */}
+        <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+          <Toolbar variant="dense" sx={{ gap: 2, minHeight: 48 }}>
+            {/* Logo */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <SmartToyIcon sx={{ color: "primary.main", fontSize: 22 }} />
+              <Typography variant="subtitle1" fontWeight={700} letterSpacing={-0.3}>
+                VLoop Harness
+              </Typography>
+            </Box>
+
+            <Box sx={{ flexGrow: 1 }} />
+
+            {/* Provider status */}
+            {defaultProvider ? (
+              <Tooltip title={`Active: ${defaultProvider.name} — ${defaultProvider.model}`}>
+                <Chip
+                  icon={
+                    <FiberManualRecordIcon sx={{ fontSize: "10px !important", color: "#4ade80 !important" }} />
+                  }
+                  label={`${defaultProvider.name} · ${defaultProvider.model}`}
+                  size="small"
+                  variant="outlined"
+                  sx={{ borderColor: "rgba(74,222,128,0.4)", fontSize: "0.72rem", cursor: "default" }}
+                />
+              </Tooltip>
+            ) : (
+              <Chip
+                label="No provider"
+                size="small"
+                variant="outlined"
+                sx={{ borderColor: "warning.dark", color: "warning.main", fontSize: "0.72rem" }}
+              />
+            )}
+
+            {/* Connection status */}
+            <Chip
+              icon={
+                <FiberManualRecordIcon
+                  sx={{
+                    fontSize: "10px !important",
+                    color: `${connected ? "#4ade80" : "#f87171"} !important`,
+                  }}
+                />
+              }
+              label={connected ? "connected" : "disconnected"}
+              size="small"
+              variant="outlined"
+              sx={{
+                borderColor: connected ? "rgba(74,222,128,0.3)" : "rgba(248,113,113,0.3)",
+                fontSize: "0.72rem",
+                cursor: "default",
+              }}
+            />
+          </Toolbar>
+        </AppBar>
+
+        {/* ── Sidebar ─────────────────────────────────────────────────────── */}
+        <Drawer
+          variant="permanent"
+          sx={{
+            width: SIDEBAR_WIDTH,
+            flexShrink: 0,
+            "& .MuiDrawer-paper": { width: SIDEBAR_WIDTH, boxSizing: "border-box" },
+          }}
+        >
+          <Toolbar variant="dense" sx={{ minHeight: 48 }} /> {/* offset for AppBar */}
+          <Box sx={{ pt: 1 }}>
+            <List dense disablePadding>
+              {NAV_ITEMS.map(({ tab, label, icon }) => (
+                <ListItem key={tab} disablePadding>
+                  <ListItemButton
+                    selected={activeTab === tab}
+                    onClick={() => setActiveTab(tab)}
+                  >
+                    <ListItemIcon
+                      sx={{
+                        minWidth: 32,
+                        color: activeTab === tab ? "primary.light" : "text.secondary",
+                      }}
+                    >
+                      {icon}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={label}
+                      primaryTypographyProps={{
+                        variant: "body2",
+                        fontWeight: activeTab === tab ? 600 : 400,
+                        color: activeTab === tab ? "primary.light" : "text.primary",
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        </Drawer>
+
+        {/* ── Main content ─────────────────────────────────────────────────── */}
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            mt: "48px", // AppBar height
+          }}
+        >
+          <Box sx={{ flexGrow: 1, overflow: "hidden" }}>
+            {activeTab === "chat" && (
+              <ChatPanel
+                onComponentSaved={() => {}}
+                onNavigate={(tab) => setActiveTab(tab as NavTab)}
+              />
+            )}
+            {activeTab === "dspy" && <DSPyPanel />}
+            {activeTab === "pipelines" && <PipelinePanel />}
+            {activeTab === "settings" && (
+              <Box sx={{ height: "100%", overflow: "auto" }}>
+                <SettingsPanel />
+              </Box>
+            )}
+          </Box>
+        </Box>
+      </Box>
+    </ThemeProvider>
   );
 }
