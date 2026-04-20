@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.whl
+.venv/
+venv/
+.uv/
+
+# UV
+uv.lock
+
+# Environment
+.env
+.env.local
+
+# Harness runtime
+.harness/
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Ruff / mypy
+.ruff_cache/
+.mypy_cache/
+
+# Node
+node_modules/
+react/dist/
+react/.vite/
+
+# PyInstaller
+*.spec
+dist-binary/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db

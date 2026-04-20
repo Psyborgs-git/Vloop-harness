@@ -1,0 +1,70 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "vloop-harness"
+version = "0.1.0"
+description = "Native binary harness — Python brain, React face. AI-powered via DSPy."
+requires-python = ">=3.11"
+dependencies = [
+    # Web server
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "websockets>=13.0",
+    "httpx>=0.28.0",
+    "python-multipart>=0.0.18",
+
+    # Native window
+    "pywebview>=5.3.2",
+
+    # AI engine
+    "dspy>=2.5.0",
+    "anthropic>=0.40.0",
+    "openai>=1.57.0",
+
+    # Data / state
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.7.0",
+    "aiosqlite>=0.20.0",
+
+    # File watching (hot reload)
+    "watchdog>=6.0.0",
+
+    # Utilities
+    "structlog>=24.4.0",
+    "rich>=13.9.0",
+    "typer>=0.15.0",
+    "python-dotenv>=1.0.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.8.0",
+    "mypy>=1.13.0",
+]
+
+[project.scripts]
+harness = "harness.main:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["harness"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
