@@ -20,5 +20,12 @@ class HarnessSettings(BaseSettings):
     vite_host: str = Field("localhost", alias="VITE_HOST")
     vite_port: int = Field(5173, alias="VITE_PORT")
 
+    # Legacy harness state DB (kept for backwards compatibility)
     state_db_path: str = Field(".harness/state.db", alias="STATE_DB_PATH")
     log_dir: str = Field(".harness/logs", alias="LOG_DIR")
+
+    # VLoop data layer — SQLite by default; override with postgresql+asyncpg://...
+    vloop_db_url: str = Field("", alias="VLOOP_DB_URL")
+
+    # Optional: override the .vloop project directory location
+    vloop_project_dir: str = Field("", alias="VLOOP_PROJECT_DIR")

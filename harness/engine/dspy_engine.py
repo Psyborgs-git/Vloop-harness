@@ -23,6 +23,7 @@ from typing import Any
 import dspy
 
 from harness.engine.config import EngineConfig
+from harness.engine.modules.chat import DashboardChat
 from harness.engine.modules.code_gen import CodeGenerator
 from harness.engine.modules.qa import QuestionAnswerer
 from harness.engine.modules.reasoning import ChainOfThoughtReasoner
@@ -46,6 +47,7 @@ class DSPyEngine:
         self._code_gen: CodeGenerator | None = None
         self._qa: QuestionAnswerer | None = None
         self._summariser: Summariser | None = None
+        self._chat: DashboardChat | None = None
 
     # ── Bootstrap ─────────────────────────────────────────────────────────────
 
@@ -102,6 +104,12 @@ class DSPyEngine:
         self._code_gen = CodeGenerator()
         self._qa = QuestionAnswerer()
         self._summariser = Summariser()
+        self._chat = DashboardChat()
+
+    def reconfigure(self, new_config: EngineConfig) -> None:
+        """Replace the active LM with a new configuration (provider switch)."""
+        self.config = new_config
+        self.configure()
 
     # ── Async execution wrapper ───────────────────────────────────────────────
 
@@ -144,6 +152,23 @@ class DSPyEngine:
         """Summarise long-form text."""
         assert self._summariser, "Engine not configured — call configure() first"
         return await self.run(self._summariser, text=text, max_words=max_words)
+
+    async def chat(
+        self,
+        history: str,
+        user_message: str,
+        available_components: str = "[]",
+        available_pipelines: str = "[]",
+    ) -> dspy.Prediction:
+        """Multi-turn dashboard chat with DSPy component/pipeline generation."""
+        assert self._chat, "Engine not configured — call configure() first"
+        return await self.run(
+            self._chat,
+            history=history,
+            user_message=user_message,
+            available_components=available_components,
+            available_pipelines=available_pipelines,
+        )
 
     # ── Direct LM access (escape hatch) ──────────────────────────────────────
 
