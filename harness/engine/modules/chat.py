@@ -15,7 +15,8 @@ class DashboardChatSignature(dspy.Signature):
 
     VLoop is a Python + React framework where every AI capability is a DSPy
     component (a Signature class + a Module class with a forward() method).
-    Components can be chained into Pipelines.
+    Components can be chained into Pipelines.  Pipelines may also include
+    *tool steps* that execute terminal commands or file operations.
 
     Your responsibilities:
       1. Answer questions about DSPy, the harness, and AI pipelines.
@@ -40,10 +41,22 @@ class DashboardChatSignature(dspy.Signature):
          Leave component_code as an empty string if not creating a component.
 
       3. When the user asks to CREATE a pipeline, produce a JSON object in
-         pipeline_config with keys: name, description, steps (array of
-         {component_id, input_map}).  Leave empty string if not relevant.
+         pipeline_config with keys: name, description, steps.  Each step must
+         have a "type" key: "component" or "tool".
+
+         Component step example:
+           {"type": "component", "component_id": "comp_abc", "config": {"input_map": {}}}
+
+         Tool step example (only use tools from available_tools):
+           {"type": "tool", "tool_name": "terminal",
+            "config": {"command": "pytest {test_path}", "cwd_relative": ".",
+                       "input_map": {"test_path": "file_path"}}}
+
+         Leave pipeline_config as empty string if not relevant.
 
       4. Be concise, technically accurate, and friendly.
+      5. NEVER include shell injection patterns, absolute paths outside the
+         workspace, or blocked commands in any generated pipeline tool step.
     """
 
     history: str = dspy.InputField(desc="Prior conversation messages (User/Assistant turns)")
@@ -53,6 +66,9 @@ class DashboardChatSignature(dspy.Signature):
     )
     available_pipelines: str = dspy.InputField(
         desc="JSON array of available pipelines [{id, name, description}]"
+    )
+    available_tools: str = dspy.InputField(
+        desc="JSON array of available tools [{name, description, required_permission, risk_level}]"
     )
     response: str = dspy.OutputField(desc="Your helpful response shown to the user")
     component_code: str = dspy.OutputField(
@@ -73,10 +89,12 @@ class DashboardChat(dspy.Module):
         user_message: str,
         available_components: str,
         available_pipelines: str,
+        available_tools: str = "[]",
     ) -> dspy.Prediction:
         return self.cot(
             history=history,
             user_message=user_message,
             available_components=available_components,
             available_pipelines=available_pipelines,
+            available_tools=available_tools,
         )

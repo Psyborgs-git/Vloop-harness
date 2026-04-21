@@ -1,5 +1,5 @@
 /**
- * PipelinePanel — compose and execute DSPy component pipelines.
+ * PipelinePanel — compose and execute DSPy component pipelines (and tool steps).
  *
  * Layout:
  *  Left: pipeline list
@@ -9,9 +9,11 @@
 import AddIcon from "@mui/icons-material/Add";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import BuildIcon from "@mui/icons-material/Build";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import {
   Alert,
   Box,
@@ -36,11 +38,20 @@ import {
 import React, { useEffect, useState } from "react";
 
 import * as api from "./api";
-import type { DSPyComponent, Pipeline, PipelineStep, RunResult } from "./types";
+import ConfirmDialog from "./ConfirmDialog";
+import type {
+  ConfirmationRequest,
+  DSPyComponent,
+  Pipeline,
+  PipelineStep,
+  RunResult,
+  ToolCatalogEntry,
+} from "./types";
 
 export default function PipelinePanel() {
   const [pipelines, setPipelines] = useState<Pipeline[]>([]);
   const [components, setComponents] = useState<DSPyComponent[]>([]);
+  const [tools, setTools] = useState<ToolCatalogEntry[]>([]);
   const [selected, setSelected] = useState<Pipeline | null>(null);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -53,9 +64,14 @@ export default function PipelinePanel() {
   async function refresh() {
     setLoading(true);
     try {
-      const [pipes, comps] = await Promise.all([api.listPipelines(), api.listComponents()]);
+      const [pipes, comps, toolList] = await Promise.all([
+        api.listPipelines(),
+        api.listComponents(),
+        api.listTools(),
+      ]);
       setPipelines(pipes);
       setComponents(comps);
+      setTools(toolList);
     } finally {
       setLoading(false);
     }
@@ -184,6 +200,7 @@ export default function PipelinePanel() {
           <PipelineEditor
             pipeline={selected}
             components={components}
+            tools={tools}
             onUpdateSteps={updateSteps}
           />
         ) : (
@@ -202,10 +219,12 @@ export default function PipelinePanel() {
 function PipelineEditor({
   pipeline,
   components,
+  tools,
   onUpdateSteps,
 }: {
   pipeline: Pipeline;
   components: DSPyComponent[];
+  tools: ToolCatalogEntry[];
   onUpdateSteps: (steps: PipelineStep[]) => void;
 }) {
   const [steps, setSteps] = useState<PipelineStep[]>(pipeline.steps);
@@ -214,6 +233,7 @@ function PipelineEditor({
   const [running, setRunning] = useState(false);
   const [runResult, setRunResult] = useState<RunResult | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
+  const [confirmation, setConfirmation] = useState<ConfirmationRequest | null>(null);
 
   useEffect(() => {
     setSteps(pipeline.steps);
@@ -222,21 +242,34 @@ function PipelineEditor({
     setRunError(null);
   }, [pipeline.id]);
 
-  function addStep() {
-    const updated = [...steps, { component_id: "" }];
-    setSteps(updated);
+  function addComponentStep() {
+    setSteps([...steps, { type: "component", component_id: "" }]);
+    setDirty(true);
+  }
+
+  function addToolStep() {
+    setSteps([...steps, { type: "tool", tool_name: "" }]);
     setDirty(true);
   }
 
   function removeStep(idx: number) {
-    const updated = steps.filter((_, i) => i !== idx);
-    setSteps(updated);
+    setSteps(steps.filter((_, i) => i !== idx));
     setDirty(true);
   }
 
-  function updateStep(idx: number, componentId: string) {
-    const updated = steps.map((s, i) => (i === idx ? { ...s, component_id: componentId } : s));
-    setSteps(updated);
+  function updateComponentStep(idx: number, componentId: string) {
+    setSteps(steps.map((s, i) =>
+      i === idx ? { ...s, type: "component" as const, component_id: componentId } : s
+    ));
+    setDirty(true);
+  }
+
+  function updateToolStep(idx: number, field: string, value: string) {
+    setSteps(steps.map((s, i) => {
+      if (i !== idx) return s;
+      if (field === "tool_name") return { ...s, tool_name: value };
+      return { ...s, config: { ...(s.config ?? {}), [field]: value } };
+    }));
     setDirty(true);
   }
 
@@ -259,8 +292,9 @@ function PipelineEditor({
     }
   }
 
-  // Collect input fields from the first step
-  const firstComp = components.find((c) => c.id === steps[0]?.component_id);
+  // Collect input fields from the first component step
+  const firstCompStep = steps.find((s) => (s.type ?? "component") === "component");
+  const firstComp = components.find((c) => c.id === firstCompStep?.component_id);
   const firstInputs = firstComp?.signature_fields.inputs ?? [];
 
   return (
@@ -278,7 +312,7 @@ function PipelineEditor({
 
       {/* Steps */}
       <Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1, flexWrap: "wrap" }}>
           <Typography variant="subtitle2" fontWeight={600} sx={{ flexGrow: 1 }}>
             Steps
           </Typography>
@@ -287,57 +321,119 @@ function PipelineEditor({
               Save changes
             </Button>
           )}
-          <Button size="small" startIcon={<AddIcon />} onClick={addStep}>
-            Add step
+          <Button size="small" startIcon={<AddIcon />} onClick={addComponentStep}>
+            Add component
+          </Button>
+          <Button size="small" startIcon={<BuildIcon />} onClick={addToolStep}>
+            Add tool step
           </Button>
         </Box>
 
         {steps.length === 0 && (
           <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-            No steps yet. Add a component step to get started.
+            No steps yet. Add a component or tool step.
           </Typography>
         )}
 
         {steps.map((step, idx) => {
-          const comp = components.find((c) => c.id === step.component_id);
+          const stepType = step.type ?? "component";
+          const isToolStep = stepType === "tool";
+          const comp = isToolStep ? undefined : components.find((c) => c.id === step.component_id);
+          const tool = isToolStep ? tools.find((t) => t.name === step.tool_name) : undefined;
+          const isDestructive =
+            isToolStep && (tool?.risk_level === "destructive" || tool?.risk_level === "caution");
+
           return (
             <React.Fragment key={idx}>
               <Paper
                 variant="outlined"
-                sx={{ p: 1.5, display: "flex", alignItems: "center", gap: 1 }}
+                sx={{
+                  p: 1.5,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 1,
+                  borderColor: isDestructive ? "warning.dark" : "divider",
+                }}
               >
-                <Typography variant="caption" color="text.secondary" sx={{ width: 24 }}>
-                  {idx + 1}
-                </Typography>
-                <FormControl size="small" sx={{ flexGrow: 1 }}>
-                  <InputLabel>Component</InputLabel>
-                  <Select
-                    label="Component"
-                    value={step.component_id}
-                    onChange={(e) => updateStep(idx, e.target.value)}
-                  >
-                    {components.map((c) => (
-                      <MenuItem key={c.id} value={c.id}>
-                        {c.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                {comp && (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ width: 24 }}>
+                    {idx + 1}
+                  </Typography>
                   <Chip
-                    label={comp.module_type}
+                    label={isToolStep ? "tool" : "component"}
                     size="small"
                     variant="outlined"
+                    color={isToolStep ? "secondary" : "default"}
                     sx={{ flexShrink: 0 }}
                   />
+                  {isToolStep ? (
+                    <FormControl size="small" sx={{ flexGrow: 1 }}>
+                      <InputLabel>Tool</InputLabel>
+                      <Select
+                        label="Tool"
+                        value={step.tool_name ?? ""}
+                        onChange={(e) => updateToolStep(idx, "tool_name", e.target.value)}
+                      >
+                        {tools.map((t) => (
+                          <MenuItem key={t.name} value={t.name}>
+                            {t.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  ) : (
+                    <FormControl size="small" sx={{ flexGrow: 1 }}>
+                      <InputLabel>Component</InputLabel>
+                      <Select
+                        label="Component"
+                        value={step.component_id ?? ""}
+                        onChange={(e) => updateComponentStep(idx, e.target.value)}
+                      >
+                        {components.map((c) => (
+                          <MenuItem key={c.id} value={c.id}>
+                            {c.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+                  {comp && (
+                    <Chip label={comp.module_type} size="small" variant="outlined" sx={{ flexShrink: 0 }} />
+                  )}
+                  {isDestructive && (
+                    <Tooltip title="This tool step may require confirmation">
+                      <WarningAmberIcon fontSize="small" sx={{ color: "warning.main", flexShrink: 0 }} />
+                    </Tooltip>
+                  )}
+                  <IconButton
+                    size="small"
+                    onClick={() => removeStep(idx)}
+                    sx={{ color: "error.main", opacity: 0.6, "&:hover": { opacity: 1 } }}
+                  >
+                    <DeleteOutlineIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+
+                {/* Tool step config fields */}
+                {isToolStep && step.tool_name === "terminal" && (
+                  <Box sx={{ display: "flex", gap: 1, pl: 4 }}>
+                    <TextField
+                      size="small"
+                      label="Command"
+                      value={step.config?.command ?? ""}
+                      onChange={(e) => updateToolStep(idx, "command", e.target.value)}
+                      fullWidth
+                      inputProps={{ style: { fontFamily: "monospace" } }}
+                    />
+                    <TextField
+                      size="small"
+                      label="CWD"
+                      value={step.config?.cwd_relative ?? "."}
+                      onChange={(e) => updateToolStep(idx, "cwd_relative", e.target.value)}
+                      sx={{ width: 120 }}
+                    />
+                  </Box>
                 )}
-                <IconButton
-                  size="small"
-                  onClick={() => removeStep(idx)}
-                  sx={{ color: "error.main", opacity: 0.6, "&:hover": { opacity: 1 } }}
-                >
-                  <DeleteOutlineIcon fontSize="small" />
-                </IconButton>
               </Paper>
               {idx < steps.length - 1 && (
                 <Box sx={{ display: "flex", justifyContent: "center", my: 0.5 }}>
@@ -350,7 +446,7 @@ function PipelineEditor({
       </Box>
 
       {/* Runner */}
-      {steps.length > 0 && steps[0]?.component_id && (
+      {steps.length > 0 && (
         <Box>
           <Divider sx={{ mb: 2 }} />
           <Typography variant="subtitle2" fontWeight={600} gutterBottom>
@@ -420,6 +516,25 @@ function PipelineEditor({
             </Box>
           )}
         </Box>
+      )}
+
+      {/* Pipeline pause/confirmation dialog */}
+      {confirmation && (
+        <ConfirmDialog
+          confirmation={confirmation}
+          onConfirm={async (token) => {
+            setConfirmation(null);
+            try {
+              await api.confirmAction(token);
+            } catch (e: any) {
+              setRunError(e.message);
+            }
+          }}
+          onCancel={async (token) => {
+            setConfirmation(null);
+            try { await api.cancelConfirmation(token); } catch { /* ignore */ }
+          }}
+        />
       )}
     </Box>
   );

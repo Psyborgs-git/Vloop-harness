@@ -37,9 +37,15 @@ export interface DSPyComponent {
 }
 
 export interface PipelineStep {
-  component_id: string;
+  type?: "component" | "tool";
+  component_id?: string;
+  tool_name?: string;
   config?: {
     input_map?: Record<string, string>;
+    command?: string;
+    cwd_relative?: string;
+    timeout?: number;
+    [key: string]: unknown;
   };
 }
 
@@ -48,6 +54,7 @@ export interface Pipeline {
   name: string;
   description: string;
   steps: PipelineStep[];
+  tool_permissions?: string[];
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -70,4 +77,51 @@ export interface RunResult {
   outputs: Record<string, unknown>;
 }
 
-export type NavTab = "chat" | "dspy" | "pipelines" | "settings";
+export type NavTab = "chat" | "dspy" | "pipelines" | "tools" | "settings";
+
+// ── Tool types ─────────────────────────────────────────────────────────────
+
+export interface ToolCatalogEntry {
+  name: string;
+  description: string;
+  required_permission: string;
+  risk_level: "safe" | "caution" | "destructive";
+}
+
+export interface ToolResult {
+  success: boolean;
+  output: string;
+  error: string | null;
+  exit_code: number | null;
+  metadata: Record<string, unknown>;
+}
+
+export interface ConfirmationRequest {
+  requires_confirmation: true;
+  token: string;
+  description: string;
+  risk_level: "caution" | "destructive";
+  expires_in_seconds: number;
+}
+
+export interface DirectoryPolicy {
+  directory: string;
+  allowed_commands: string[];
+  allowed_arg_patterns: Record<string, string[]>;
+  max_runtime_seconds: number;
+  max_output_bytes: number;
+}
+
+export interface PolicyConfig {
+  permanent_blocklist: string[];
+  denylist: string[];
+  directories: DirectoryPolicy[];
+}
+
+export interface FilesystemEntry {
+  name: string;
+  type: "file" | "dir" | "unknown";
+  size?: number;
+  mtime?: number;
+}
+
