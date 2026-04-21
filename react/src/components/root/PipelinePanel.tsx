@@ -48,7 +48,12 @@ import type {
   ToolCatalogEntry,
 } from "./types";
 
-export default function PipelinePanel() {
+interface Props {
+  focusPipelineId?: string | null;
+  onFocused?: () => void;
+}
+
+export default function PipelinePanel({ focusPipelineId, onFocused }: Props) {
   const [pipelines, setPipelines] = useState<Pipeline[]>([]);
   const [components, setComponents] = useState<DSPyComponent[]>([]);
   const [tools, setTools] = useState<ToolCatalogEntry[]>([]);
@@ -60,6 +65,17 @@ export default function PipelinePanel() {
   useEffect(() => {
     refresh();
   }, []);
+
+  // ── Jump to pipeline from command palette ─────────────────────────────────
+
+  useEffect(() => {
+    if (!focusPipelineId || pipelines.length === 0) return;
+    const target = pipelines.find((p) => p.id === focusPipelineId);
+    if (target) {
+      setSelected(target);
+      onFocused?.();
+    }
+  }, [focusPipelineId, pipelines]);
 
   async function refresh() {
     setLoading(true);

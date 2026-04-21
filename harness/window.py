@@ -44,6 +44,23 @@ class RootWindow:
         )
         webview.start(debug=False)
 
+    def focus(self) -> None:
+        """Bring the window to the front.  Called from the global hotkey thread."""
+        if self._window is not None:
+            try:
+                self._window.show()
+            except Exception:
+                pass
+            # macOS: activate the app so the window comes to front
+            try:
+                from AppKit import NSApplication  # type: ignore[import-untyped]
+                NSApplication.sharedApplication().activateIgnoringOtherApps_(True)
+            except ImportError:
+                pass
+        else:
+            import webbrowser
+            webbrowser.open(self.url)
+
     def open_nonblocking(self) -> threading.Thread:
         t = threading.Thread(target=self.open, daemon=True)
         t.start()

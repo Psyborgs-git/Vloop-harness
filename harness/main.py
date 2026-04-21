@@ -38,14 +38,39 @@ def _callback() -> None:
     """Vloop Harness — Python brain, React face."""
 
 
-def _start_vite(vite_port: int, react_dir: Path) -> subprocess.Popen[str]:
+def _start_global_hotkey(window: "RootWindow") -> None:
+    """Daemon thread: double-tap Cmd brings the PyWebView window to front."""
+    try:
+        from pynput import keyboard as kb
+    except ImportError:
+        return  # pynput not installed — skip silently
+
+    last_cmd_time = 0.0
+    DOUBLE_TAP_S = 0.4
+
+    def on_press(key: "kb.Key") -> None:
+        nonlocal last_cmd_time
+        if key in (kb.Key.cmd, kb.Key.cmd_l, kb.Key.cmd_r):
+            now = time.time()
+            if now - last_cmd_time < DOUBLE_TAP_S:
+                window.focus()
+                last_cmd_time = 0.0
+            else:
+                last_cmd_time = now
+
+    listener = kb.Listener(on_press=on_press)
+    listener.daemon = True
+    listener.start()
+    listener.join()
+
+
+def _start_vite(vite_port: int, react_dir: Path) -> subprocess.Popen[bytes]:
     cmd = ["npm", "run", "dev", "--", "--port", str(vite_port), "--host"]
     proc = subprocess.Popen(
         cmd,
         cwd=str(react_dir),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
     # Give Vite a moment to bind
     time.sleep(2)
@@ -112,6 +137,8 @@ def run(
     if not no_window:
         window = RootWindow(url=root_url)
         typer.echo(f"Opening root window → {root_url}")
+        # Global double-Cmd hotkey — runs in its own daemon thread
+        threading.Thread(target=_start_global_hotkey, args=(window,), daemon=True).start()
         window.open()  # blocks until window is closed
     else:
         typer.echo(f"Headless mode — visit {root_url} in your browser")

@@ -9,6 +9,18 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 router = APIRouter()
 
 
+@router.websocket("/ws/root")
+async def root_ws(ws: WebSocket) -> None:
+    """Keep-alive WebSocket for the main dashboard (no legacy component needed)."""
+    await ws.accept()
+    await ws.send_text(json.dumps({"type": "state_update", "data": {}}))
+    try:
+        while True:
+            await ws.receive_text()  # drain any client messages
+    except WebSocketDisconnect:
+        pass
+
+
 @router.websocket("/ws/{component_id}")
 async def component_ws(component_id: str, ws: WebSocket) -> None:
     mp = ws.app.state.main_process

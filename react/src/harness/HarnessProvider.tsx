@@ -57,7 +57,7 @@ export function HarnessProvider({ children }: Props) {
     ws.onclose = () => {
       setConnected(false);
       // Reconnect after 1 s
-      reconnectTimer.current = setTimeout(connect, 1000);
+      reconnectTimer.current = setTimeout(connect, 3000);
     };
 
     ws.onerror = () => ws.close();

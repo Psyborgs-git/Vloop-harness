@@ -40,9 +40,11 @@ import type { ChatMessage, ChatSession } from "./types";
 interface Props {
   onComponentSaved?: (id: string) => void;
   onNavigate?: (tab: string) => void;
+  focusSessionId?: string | null;
+  onFocused?: () => void;
 }
 
-export default function ChatPanel({ onComponentSaved, onNavigate }: Props) {
+export default function ChatPanel({ onComponentSaved, onNavigate, focusSessionId, onFocused }: Props) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -58,6 +60,17 @@ export default function ChatPanel({ onComponentSaved, onNavigate }: Props) {
       if (s.length > 0) loadMessages(s[0].id);
     });
   }, []);
+
+  // ── Jump to session from command palette ──────────────────────────────────
+
+  useEffect(() => {
+    if (!focusSessionId || sessions.length === 0) return;
+    const target = sessions.find((s) => s.id === focusSessionId);
+    if (target) {
+      loadMessages(target.id);
+      onFocused?.();
+    }
+  }, [focusSessionId, sessions]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

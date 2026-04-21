@@ -43,6 +43,7 @@ import React, { useEffect, useState } from "react";
 import { useHarness } from "@harness/useHarness";
 import * as api from "./api";
 import ChatPanel from "./ChatPanel";
+import CommandPalette from "./CommandPalette";
 import DSPyPanel from "./DSPyPanel";
 import PipelinePanel from "./PipelinePanel";
 import SettingsPanel from "./SettingsPanel";
@@ -137,12 +138,31 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<NavTab>("chat");
   const [defaultProvider, setDefaultProvider] = useState<Provider | null>(null);
 
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [focusId, setFocusId] = useState<string | null>(null);
+
   useEffect(() => {
     api.listProviders().then((providers) => {
       const def = providers.find((p) => p.is_default) ?? null;
       setDefaultProvider(def);
     });
   }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!e.metaKey) return;
+      if (e.key === "r") { e.preventDefault(); window.location.reload(); }
+      if (e.key === "k") { e.preventDefault(); setPaletteOpen(true); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  function handlePaletteSelect(tab: NavTab, id: string) {
+    setFocusId(id);
+    setActiveTab(tab);
+    setPaletteOpen(false);
+  }
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -263,10 +283,22 @@ export default function App() {
               <ChatPanel
                 onComponentSaved={() => {}}
                 onNavigate={(tab) => setActiveTab(tab as NavTab)}
+                focusSessionId={focusId}
+                onFocused={() => setFocusId(null)}
               />
             )}
-            {activeTab === "dspy" && <DSPyPanel />}
-            {activeTab === "pipelines" && <PipelinePanel />}
+            {activeTab === "dspy" && (
+              <DSPyPanel
+                focusComponentId={focusId}
+                onFocused={() => setFocusId(null)}
+              />
+            )}
+            {activeTab === "pipelines" && (
+              <PipelinePanel
+                focusPipelineId={focusId}
+                onFocused={() => setFocusId(null)}
+              />
+            )}
             {activeTab === "tools" && <ToolsPanel />}
             {activeTab === "settings" && (
               <Box sx={{ height: "100%", overflow: "auto" }}>
@@ -276,6 +308,12 @@ export default function App() {
           </Box>
         </Box>
       </Box>
+
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        onSelect={handlePaletteSelect}
+      />
     </ThemeProvider>
   );
 }

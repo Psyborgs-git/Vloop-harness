@@ -55,7 +55,12 @@ class MyTask(dspy.Module):
         return self.predict(input_text=input_text)
 `;
 
-export default function DSPyPanel() {
+interface Props {
+  focusComponentId?: string | null;
+  onFocused?: () => void;
+}
+
+export default function DSPyPanel({ focusComponentId, onFocused }: Props) {
   const [components, setComponents] = useState<DSPyComponent[]>([]);
   const [selected, setSelected] = useState<DSPyComponent | null>(null);
   const [loading, setLoading] = useState(false);
@@ -68,6 +73,17 @@ export default function DSPyPanel() {
   useEffect(() => {
     refresh();
   }, []);
+
+  // ── Jump to component from command palette ────────────────────────────────
+
+  useEffect(() => {
+    if (!focusComponentId || components.length === 0) return;
+    const target = components.find((c) => c.id === focusComponentId);
+    if (target) {
+      setSelected(target);
+      onFocused?.();
+    }
+  }, [focusComponentId, components]);
 
   async function refresh() {
     setLoading(true);
