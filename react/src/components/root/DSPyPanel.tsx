@@ -33,7 +33,7 @@ import {
 } from "@mui/material";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import * as api from "./api";
 import type { DSPyComponent, RunResult } from "./types";
