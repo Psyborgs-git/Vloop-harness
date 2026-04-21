@@ -25,9 +25,11 @@ import dspy
 from harness.engine.config import EngineConfig
 from harness.engine.modules.chat import DashboardChat
 from harness.engine.modules.code_gen import CodeGenerator
+from harness.engine.modules.component_spec import ComponentSpecGenerator
 from harness.engine.modules.qa import QuestionAnswerer
 from harness.engine.modules.reasoning import ChainOfThoughtReasoner
 from harness.engine.modules.summarise import Summariser
+from harness.engine.modules.view_gen import ViewGenerator
 
 
 class DSPyEngine:
@@ -48,6 +50,8 @@ class DSPyEngine:
         self._qa: QuestionAnswerer | None = None
         self._summariser: Summariser | None = None
         self._chat: DashboardChat | None = None
+        self._view_gen: ViewGenerator | None = None
+        self._component_spec: ComponentSpecGenerator | None = None
 
     # ── Bootstrap ─────────────────────────────────────────────────────────────
 
@@ -105,6 +109,8 @@ class DSPyEngine:
         self._qa = QuestionAnswerer()
         self._summariser = Summariser()
         self._chat = DashboardChat()
+        self._view_gen = ViewGenerator()
+        self._component_spec = ComponentSpecGenerator()
 
     def reconfigure(self, new_config: EngineConfig) -> None:
         """Replace the active LM with a new configuration (provider switch)."""
@@ -170,6 +176,34 @@ class DSPyEngine:
             available_components=available_components,
             available_pipelines=available_pipelines,
             available_tools=available_tools,
+        )
+
+    async def generate_view(
+        self,
+        ui_description: str,
+        available_components: str = "[]",
+        spec: str = "",
+    ) -> dspy.Prediction:
+        """Generate a React TSX view stub from a natural-language description."""
+        assert self._view_gen, "Engine not configured — call configure() first"
+        return await self.run(
+            self._view_gen,
+            ui_description=ui_description,
+            available_components=available_components,
+            spec=spec,
+        )
+
+    async def generate_component_spec(
+        self,
+        description: str,
+        context: str = "",
+    ) -> dspy.Prediction:
+        """Generate a DSPy component (Signature + Module) from a description."""
+        assert self._component_spec, "Engine not configured — call configure() first"
+        return await self.run(
+            self._component_spec,
+            description=description,
+            context=context,
         )
 
     # ── Direct LM access (escape hatch) ──────────────────────────────────────

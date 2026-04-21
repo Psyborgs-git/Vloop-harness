@@ -9,6 +9,7 @@ import type {
   ChatMessage,
   ChatSession,
   DSPyComponent,
+  GeneratedView,
   Pipeline,
   Provider,
   RunResult,
@@ -61,10 +62,13 @@ export const listMessages = (sessionId: string) =>
   request<ChatMessage[]>(`/api/chat/sessions/${sessionId}/messages`);
 
 export const sendMessage = (sessionId: string, content: string) =>
-  request<ChatMessage & { saved_component_id?: string; saved_pipeline_id?: string }>(
+  request<ChatMessage & { saved_component_id?: string; saved_pipeline_id?: string; saved_view_id?: string }>(
     `/api/chat/sessions/${sessionId}/messages`,
     { method: "POST", body: JSON.stringify({ content }) }
   );
+
+export const getTranscript = (sessionId: string) =>
+  request<Record<string, unknown>[]>(`/api/chat/sessions/${sessionId}/transcript`);
 
 // ── DSPy components ────────────────────────────────────────────────────────
 
@@ -245,3 +249,22 @@ export const confirmAction = (token: string) =>
 
 export const cancelConfirmation = (token: string) =>
   request<void>(`/api/tools/confirm/${token}`, { method: "DELETE" });
+
+// ── Generated views ────────────────────────────────────────────────────────
+
+export const generateView = (params: {
+  description: string;
+  component_name?: string;
+  spec?: string;
+  session_id?: string;
+}) =>
+  request<GeneratedView>("/api/views/generate", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+
+export const listViews = () =>
+  request<GeneratedView[]>("/api/views");
+
+export const deleteView = (id: string) =>
+  request<void>(`/api/views/${id}`, { method: "DELETE" });

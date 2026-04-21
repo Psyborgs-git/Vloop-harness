@@ -17,6 +17,7 @@ from harness.data.models import (
     ChatMessage,
     ChatSession,
     DSPyComponentDef,
+    GeneratedView,
     PipelineDef,
     ProviderConfigDB,
     TelemetryEvent,
@@ -209,6 +210,29 @@ class Repository:
         p = await self.session.get(ProviderConfigDB, provider_id)
         if p:
             await self.session.delete(p)
+            await self.session.commit()
+
+    # ── Generated views ───────────────────────────────────────────────────────
+
+    async def save_view(self, view: GeneratedView) -> GeneratedView:
+        self.session.add(view)
+        await self.session.commit()
+        await self.session.refresh(view)
+        return view
+
+    async def list_views(self) -> list[GeneratedView]:
+        result = await self.session.execute(
+            select(GeneratedView).order_by(GeneratedView.created_at.desc())
+        )
+        return list(result.scalars().all())
+
+    async def get_view(self, view_id: str) -> GeneratedView | None:
+        return await self.session.get(GeneratedView, view_id)
+
+    async def delete_view(self, view_id: str) -> None:
+        v = await self.session.get(GeneratedView, view_id)
+        if v:
+            await self.session.delete(v)
             await self.session.commit()
 
     # ── Telemetry ─────────────────────────────────────────────────────────────

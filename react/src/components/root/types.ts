@@ -17,6 +17,8 @@ export interface ChatMessage {
     saved_component_id?: string;
     pipeline_config?: string;
     saved_pipeline_id?: string;
+    view_stub_request?: string;
+    saved_view_id?: string;
   };
   created_at: string;
 }
@@ -77,7 +79,28 @@ export interface RunResult {
   outputs: Record<string, unknown>;
 }
 
-export type NavTab = "chat" | "dspy" | "pipelines" | "tools" | "settings";
+export type NavTab = "chat";
+
+/** Panel shown in the right contextual drawer. */
+export type ContextPanelType = "dspy" | "pipelines" | "tools" | "view" | null;
+
+export interface ContextPanelState {
+  type: ContextPanelType;
+  id?: string;
+}
+
+// ── Generated view types ───────────────────────────────────────────────────
+
+export interface GeneratedView {
+  id: string;
+  name: string;
+  component_name: string;
+  react_code: string;
+  view_spec: string;
+  file_path: string | null;
+  session_id: string | null;
+  created_at: string;
+}
 
 // ── Tool types ─────────────────────────────────────────────────────────────
 
