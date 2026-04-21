@@ -10,6 +10,7 @@ Endpoints
 from __future__ import annotations
 
 import json
+import shutil
 import uuid
 from pathlib import Path
 from typing import Any
@@ -125,15 +126,15 @@ async def delete_view(
     view = await repo.get_view(view_id)
     if not view:
         raise HTTPException(status_code=404, detail="View not found")
-    # Optionally remove generated files
+    # Remove the whole generated component directory (App.tsx + main.tsx, etc.)
     if view.file_path:
         try:
             p = Path(view.file_path)
-            if p.exists():
+            comp_dir = p.parent
+            if comp_dir.exists():
+                shutil.rmtree(comp_dir, ignore_errors=True)
+            elif p.exists():
                 p.unlink()
-            # Remove directory if empty
-            if p.parent.exists() and not any(p.parent.iterdir()):
-                p.parent.rmdir()
         except Exception:
             pass
     await repo.delete_view(view_id)

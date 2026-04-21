@@ -22,19 +22,21 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 
 import * as api from "./api";
-import type { ChatSession, DSPyComponent, Pipeline } from "./types";
+import type { ChatSession, ContextPanelType, DSPyComponent, Pipeline } from "./types";
+
+export type PaletteNavType = "chat" | Exclude<ContextPanelType, null>;
 
 interface PaletteItem {
   id: string;
   label: string;
-  panelType: string; // "chat" | "dspy" | "pipelines"
+  panelType: PaletteNavType;
   group: string;
 }
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  onSelect: (panelType: string, id: string) => void;
+  onSelect: (panelType: PaletteNavType, id: string) => void;
 }
 
 export default function CommandPalette({ open, onClose, onSelect }: Props) {
@@ -56,19 +58,19 @@ export default function CommandPalette({ open, onClose, onSelect }: Props) {
         ...(sessions as ChatSession[]).map((s) => ({
           id: s.id,
           label: s.title,
-          panelType: "chat",
+          panelType: "chat" as const,
           group: "Chat Sessions",
         })),
         ...(comps as DSPyComponent[]).map((c) => ({
           id: c.id,
           label: c.name,
-          panelType: "dspy",
+          panelType: "dspy" as const,
           group: "DSPy Components",
         })),
         ...(pipes as Pipeline[]).map((p) => ({
           id: p.id,
           label: p.name,
-          panelType: "pipelines",
+          panelType: "pipelines" as const,
           group: "Pipelines",
         })),
       ]);

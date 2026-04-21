@@ -204,19 +204,13 @@ async def test_generate_view_stores_in_db(views_client_with_ai) -> None:
 async def test_generate_view_overrides_name_from_request(views_client_with_ai) -> None:
     """component_name provided in the request must take precedence over AI output."""
     client, *_ = views_client_with_ai
+    # The AI would return "GreetCard" but we request "CustomName".
     resp = await client.post(
         "/api/views/generate",
-        # The AI would return "GreetCard" but we request "CustomName"
         json={"description": "Custom", "component_name": "CustomName"},
     )
-    # CustomName is invalid per our PascalCase regex (no digits-only middle), let's use a valid one
-    # Actually let's override with "CustomView" (valid PascalCase)
-    resp = await client.post(
-        "/api/views/generate",
-        json={"description": "Custom", "component_name": "CustomView"},
-    )
     assert resp.status_code == 201
-    assert resp.json()["component_name"] == "CustomView"
+    assert resp.json()["component_name"] == "CustomName"
 
 
 # ── Invalid component names rejected ──────────────────────────────────────────

@@ -38,6 +38,7 @@ import { useHarness } from "@harness/useHarness";
 import * as api from "./api";
 import ChatPanel from "./ChatPanel";
 import CommandPalette from "./CommandPalette";
+import type { PaletteNavType } from "./CommandPalette";
 import ContextualPanel from "./ContextualPanel";
 import SettingsPanel from "./SettingsPanel";
 import type { ContextPanelState, Provider } from "./types";
@@ -140,11 +141,11 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  function handlePaletteSelect(panelType: string, id: string) {
+  function handlePaletteSelect(panelType: PaletteNavType, id: string) {
     if (panelType === "chat") {
       setFocusId(id);
     } else {
-      setContextPanel({ type: panelType as ContextPanelState["type"], id });
+      setContextPanel({ type: panelType, id });
     }
     setPaletteOpen(false);
   }

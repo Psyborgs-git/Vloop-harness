@@ -76,6 +76,12 @@ export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel }: Pr
   const [compList, setCompList] = useState<DSPyComponent[]>([]);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
 
+  // Track whether tool/component lists have been fetched (even if empty)
+  const toolListLoadedRef = useRef(false);
+  const toolListLoadingRef = useRef(false);
+  const compListLoadedRef = useRef(false);
+  const compListLoadingRef = useRef(false);
+
   // ── Load sessions on mount ────────────────────────────────────────────────
 
   useEffect(() => {
@@ -167,9 +173,14 @@ export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel }: Pr
 
   async function openToolsMenu(e: React.MouseEvent<HTMLElement>) {
     setToolsAnchor(e.currentTarget);
-    if (toolList.length === 0) {
+    if (toolListLoadedRef.current || toolListLoadingRef.current) return;
+    toolListLoadingRef.current = true;
+    try {
       const tools = await api.listTools().catch(() => []);
       setToolList(tools);
+      toolListLoadedRef.current = true;
+    } finally {
+      toolListLoadingRef.current = false;
     }
   }
 
@@ -183,9 +194,14 @@ export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel }: Pr
 
   async function openCompsMenu(e: React.MouseEvent<HTMLElement>) {
     setCompsAnchor(e.currentTarget);
-    if (compList.length === 0) {
+    if (compListLoadedRef.current || compListLoadingRef.current) return;
+    compListLoadingRef.current = true;
+    try {
       const comps = await api.listComponents().catch(() => []);
       setCompList(comps);
+      compListLoadedRef.current = true;
+    } finally {
+      compListLoadingRef.current = false;
     }
   }
 

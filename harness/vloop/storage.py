@@ -93,8 +93,13 @@ class VLoopStorage:
     def archive_chat_session(self, session_id: str) -> None:
         """Rename the JSONL transcript to ``{session_id}.jsonl.deleted`` for soft retention."""
         src = self.chat_session_file(session_id)
-        if src.exists():
-            src.rename(src.with_suffix(".jsonl.deleted"))
+        if not src.exists():
+            return
+
+        dst = src.with_suffix(".jsonl.deleted")
+        if dst.exists():
+            dst.unlink()
+        src.rename(dst)
 
     # ── Telemetry JSONL ──────────────────────────────────────────────────────
 
