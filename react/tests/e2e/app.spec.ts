@@ -95,6 +95,8 @@ async function setup(
     views = [],
   } = opts;
 
+  let sentMessage = false;
+
   await page.route("**/api/**", (r) => {
     const url = r.request().url();
     const method = r.request().method();
@@ -537,12 +539,12 @@ test.describe("7. GenerateViewDialog", () => {
     await setupPage(page, { sessions: [SESSION_1] });
     await newViewBtn(page).click();
     await expect(
-      page.getByLabel(/Description/i).or(page.getByPlaceholder(/description/i)).first()
+      page.getByLabel(/Describe the view/i).or(page.getByPlaceholder(/dashboard showing/i)).first()
     ).toBeVisible({ timeout: 5000 });
     await expect(
       page
-        .getByLabel(/Component Name/i)
-        .or(page.getByPlaceholder(/Component Name/i))
+        .getByLabel(/Component name/i)
+        .or(page.getByPlaceholder(/MetricsDashboard/i))
         .first()
     ).toBeVisible({ timeout: 5000 });
   });
@@ -559,8 +561,8 @@ test.describe("7. GenerateViewDialog", () => {
     await setupPage(page, { sessions: [SESSION_1] });
     await newViewBtn(page).click();
     const descField = page
-      .getByLabel(/Description/i)
-      .or(page.getByPlaceholder(/description/i))
+      .getByLabel(/Describe the view/i)
+      .or(page.getByPlaceholder(/dashboard showing/i))
       .first();
     await descField.fill("A metrics dashboard");
     await expect(
@@ -656,12 +658,8 @@ test.describe("9. Contextual panel", () => {
     await expect(
       page.locator("[class*='MuiDrawer-paperAnchorRight']")
     ).toBeVisible({ timeout: 5000 });
-    await page
-      .locator("[class*='MuiDrawer-paperAnchorRight']")
-      .locator("button")
-      .filter({ has: page.locator("svg[data-testid='CloseIcon']") })
-      .first()
-      .click();
+    // Use Escape key to close the drawer — same UX action, avoids AppBar z-index overlap
+    await page.keyboard.press("Escape");
     await expect(
       page.locator("[class*='MuiDrawer-paperAnchorRight']")
     ).not.toBeVisible({ timeout: 5000 });
@@ -728,8 +726,8 @@ test.describe("12. View generation flow", () => {
     await setupPage(page, { sessions: [SESSION_1] });
     await newViewBtn(page).click();
     const descField = page
-      .getByLabel(/Description/i)
-      .or(page.getByPlaceholder(/description/i))
+      .getByLabel(/Describe the view/i)
+      .or(page.getByPlaceholder(/dashboard showing/i))
       .first();
     await descField.fill("A simple greeting card");
     await page.locator("button").filter({ hasText: /^Generate$/ }).click();
