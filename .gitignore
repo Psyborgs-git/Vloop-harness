@@ -41,6 +41,10 @@ node_modules/
 react/dist/
 react/.vite/
 
+# Playwright
+react/playwright-report/
+react/test-results/
+
 # PyInstaller
 *.spec
 dist-binary/
