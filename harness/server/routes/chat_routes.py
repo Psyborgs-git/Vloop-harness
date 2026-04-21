@@ -95,6 +95,7 @@ async def rename_session(
 @router.delete("/sessions/{session_id}", status_code=204)
 async def delete_session(
     session_id: str,
+    request: Request,
     db: AsyncSession = Depends(get_session),
 ) -> None:
     repo = Repository(db)
@@ -102,6 +103,12 @@ async def delete_session(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     await repo.delete_session(session_id)
+    # Soft-retain the JSONL transcript
+    try:
+        storage = request.app.state.vloop_storage
+        storage.archive_chat_session(session_id)
+    except Exception:
+        pass
 
 
 @router.get("/sessions/{session_id}/messages")
@@ -112,6 +119,24 @@ async def list_messages(
     repo = Repository(db)
     messages = await repo.get_messages(session_id)
     return [_message_to_dict(m) for m in messages]
+
+
+@router.get("/sessions/{session_id}/transcript")
+async def get_transcript(
+    session_id: str,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+) -> list[dict[str, Any]]:
+    """Return the raw JSONL transcript lines for a session (canonical text source)."""
+    repo = Repository(db)
+    session = await repo.get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    try:
+        storage = request.app.state.vloop_storage
+        return storage.read_chat_session(session_id)
+    except Exception:
+        return []
 
 
 # ── Message send + AI reply ───────────────────────────────────────────────────
@@ -157,6 +182,7 @@ async def send_message(
     ai_response_text = ""
     component_code = ""
     pipeline_config = ""
+    view_stub_request = ""
     saved_component_id: str | None = None
     saved_pipeline_id: str | None = None
 
@@ -172,6 +198,7 @@ async def send_message(
             ai_response_text = getattr(prediction, "response", "") or ""
             component_code = getattr(prediction, "component_code", "") or ""
             pipeline_config = getattr(prediction, "pipeline_config", "") or ""
+            view_stub_request = getattr(prediction, "view_stub_request", "") or ""
         except Exception as exc:
             ai_response_text = f"I encountered an error: {exc}"
     else:
@@ -251,6 +278,52 @@ async def send_message(
         except Exception:
             pass
 
+    # Auto-save generated view stub if view_stub_request was returned
+    saved_view_id: str | None = None
+    if view_stub_request.strip():
+        try:
+            from harness.data.models import GeneratedView
+            from harness.server.routes.view_validation import (
+                validate_component_name,
+                validate_react_code,
+                write_view_stub,
+            )
+
+            req_data = json.loads(view_stub_request)
+            view_desc = req_data.get("description", body.content)
+            view_comp_name_raw = req_data.get("component_name", "")
+            view_spec = req_data.get("spec", "")
+
+            prediction_view = await mp.ai.generate_view(
+                ui_description=view_desc,
+                available_components=available_comps,
+                spec=view_spec,
+            )
+            react_code_v = getattr(prediction_view, "react_code", "") or ""
+            raw_name_v = view_comp_name_raw or getattr(prediction_view, "component_name", "") or "GeneratedView"
+            view_spec_v = getattr(prediction_view, "view_spec", "") or ""
+
+            comp_name_v = validate_component_name(raw_name_v)
+            validate_react_code(react_code_v)
+
+            storage = request.app.state.vloop_storage
+            react_root = storage.project_dir.parent / "react" / "src" / "components" / "generated"
+            file_path_v = write_view_stub(react_root, comp_name_v, react_code_v)
+
+            view_rec = GeneratedView(
+                id=str(uuid.uuid4()),
+                name=view_desc[:255],
+                component_name=comp_name_v,
+                react_code=react_code_v,
+                view_spec=view_spec_v,
+                file_path=file_path_v,
+                session_id=session_id,
+            )
+            view_rec = await repo.save_view(view_rec)
+            saved_view_id = view_rec.id
+        except Exception:
+            pass  # View generation errors must not fail the chat message
+
     # Build the assistant's full reply with metadata in the DB meta field
     meta: dict[str, Any] = {}
     if component_code:
@@ -261,10 +334,36 @@ async def send_message(
         meta["pipeline_config"] = pipeline_config
     if saved_pipeline_id:
         meta["saved_pipeline_id"] = saved_pipeline_id
+    if saved_view_id:
+        meta["saved_view_id"] = saved_view_id
 
     ai_msg = await repo.add_message(
         session_id, "assistant", ai_response_text, meta=meta or None
     )
+
+    # Dual-write both messages to JSONL transcript (canonical text source)
+    try:
+        storage = request.app.state.vloop_storage
+        storage.append_chat_message(session_id, {
+            "id": user_msg.id,
+            "session_id": session_id,
+            "role": "user",
+            "content": body.content,
+            "meta": {},
+            "created_at": user_msg.created_at.isoformat(),
+            "v": 1,
+        })
+        storage.append_chat_message(session_id, {
+            "id": ai_msg.id,
+            "session_id": session_id,
+            "role": "assistant",
+            "content": ai_response_text,
+            "meta": meta,
+            "created_at": ai_msg.created_at.isoformat(),
+            "v": 1,
+        })
+    except Exception:
+        pass  # JSONL write failure must not fail the request
 
     # Log telemetry
     try:
@@ -277,6 +376,7 @@ async def send_message(
         **_message_to_dict(ai_msg),
         "saved_component_id": saved_component_id,
         "saved_pipeline_id": saved_pipeline_id,
+        "saved_view_id": saved_view_id,
     }
 
 

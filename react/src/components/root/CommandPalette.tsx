@@ -22,19 +22,21 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 
 import * as api from "./api";
-import type { ChatSession, DSPyComponent, NavTab, Pipeline } from "./types";
+import type { ChatSession, ContextPanelType, DSPyComponent, Pipeline } from "./types";
+
+export type PaletteNavType = "chat" | Exclude<ContextPanelType, null>;
 
 interface PaletteItem {
   id: string;
   label: string;
-  tab: NavTab;
+  panelType: PaletteNavType;
   group: string;
 }
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  onSelect: (tab: NavTab, id: string) => void;
+  onSelect: (panelType: PaletteNavType, id: string) => void;
 }
 
 export default function CommandPalette({ open, onClose, onSelect }: Props) {
@@ -56,19 +58,19 @@ export default function CommandPalette({ open, onClose, onSelect }: Props) {
         ...(sessions as ChatSession[]).map((s) => ({
           id: s.id,
           label: s.title,
-          tab: "chat" as NavTab,
+          panelType: "chat" as const,
           group: "Chat Sessions",
         })),
         ...(comps as DSPyComponent[]).map((c) => ({
           id: c.id,
           label: c.name,
-          tab: "dspy" as NavTab,
+          panelType: "dspy" as const,
           group: "DSPy Components",
         })),
         ...(pipes as Pipeline[]).map((p) => ({
           id: p.id,
           label: p.name,
-          tab: "pipelines" as NavTab,
+          panelType: "pipelines" as const,
           group: "Pipelines",
         })),
       ]);
@@ -83,7 +85,7 @@ export default function CommandPalette({ open, onClose, onSelect }: Props) {
   const flat = groups.flatMap((g) => filtered.filter((i) => i.group === g));
 
   function select(item: PaletteItem) {
-    onSelect(item.tab, item.id);
+    onSelect(item.panelType, item.id);
   }
 
   function handleKey(e: React.KeyboardEvent) {

@@ -26,6 +26,7 @@ from harness.server.routes.chat_routes import router as chat_router
 from harness.server.routes.dspy_routes import router as dspy_router
 from harness.server.routes.settings_routes import router as settings_router
 from harness.server.routes.tool_routes import router as tool_router
+from harness.server.routes.views_routes import router as views_router
 
 if TYPE_CHECKING:
     from harness.core.main_process import MainProcess
@@ -141,6 +142,7 @@ def create_app(main_process: "MainProcess", settings: "HarnessSettings") -> Fast
     app.include_router(chat_router)
     app.include_router(settings_router)
     app.include_router(tool_router)
+    app.include_router(views_router)
     app.include_router(proxy.router)  # catch-all last
 
     @app.get("/")

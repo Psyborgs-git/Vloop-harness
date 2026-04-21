@@ -165,6 +165,30 @@ class ProviderConfigDB(Base):
     )
 
 
+# ── Generated React views ─────────────────────────────────────────────────────
+
+
+class GeneratedView(Base):
+    """An AI-generated React view stub.
+
+    ``react_code`` holds the TSX source written to disk under
+    ``react/src/components/generated/{component_name}/App.tsx``.
+    ``view_spec`` contains the LLM's natural-language spec/rationale.
+    ``file_path`` records the absolute disk path of the written stub (if any).
+    """
+
+    __tablename__ = "generated_views"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_new_uuid)
+    name: Mapped[str] = mapped_column(String(255))
+    component_name: Mapped[str] = mapped_column(String(64))
+    react_code: Mapped[str] = mapped_column(Text, default="")
+    view_spec: Mapped[str] = mapped_column(Text, default="")
+    file_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    session_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
 # ── Telemetry ─────────────────────────────────────────────────────────────────
 
 

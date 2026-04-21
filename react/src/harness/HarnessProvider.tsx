@@ -7,7 +7,7 @@
  * - Exposes HarnessContext to the subtree
  */
 
-import React, {
+import {
   createContext,
   useCallback,
   useEffect,

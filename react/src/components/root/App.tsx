@@ -1,54 +1,47 @@
 /**
- * VLoop Harness — Root Dashboard
- *
- * A modern AI-app dashboard built with Material UI dark theme.
+ * VLoop Harness — Root Dashboard (Chat-First)
  *
  * Layout:
- *  ┌─ TopBar ──────────────────────────────────────────────────────┐
- *  │  VLoop Harness    [provider status]  [connection]             │
- *  ├─ Sidebar ─┬─ Content ──────────────────────────────────────────┤
- *  │  Chat     │  <active panel>                                    │
- *  │  DSPy     │                                                    │
- *  │  Pipelines│                                                    │
- *  │  Settings │                                                    │
- *  └───────────┴────────────────────────────────────────────────────┘
+ *  ┌─ TopBar ─────────────────────────────────────────────────────────┐
+ *  │  VLoop Harness    [provider status]  [connection]  [⚙ settings]  │
+ *  ├─ Main (full width) ──────────────────────────────────────────────┤
+ *  │  ChatPanel (session sidebar + conversation)                       │
+ *  └──────────────────────────────────────────────────────────────────┘
+ *
+ *  Settings opens as a Dialog (desktop) or bottom Drawer ≤80vh (mobile).
+ *  DSPy / Pipelines / Tools open as a contextual right Drawer from chat actions.
  */
 
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
-import ChatIcon from "@mui/icons-material/Chat";
-import CodeIcon from "@mui/icons-material/Code";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import SettingsIcon from "@mui/icons-material/Settings";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
-import TerminalIcon from "@mui/icons-material/Terminal";
 import {
   AppBar,
   Box,
   Chip,
   CssBaseline,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   Drawer,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
+  IconButton,
   ThemeProvider,
   Toolbar,
   Tooltip,
   Typography,
   createTheme,
+  useMediaQuery,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useHarness } from "@harness/useHarness";
 import * as api from "./api";
 import ChatPanel from "./ChatPanel";
 import CommandPalette from "./CommandPalette";
-import DSPyPanel from "./DSPyPanel";
-import PipelinePanel from "./PipelinePanel";
+import type { PaletteNavType } from "./CommandPalette";
+import ContextualPanel from "./ContextualPanel";
 import SettingsPanel from "./SettingsPanel";
-import ToolsPanel from "./ToolsPanel";
-import type { NavTab, Provider } from "./types";
+import type { ContextPanelState, Provider } from "./types";
 
 // ── MUI dark theme ────────────────────────────────────────────────────────────
 
@@ -56,7 +49,7 @@ const darkTheme = createTheme({
   palette: {
     mode: "dark",
     primary: {
-      main: "#6366f1",       // indigo-500
+      main: "#6366f1",
       dark: "#4f46e5",
       light: "#818cf8",
     },
@@ -119,27 +112,17 @@ const darkTheme = createTheme({
   },
 });
 
-// ── Sidebar navigation ────────────────────────────────────────────────────────
-
-const SIDEBAR_WIDTH = 200;
-
-const NAV_ITEMS: Array<{ tab: NavTab; label: string; icon: React.ReactNode }> = [
-  { tab: "chat", label: "Chat", icon: <ChatIcon fontSize="small" /> },
-  { tab: "dspy", label: "DSPy Components", icon: <CodeIcon fontSize="small" /> },
-  { tab: "pipelines", label: "Pipelines", icon: <AccountTreeIcon fontSize="small" /> },
-  { tab: "tools", label: "Tools", icon: <TerminalIcon fontSize="small" /> },
-  { tab: "settings", label: "Settings", icon: <SettingsIcon fontSize="small" /> },
-];
-
 // ── Root app ──────────────────────────────────────────────────────────────────
 
 export default function App() {
   const { connected } = useHarness();
-  const [activeTab, setActiveTab] = useState<NavTab>("chat");
   const [defaultProvider, setDefaultProvider] = useState<Provider | null>(null);
-
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [focusId, setFocusId] = useState<string | null>(null);
+  const [contextPanel, setContextPanel] = useState<ContextPanelState>({ type: null });
+
+  const isMobile = useMediaQuery(darkTheme.breakpoints.down("md"));
 
   useEffect(() => {
     api.listProviders().then((providers) => {
@@ -158,19 +141,26 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  function handlePaletteSelect(tab: NavTab, id: string) {
-    setFocusId(id);
-    setActiveTab(tab);
+  function handlePaletteSelect(panelType: PaletteNavType, id: string) {
+    if (panelType === "chat") {
+      setFocusId(id);
+    } else {
+      setContextPanel({ type: panelType, id });
+    }
     setPaletteOpen(false);
+  }
+
+  function openContextPanel(type: ContextPanelState["type"], id?: string) {
+    setContextPanel({ type, id });
   }
 
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
-      <Box sx={{ display: "flex", height: "100vh", overflow: "hidden" }}>
+      <Box sx={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
 
-        {/* ── Top app bar ─────────────────────────────────────────────────── */}
-        <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+        {/* ── Top app bar ──────────────────────────────────────────────────── */}
+        <AppBar position="static" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, flexShrink: 0 }}>
           <Toolbar variant="dense" sx={{ gap: 2, minHeight: 48 }}>
             {/* Logo */}
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -223,92 +213,83 @@ export default function App() {
                 cursor: "default",
               }}
             />
+
+            {/* Settings gear */}
+            <Tooltip title="Settings">
+              <IconButton size="small" onClick={() => setSettingsOpen(true)} sx={{ color: "text.secondary" }}>
+                <SettingsIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </Toolbar>
         </AppBar>
 
-        {/* ── Sidebar ─────────────────────────────────────────────────────── */}
-        <Drawer
-          variant="permanent"
-          sx={{
-            width: SIDEBAR_WIDTH,
-            flexShrink: 0,
-            "& .MuiDrawer-paper": { width: SIDEBAR_WIDTH, boxSizing: "border-box" },
-          }}
-        >
-          <Toolbar variant="dense" sx={{ minHeight: 48 }} /> {/* offset for AppBar */}
-          <Box sx={{ pt: 1 }}>
-            <List dense disablePadding>
-              {NAV_ITEMS.map(({ tab, label, icon }) => (
-                <ListItem key={tab} disablePadding>
-                  <ListItemButton
-                    selected={activeTab === tab}
-                    onClick={() => setActiveTab(tab)}
-                  >
-                    <ListItemIcon
-                      sx={{
-                        minWidth: 32,
-                        color: activeTab === tab ? "primary.light" : "text.secondary",
-                      }}
-                    >
-                      {icon}
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={label}
-                      primaryTypographyProps={{
-                        variant: "body2",
-                        fontWeight: activeTab === tab ? 600 : 400,
-                        color: activeTab === tab ? "primary.light" : "text.primary",
-                      }}
-                    />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </List>
-          </Box>
-        </Drawer>
-
-        {/* ── Main content ─────────────────────────────────────────────────── */}
-        <Box
-          component="main"
-          sx={{
-            flexGrow: 1,
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-            mt: "48px", // AppBar height
-          }}
-        >
-          <Box sx={{ flexGrow: 1, overflow: "hidden" }}>
-            {activeTab === "chat" && (
-              <ChatPanel
-                onComponentSaved={() => {}}
-                onNavigate={(tab) => setActiveTab(tab as NavTab)}
-                focusSessionId={focusId}
-                onFocused={() => setFocusId(null)}
-              />
-            )}
-            {activeTab === "dspy" && (
-              <DSPyPanel
-                focusComponentId={focusId}
-                onFocused={() => setFocusId(null)}
-              />
-            )}
-            {activeTab === "pipelines" && (
-              <PipelinePanel
-                focusPipelineId={focusId}
-                onFocused={() => setFocusId(null)}
-              />
-            )}
-            {activeTab === "tools" && <ToolsPanel />}
-            {activeTab === "settings" && (
-              <Box sx={{ height: "100%", overflow: "auto" }}>
-                <SettingsPanel />
-              </Box>
-            )}
-          </Box>
+        {/* ── Main content (chat always full-width) ────────────────────────── */}
+        <Box sx={{ flexGrow: 1, overflow: "hidden" }}>
+          <ChatPanel
+            focusSessionId={focusId}
+            onFocused={() => setFocusId(null)}
+            onOpenPanel={openContextPanel}
+          />
         </Box>
       </Box>
 
+      {/* ── Settings container — Dialog (desktop) / bottom Drawer (mobile) ── */}
+      {isMobile ? (
+        <Drawer
+          anchor="bottom"
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          PaperProps={{
+            sx: {
+              maxHeight: "80vh",
+              borderRadius: "12px 12px 0 0",
+              overflow: "auto",
+            },
+          }}
+        >
+          {/* Drag handle indicator */}
+          <Box sx={{ display: "flex", justifyContent: "center", pt: 1, pb: 0.5, flexShrink: 0 }}>
+            <Box sx={{ width: 36, height: 4, borderRadius: 2, bgcolor: "divider" }} />
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", px: 2, pt: 0.5, pb: 1, flexShrink: 0 }}>
+            <Typography variant="subtitle1" fontWeight={700} sx={{ flexGrow: 1 }}>
+              Settings
+            </Typography>
+            <Tooltip title="Close">
+              <IconButton size="small" onClick={() => setSettingsOpen(false)}>
+                ✕
+              </IconButton>
+            </Tooltip>
+          </Box>
+          <SettingsPanel />
+        </Drawer>
+      ) : (
+        <Dialog
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          maxWidth="sm"
+          fullWidth
+          scroll="paper"
+        >
+          <DialogTitle sx={{ display: "flex", alignItems: "center" }}>
+            <SettingsIcon fontSize="small" sx={{ mr: 1, color: "text.secondary" }} />
+            Settings
+          </DialogTitle>
+          <DialogContent dividers sx={{ p: 0 }}>
+            <SettingsPanel />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* ── Contextual right/bottom panel ────────────────────────────────── */}
+      <ContextualPanel
+        open={contextPanel.type !== null}
+        panelType={contextPanel.type}
+        panelId={contextPanel.id}
+        onClose={() => setContextPanel({ type: null })}
+      />
+
+      {/* ── Cmd+K palette ────────────────────────────────────────────────── */}
       <CommandPalette
         open={paletteOpen}
         onClose={() => setPaletteOpen(false)}
@@ -317,3 +298,4 @@ export default function App() {
     </ThemeProvider>
   );
 }
+

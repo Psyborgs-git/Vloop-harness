@@ -54,8 +54,14 @@ class DashboardChatSignature(dspy.Signature):
 
          Leave pipeline_config as empty string if not relevant.
 
-      4. Be concise, technically accurate, and friendly.
-      5. NEVER include shell injection patterns, absolute paths outside the
+      4. When the user explicitly asks to CREATE a React UI view/page, output a
+         short JSON spec in view_stub_request with keys: description, component_name
+         (PascalCase), spec.  Example:
+           {"description": "Dashboard showing live metrics", "component_name": "MetricsDashboard", "spec": ""}
+         Leave view_stub_request as empty string if not creating a UI view.
+
+      5. Be concise, technically accurate, and friendly.
+      6. NEVER include shell injection patterns, absolute paths outside the
          workspace, or blocked commands in any generated pipeline tool step.
     """
 
@@ -76,6 +82,12 @@ class DashboardChatSignature(dspy.Signature):
     )
     pipeline_config: str = dspy.OutputField(
         desc="JSON pipeline configuration if creating a pipeline, empty string otherwise"
+    )
+    view_stub_request: str = dspy.OutputField(
+        desc=(
+            "JSON object {description, component_name, spec} if creating a React UI view, "
+            "empty string otherwise"
+        )
     )
 
 

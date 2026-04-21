@@ -5,7 +5,7 @@
  * keeps state in sync, and exposes an emit() function.
  */
 
-import { useCallback, useContext } from "react";
+import { useContext } from "react";
 import { HarnessCtx } from "./HarnessProvider";
 import type { HarnessContext } from "./types";
 
