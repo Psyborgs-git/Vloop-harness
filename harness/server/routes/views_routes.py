@@ -10,7 +10,6 @@ Endpoints
 from __future__ import annotations
 
 import json
-import re
 import uuid
 from pathlib import Path
 from typing import Any
@@ -22,43 +21,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from harness.data.db import get_session
 from harness.data.models import GeneratedView
 from harness.data.repository import Repository
+from harness.server.routes.view_validation import (
+    validate_component_name,
+    validate_react_code,
+    write_view_stub,
+)
 
 router = APIRouter(prefix="/api/views", tags=["views"])
-
-# ── Validation ────────────────────────────────────────────────────────────────
-
-_COMPONENT_NAME_RE = re.compile(r"^[A-Z][a-zA-Z0-9]{1,63}$")
-
-# Patterns that must not appear in generated React code (security baseline)
-_BANNED_PATTERNS = [
-    r"require\s*\(\s*['\"]child_process",
-    r"\beval\s*\(",
-    r"\bexec\s*\(",
-    r"process\.env",
-    r"__dirname",
-    r"__filename",
-    r"require\s*\(\s*['\"]fs['\"]",
-    r"require\s*\(\s*['\"]path['\"]",
-]
-
-
-def _validate_component_name(name: str) -> str:
-    """Raise ValueError if name is not a safe PascalCase identifier."""
-    clean = name.strip()
-    if not _COMPONENT_NAME_RE.match(clean):
-        raise ValueError(
-            f"component_name must be PascalCase [A-Z][a-zA-Z0-9]{{1,63}}, got {clean!r}"
-        )
-    return clean
-
-
-def _validate_react_code(code: str) -> None:
-    """Raise ValueError if generated code contains dangerous patterns."""
-    for pattern in _BANNED_PATTERNS:
-        if re.search(pattern, code):
-            raise ValueError(
-                f"Generated code contains a disallowed pattern: {pattern!r}"
-            )
 
 
 # ── Request / Response models ─────────────────────────────────────────────────
@@ -109,46 +78,23 @@ async def generate_view(
 
     # Validate component name
     try:
-        component_name = _validate_component_name(raw_name)
+        component_name = validate_component_name(raw_name)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     # Validate react code safety
     try:
-        _validate_react_code(react_code)
+        validate_react_code(react_code)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     # Write stub files to disk (react/src/components/generated/{component_name}/)
-    file_path: str | None = None
     react_root = storage.project_dir.parent / "react" / "src" / "components" / "generated"
-    try:
-        comp_dir = react_root / component_name
-        comp_dir.mkdir(parents=True, exist_ok=True)
-        app_tsx = comp_dir / "App.tsx"
-        app_tsx.write_text(react_code, encoding="utf-8")
-        # Write a minimal main.tsx entry point
-        main_tsx = comp_dir / "main.tsx"
-        if not main_tsx.exists():
-            main_tsx.write_text(
-                f'import React from "react";\n'
-                f'import ReactDOM from "react-dom/client";\n'
-                f'import {component_name} from "./App";\n\n'
-                f'ReactDOM.createRoot(document.getElementById("root")!).render(\n'
-                f'  <React.StrictMode>\n'
-                f'    <{component_name} />\n'
-                f'  </React.StrictMode>\n'
-                f');\n',
-                encoding="utf-8",
-            )
-        file_path = str(app_tsx)
-    except Exception:
-        pass  # File write failure is non-fatal; DB record still saved
+    file_path = write_view_stub(react_root, component_name, react_code)
 
     # Persist to DB
-    view_id = str(uuid.uuid4())
     view = GeneratedView(
-        id=view_id,
+        id=str(uuid.uuid4()),
         name=body.description[:255],
         component_name=component_name,
         react_code=react_code,
@@ -207,3 +153,4 @@ def _view_to_dict(v: GeneratedView) -> dict[str, Any]:
         "session_id": v.session_id,
         "created_at": v.created_at.isoformat(),
     }
+

@@ -282,14 +282,14 @@ async def send_message(
     saved_view_id: str | None = None
     if view_stub_request.strip():
         try:
-            import json as _json
-            from harness.server.routes.views_routes import (
-                _validate_component_name,
-                _validate_react_code,
-            )
             from harness.data.models import GeneratedView
+            from harness.server.routes.view_validation import (
+                validate_component_name,
+                validate_react_code,
+                write_view_stub,
+            )
 
-            req_data = _json.loads(view_stub_request)
+            req_data = json.loads(view_stub_request)
             view_desc = req_data.get("description", body.content)
             view_comp_name_raw = req_data.get("component_name", "")
             view_spec = req_data.get("spec", "")
@@ -303,37 +303,15 @@ async def send_message(
             raw_name_v = view_comp_name_raw or getattr(prediction_view, "component_name", "") or "GeneratedView"
             view_spec_v = getattr(prediction_view, "view_spec", "") or ""
 
-            comp_name_v = _validate_component_name(raw_name_v)
-            _validate_react_code(react_code_v)
+            comp_name_v = validate_component_name(raw_name_v)
+            validate_react_code(react_code_v)
 
             storage = request.app.state.vloop_storage
             react_root = storage.project_dir.parent / "react" / "src" / "components" / "generated"
-            file_path_v: str | None = None
-            try:
-                comp_dir_v = react_root / comp_name_v
-                comp_dir_v.mkdir(parents=True, exist_ok=True)
-                app_tsx_v = comp_dir_v / "App.tsx"
-                app_tsx_v.write_text(react_code_v, encoding="utf-8")
-                main_tsx_v = comp_dir_v / "main.tsx"
-                if not main_tsx_v.exists():
-                    main_tsx_v.write_text(
-                        f'import React from "react";\n'
-                        f'import ReactDOM from "react-dom/client";\n'
-                        f'import {comp_name_v} from "./App";\n\n'
-                        f'ReactDOM.createRoot(document.getElementById("root")!).render(\n'
-                        f'  <React.StrictMode>\n'
-                        f'    <{comp_name_v} />\n'
-                        f'  </React.StrictMode>\n'
-                        f');\n',
-                        encoding="utf-8",
-                    )
-                file_path_v = str(app_tsx_v)
-            except Exception:
-                pass
+            file_path_v = write_view_stub(react_root, comp_name_v, react_code_v)
 
-            import uuid as _uuid
             view_rec = GeneratedView(
-                id=str(_uuid.uuid4()),
+                id=str(uuid.uuid4()),
                 name=view_desc[:255],
                 component_name=comp_name_v,
                 react_code=react_code_v,
