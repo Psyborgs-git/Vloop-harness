@@ -14,6 +14,7 @@ Boot sequence:
 from __future__ import annotations
 
 import asyncio
+import socket
 import subprocess
 import sys
 import threading
@@ -36,6 +37,18 @@ app = typer.Typer(name="harness", help="Vloop Harness CLI", no_args_is_help=True
 @app.callback()
 def _callback() -> None:
     """Vloop Harness — Python brain, React face."""
+
+
+def _wait_for_port(host: str, port: int, timeout: float = 30.0, interval: float = 0.3) -> bool:
+    """Poll host:port until TCP connect succeeds or timeout expires."""
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            with socket.create_connection((host, port), timeout=0.5):
+                return True
+        except OSError:
+            time.sleep(interval)
+    return False
 
 
 def _start_global_hotkey(window: "RootWindow") -> None:
@@ -70,15 +83,25 @@ def _start_vite(vite_port: int, react_dir: Path) -> subprocess.Popen[bytes]:
         cmd,
         cwd=str(react_dir),
         stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,  # capture for diagnostics on failure
     )
-    # Give Vite a moment to bind
-    time.sleep(2)
+    if not _wait_for_port("localhost", vite_port, timeout=30.0):
+        stderr_out = b""
+        try:
+            proc.kill()
+            stderr_out = proc.stderr.read() if proc.stderr else b""
+        except Exception:
+            pass
+        raise RuntimeError(
+            f"Vite failed to start on port {vite_port}.\n"
+            "Ensure node_modules are installed: cd react && npm install\n"
+            + stderr_out.decode(errors="replace")
+        )
     return proc
 
 
 def _run_uvicorn(fastapi_app: "fastapi.FastAPI", host: str, port: int) -> None:  # type: ignore[name-defined]
-    uvicorn.run(fastapi_app, host=host, port=port, log_level="info")
+    uvicorn.run(fastapi_app, host=host, port=port, log_level="warning")
 
 
 @app.command()
@@ -119,6 +142,11 @@ def run(
     )
     server_thread.start()
     typer.echo(f"API server starting on http://{host}:{port}")
+
+    if not _wait_for_port(host, port, timeout=15.0):
+        typer.echo(f"Error: API server failed to bind on {host}:{port}", err=True)
+        sys.exit(1)
+    typer.echo(f"API server ready on http://{host}:{port}")
 
     # ── Vite dev server ───────────────────────────────────────────────────────
     vite_proc: subprocess.Popen[str] | None = None
