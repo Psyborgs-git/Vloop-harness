@@ -59,6 +59,14 @@ class MainProcess:
         tool_registry.confirmations = confirmations    # type: ignore[attr-defined]
         tool_registry.register(TerminalTool(self))
         tool_registry.register(FilesystemTool(self))
+
+        # Optional tools — degrade gracefully if dependencies are absent
+        from harness.tools.browser_tool import BrowserTool
+        from harness.tools.db_tool import DatabaseTool
+
+        tool_registry.register(BrowserTool(self))
+        tool_registry.register(DatabaseTool(self))
+
         self._tools = tool_registry
         self.logger.info("Tool runtime ready", workspace=str(self.workspace_root))
 

@@ -79,10 +79,8 @@ export interface RunResult {
   outputs: Record<string, unknown>;
 }
 
-export type NavTab = "chat";
-
 /** Panel shown in the right contextual drawer. */
-export type ContextPanelType = "dspy" | "pipelines" | "tools" | "view" | null;
+export type ContextPanelType = "dspy" | "pipelines" | "tools" | "view" | "agents" | "manifests" | "eval" | null;
 
 export interface ContextPanelState {
   type: ContextPanelType;
@@ -146,5 +144,79 @@ export interface FilesystemEntry {
   type: "file" | "dir" | "unknown";
   size?: number;
   mtime?: number;
+}
+
+// ── Agent runs ─────────────────────────────────────────────────────────────
+
+export interface AgentRunStep {
+  id: string;
+  run_id: string;
+  step_type: string;
+  tool_name: string | null;
+  input_data: Record<string, unknown> | null;
+  output_data: Record<string, unknown> | null;
+  status: "pending" | "running" | "completed" | "failed" | "skipped";
+  error: string | null;
+  confirmation_token: string | null;
+  duration_ms: number | null;
+  created_at: string;
+}
+
+export interface AgentRun {
+  id: string;
+  goal: string;
+  plan: string;
+  status: "pending" | "running" | "paused" | "completed" | "cancelled" | "failed";
+  autonomy_mode: "observe" | "suggest" | "write_approval" | "test_approval" | "autonomous";
+  session_id: string | null;
+  result: Record<string, unknown> | null;
+  error: string | null;
+  created_at: string;
+  updated_at: string;
+  steps?: AgentRunStep[];
+}
+
+// ── Workspace windows ─────────────────────────────────────────────────────
+
+export interface WorkspaceWindow {
+  id: string;
+  title: string;
+  url: string;
+  minimized: boolean;
+  focusedAt: number;
+}
+
+// ── App manifests ──────────────────────────────────────────────────────────
+
+export interface AppManifest {
+  id: string;
+  name: string;
+  description: string;
+  backend_type: "component" | "pipeline" | "dspy_module";
+  backend_id: string | null;
+  react_views: string[];
+  permissions: string[];
+  state_schema: Record<string, unknown>;
+  status: "draft" | "validated" | "active" | "archived";
+  agent_run_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ── Tool traces ────────────────────────────────────────────────────────────
+
+export interface ToolTrace {
+  id: string;
+  tool_name: string;
+  component_id: string | null;
+  session_id: string | null;
+  run_step_id: string | null;
+  inputs: Record<string, unknown> | null;
+  outputs: Record<string, unknown> | null;
+  risk_level: "safe" | "caution" | "destructive";
+  confirmation_token: string | null;
+  duration_ms: number | null;
+  success: boolean;
+  created_at: string;
 }
 

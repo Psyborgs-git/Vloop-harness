@@ -34,6 +34,9 @@ dependencies = [
     # File watching (hot reload)
     "watchdog>=6.0.0",
 
+    # Browser automation (browser tool)
+    "playwright>=1.40.0",
+
     # Utilities
     "structlog>=24.4.0",
     "rich>=13.9.0",

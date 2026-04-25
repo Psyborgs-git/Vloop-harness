@@ -23,6 +23,7 @@ from typing import Any
 import dspy
 
 from harness.engine.config import EngineConfig
+from harness.engine.modules.agent_planner import AgentPlanner
 from harness.engine.modules.chat import DashboardChat
 from harness.engine.modules.code_gen import CodeGenerator
 from harness.engine.modules.component_spec import ComponentSpecGenerator
@@ -52,6 +53,7 @@ class DSPyEngine:
         self._chat: DashboardChat | None = None
         self._view_gen: ViewGenerator | None = None
         self._component_spec: ComponentSpecGenerator | None = None
+        self._agent_planner: AgentPlanner | None = None
 
     # ── Bootstrap ─────────────────────────────────────────────────────────────
 
@@ -111,6 +113,7 @@ class DSPyEngine:
         self._chat = DashboardChat()
         self._view_gen = ViewGenerator()
         self._component_spec = ComponentSpecGenerator()
+        self._agent_planner = AgentPlanner()
 
     def reconfigure(self, new_config: EngineConfig) -> None:
         """Replace the active LM with a new configuration (provider switch)."""
@@ -203,6 +206,25 @@ class DSPyEngine:
         return await self.run(
             self._component_spec,
             description=description,
+            context=context,
+        )
+
+    async def plan(
+        self,
+        goal: str,
+        available_components: str = "[]",
+        available_pipelines: str = "[]",
+        available_tools: str = "[]",
+        context: str = "",
+    ) -> dspy.Prediction:
+        """Generate a structured agent execution plan from a natural-language goal."""
+        assert self._agent_planner, "Engine not configured — call configure() first"
+        return await self.run(
+            self._agent_planner,
+            goal=goal,
+            available_components=available_components,
+            available_pipelines=available_pipelines,
+            available_tools=available_tools,
             context=context,
         )
 

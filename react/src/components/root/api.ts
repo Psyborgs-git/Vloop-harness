@@ -268,3 +268,210 @@ export const listViews = () =>
 
 export const deleteView = (id: string) =>
   request<void>(`/api/views/${id}`, { method: "DELETE" });
+
+// ── Agent runs ─────────────────────────────────────────────────────────────
+
+import type { AgentRun, AppManifest, ToolTrace } from "./types";
+
+export const startAgentRun = (data: {
+  goal: string;
+  session_id?: string;
+  autonomy_mode?: string;
+  context?: string;
+}) =>
+  request<AgentRun>("/api/agents/runs", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+export const listAgentRuns = (limit = 50) =>
+  request<AgentRun[]>(`/api/agents/runs?limit=${limit}`);
+
+export const getAgentRun = (id: string) =>
+  request<AgentRun>(`/api/agents/runs/${id}`);
+
+export const cancelAgentRun = (id: string) =>
+  request<{ run_id: string; status: string }>(`/api/agents/runs/${id}/cancel`, {
+    method: "POST",
+  });
+
+export const resumeAgentRun = (id: string, confirmedToken?: string) =>
+  request<{ run_id: string; status: string }>(`/api/agents/runs/${id}/resume`, {
+    method: "POST",
+    body: JSON.stringify({ confirmed_token: confirmedToken ?? null }),
+  });
+
+export const deleteAgentRun = (id: string) =>
+  request<void>(`/api/agents/runs/${id}`, { method: "DELETE" });
+
+// ── App manifests ──────────────────────────────────────────────────────────
+
+export const createAppManifest = (data: {
+  name: string;
+  description?: string;
+  backend_type?: string;
+  backend_id?: string;
+  react_views?: string[];
+  permissions?: string[];
+  state_schema?: Record<string, unknown>;
+  agent_run_id?: string;
+}) =>
+  request<AppManifest>("/api/apps/manifests", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+export const listAppManifests = (status?: string) => {
+  const q = status ? `?status=${encodeURIComponent(status)}` : "";
+  return request<AppManifest[]>(`/api/apps/manifests${q}`);
+};
+
+export const getAppManifest = (id: string) =>
+  request<AppManifest>(`/api/apps/manifests/${id}`);
+
+export const updateAppManifest = (id: string, data: Partial<AppManifest>) =>
+  request<AppManifest>(`/api/apps/manifests/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+
+export const promoteAppManifest = (id: string, status: string) =>
+  request<AppManifest>(`/api/apps/manifests/${id}/promote`, {
+    method: "POST",
+    body: JSON.stringify({ status }),
+  });
+
+export const deleteAppManifest = (id: string) =>
+  request<void>(`/api/apps/manifests/${id}`, { method: "DELETE" });
+
+// ── Tool traces ────────────────────────────────────────────────────────────
+
+export const listToolTraces = (params?: {
+  tool_name?: string;
+  session_id?: string;
+  run_step_id?: string;
+  limit?: number;
+}) => {
+  const qs = new URLSearchParams();
+  if (params?.tool_name) qs.set("tool_name", params.tool_name);
+  if (params?.session_id) qs.set("session_id", params.session_id);
+  if (params?.run_step_id) qs.set("run_step_id", params.run_step_id);
+  if (params?.limit) qs.set("limit", String(params.limit));
+  const q = qs.toString() ? `?${qs.toString()}` : "";
+  return request<ToolTrace[]>(`/api/apps/traces${q}`);
+};
+
+// ── Browser tool ───────────────────────────────────────────────────────────
+
+export const executeBrowser = (params: {
+  operation: string;
+  url?: string;
+  selector?: string;
+  value?: string;
+  expression?: string;
+  full_page?: boolean;
+}) =>
+  request<ToolResult>("/api/tools/browser", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+
+// ── Component versions (eval/rollback) ────────────────────────────────────────
+
+export interface ComponentVersion {
+  id: string;
+  component_id: string;
+  version_number: number;
+  name: string;
+  description: string;
+  code: string;
+  module_type: string;
+  change_summary: string;
+  created_at: string;
+}
+
+export interface EvalDataset {
+  id: string;
+  component_id: string;
+  name: string;
+  description: string;
+  examples: Array<{ inputs: Record<string, unknown>; expected_outputs: Record<string, unknown> }>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EvalResult {
+  component_id: string;
+  dataset_id: string;
+  total: number;
+  passed: number;
+  failed: number;
+  results: Array<{
+    index: number;
+    passed: boolean;
+    inputs: Record<string, unknown>;
+    expected_outputs: Record<string, unknown>;
+    actual_outputs: Record<string, unknown>;
+    error?: string;
+  }>;
+}
+
+export const listComponentVersions = (componentId: string) =>
+  request<ComponentVersion[]>(`/api/dspy/components/${componentId}/versions`);
+
+export const snapshotComponent = (componentId: string, changeSummary = "") =>
+  request<ComponentVersion>(`/api/dspy/components/${componentId}/snapshot`, {
+    method: "POST",
+    body: JSON.stringify({ change_summary: changeSummary }),
+  });
+
+export const rollbackComponent = (componentId: string, versionId: string) =>
+  request<{ component_id: string; rolled_back_to: number; snapshot_id: string }>(
+    `/api/dspy/components/${componentId}/rollback`,
+    { method: "POST", body: JSON.stringify({ version_id: versionId }) },
+  );
+
+export const listEvalDatasets = (componentId: string) =>
+  request<EvalDataset[]>(`/api/dspy/components/${componentId}/eval-datasets`);
+
+export const createEvalDataset = (
+  componentId: string,
+  data: { name: string; description?: string; examples?: unknown[] },
+) =>
+  request<EvalDataset>(`/api/dspy/components/${componentId}/eval-datasets`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+export const updateEvalDataset = (
+  componentId: string,
+  datasetId: string,
+  data: Partial<{ name: string; description: string; examples: unknown[] }>,
+) =>
+  request<EvalDataset>(`/api/dspy/components/${componentId}/eval-datasets/${datasetId}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+
+export const deleteEvalDataset = (componentId: string, datasetId: string) =>
+  request<void>(`/api/dspy/components/${componentId}/eval-datasets/${datasetId}`, {
+    method: "DELETE",
+  });
+
+export const evaluateComponent = (componentId: string, datasetId?: string) =>
+  request<EvalResult>(`/api/dspy/components/${componentId}/evaluate`, {
+    method: "POST",
+    body: JSON.stringify({ dataset_id: datasetId }),
+  });
+
+// ── Database tool ──────────────────────────────────────────────────────────
+
+export const executeDatabase = (params: {
+  operation: "schema_info" | "query_read" | "query_write";
+  sql?: string;
+  params?: Record<string, unknown>;
+}) =>
+  request<ToolResult | ConfirmationRequest>("/api/tools/database", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });

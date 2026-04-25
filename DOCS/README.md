@@ -8,3 +8,4 @@
 | [api-reference.md](api-reference.md) | REST and WebSocket API spec |
 | [ai-engine.md](ai-engine.md) | DSPy engine — config, modules, custom usage |
 | [frontend-guide.md](frontend-guide.md) | React/Vite conventions, `useHarness` hook |
+| [full-stack-agents-harness-plan.md](full-stack-agents-harness-plan.md) | Updated plan and parity map for the autonomous full-stack agents harness |

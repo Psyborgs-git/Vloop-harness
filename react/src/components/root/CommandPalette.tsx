@@ -22,7 +22,7 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 
 import * as api from "./api";
-import type { ChatSession, ContextPanelType, DSPyComponent, Pipeline } from "./types";
+import type { AgentRun, AppManifest, ChatSession, ContextPanelType, DSPyComponent, Pipeline } from "./types";
 
 export type PaletteNavType = "chat" | Exclude<ContextPanelType, null>;
 
@@ -53,7 +53,9 @@ export default function CommandPalette({ open, onClose, onSelect }: Props) {
       api.listSessions(),
       api.listComponents(),
       api.listPipelines(),
-    ]).then(([sessions, comps, pipes]) => {
+      api.listAgentRuns(),
+      api.listAppManifests(),
+    ]).then(([sessions, comps, pipes, runs, manifests]) => {
       setItems([
         ...(sessions as ChatSession[]).map((s) => ({
           id: s.id,
@@ -72,6 +74,18 @@ export default function CommandPalette({ open, onClose, onSelect }: Props) {
           label: p.name,
           panelType: "pipelines" as const,
           group: "Pipelines",
+        })),
+        ...(runs as AgentRun[]).map((r) => ({
+          id: r.id,
+          label: r.goal,
+          panelType: "agents" as const,
+          group: "Agent Runs",
+        })),
+        ...(manifests as AppManifest[]).map((m) => ({
+          id: m.id,
+          label: m.name,
+          panelType: "manifests" as const,
+          group: "App Manifests",
         })),
       ]);
     });
@@ -117,7 +131,7 @@ export default function CommandPalette({ open, onClose, onSelect }: Props) {
         <TextField
           inputRef={inputRef}
           fullWidth
-          placeholder="Search sessions, components, pipelines…"
+          placeholder="Search sessions, components, pipelines, agents…"
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);

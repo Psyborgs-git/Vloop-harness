@@ -15,9 +15,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "baseUrl": ".",
     "paths": {
-      "@harness/*": ["src/harness/*"]
+      "@harness/*": ["./src/harness/*"]
     }
   },
   "include": ["src"]
