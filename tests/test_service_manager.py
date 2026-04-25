@@ -40,3 +40,38 @@ def test_cleanup_orphans_removes_stale_pid(tmp_path) -> None:
     manager.cleanup_orphans()
 
     assert not pid_path.exists()
+
+
+def test_start_backend_sets_harness_debug_for_static_mode(tmp_path, monkeypatch) -> None:
+    manager = _manager(tmp_path, frontend_mode="static")
+    captured: dict[str, str] = {}
+
+    def fake_status_for(_name: str):
+        from harness.core.service_manager import ServiceStatus
+
+        return ServiceStatus(
+            name="backend",
+            running=False,
+            healthy=False,
+            pid=None,
+            log_path=manager._service_log("backend"),
+        )
+
+    class DummyProc:
+        pid = 12345
+
+    def fake_spawn_service(_name, _cmd, cwd, env_overrides=None):  # type: ignore[no-untyped-def]
+        assert cwd == manager.repo_root
+        if env_overrides:
+            captured.update(env_overrides)
+        manager._write_pid("backend", DummyProc.pid, ["python"], cwd)
+        return DummyProc()
+
+    monkeypatch.setattr(manager, "_status_for", fake_status_for)
+    monkeypatch.setattr(manager, "_port_in_use", lambda *_args, **_kwargs: False)
+    monkeypatch.setattr(manager, "_wait_for_port", lambda *_args, **_kwargs: True)
+    monkeypatch.setattr(manager, "_spawn_service", fake_spawn_service)
+
+    manager.start("backend")
+
+    assert captured.get("HARNESS_DEBUG") == "false"

@@ -122,7 +122,12 @@ class ServiceManager:
             "--port",
             str(self.backend_port),
         ]
-        proc = self._spawn_service("backend", cmd, cwd=self.repo_root)
+        proc = self._spawn_service(
+            "backend",
+            cmd,
+            cwd=self.repo_root,
+            env_overrides={"HARNESS_DEBUG": "false" if self.frontend_mode == "static" else "true"},
+        )
 
         if not self._wait_for_port(self.backend_host, self.backend_port, timeout=20.0):
             err = self._read_log_tail("backend")
@@ -273,8 +278,17 @@ class ServiceManager:
 
     # ── Process utilities ────────────────────────────────────────────────────
 
-    def _spawn_service(self, name: ServiceName, cmd: list[str], cwd: Path) -> subprocess.Popen[bytes]:
+    def _spawn_service(
+        self,
+        name: ServiceName,
+        cmd: list[str],
+        cwd: Path,
+        env_overrides: dict[str, str] | None = None,
+    ) -> subprocess.Popen[bytes]:
         log_file = self._service_log(name)
+        env = os.environ.copy()
+        if env_overrides:
+            env.update(env_overrides)
         with log_file.open("ab") as log:
             proc = subprocess.Popen(
                 cmd,
@@ -282,6 +296,7 @@ class ServiceManager:
                 stdout=log,
                 stderr=subprocess.STDOUT,
                 start_new_session=True,
+                env=env,
             )
         self._write_pid(name, proc.pid, cmd, cwd)
         return proc
