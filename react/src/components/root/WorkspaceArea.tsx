@@ -37,6 +37,22 @@ interface Props {
   onOpenNew: (url: string, title: string) => void;
 }
 
+/** Allow only safe relative paths and http/https URLs for iframe src. */
+function sanitizeIframeSrc(url: string): string {
+  if (url.startsWith("/") || url.startsWith("./") || url.startsWith("../")) {
+    return url;
+  }
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === "https:" || parsed.protocol === "http:") {
+      return url;
+    }
+  } catch {
+    // not a valid absolute URL
+  }
+  return "about:blank";
+}
+
 export default function WorkspaceArea({
   windows,
   focusedId,
@@ -193,7 +209,7 @@ export default function WorkspaceArea({
         ) : focusedWindow ? (
           <iframe
             key={focusedWindow.id}
-            src={focusedWindow.url}
+            src={sanitizeIframeSrc(focusedWindow.url)}
             style={{ width: "100%", height: "100%", border: "none", display: "block" }}
             title={focusedWindow.title}
           />
