@@ -11,6 +11,7 @@ from harness.core.component_tree import ComponentTree
 from harness.core.logger import HarnessLogger
 from harness.core.permissions import Permission, PermissionsGuard
 from harness.core.process_manager import ProcessManager
+from harness.core.service_manager import ServiceManager
 from harness.core.state_store import StateStore
 
 
@@ -37,6 +38,9 @@ class MainProcess:
 
         # AI engine reference — set by harness.engine bootstrap
         self._ai_engine: Any | None = None
+
+        # Service manager — set by harness.main after services are wired up
+        self._service_manager: ServiceManager | None = None
 
     # ── Bootstrap ─────────────────────────────────────────────────────────────
 
@@ -134,3 +138,17 @@ class MainProcess:
     def attach_ai_engine(self, engine: Any) -> None:
         self._ai_engine = engine
         self.logger.info("AI engine attached", engine=engine.__class__.__name__)
+
+    # ── Service manager accessor ───────────────────────────────────────────────
+
+    @property
+    def service_manager(self) -> ServiceManager:
+        if self._service_manager is None:
+            raise RuntimeError(
+                "ServiceManager not initialised — call attach_service_manager() first"
+            )
+        return self._service_manager
+
+    def attach_service_manager(self, manager: ServiceManager) -> None:
+        self._service_manager = manager
+        self.logger.info("ServiceManager attached")

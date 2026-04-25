@@ -9,7 +9,8 @@ Boot sequence
 5. ProviderManager — seeds default Ollama provider, loads it into engine
 6. ComponentRegistry + PipelineBuilder — DSPy runtime
 7. MainProcess    — component tree, legacy state store, logger
-8. Existing legacy routes + new dspy/chat/settings routes
+8. Existing legacy routes + new dspy/chat/settings/service routes
+9. Static UI files — mount react/dist/assets/ when a production build exists
 """
 
 from __future__ import annotations
@@ -27,6 +28,7 @@ from harness.server.routes.app_routes import router as app_router
 from harness.server.routes.chat_routes import router as chat_router
 from harness.server.routes.dspy_routes import router as dspy_router
 from harness.server.routes.eval_routes import router as eval_router
+from harness.server.routes.service_routes import router as service_router
 from harness.server.routes.settings_routes import router as settings_router
 from harness.server.routes.tool_routes import router as tool_router
 from harness.server.routes.views_routes import router as views_router
@@ -138,6 +140,19 @@ def create_app(main_process: "MainProcess", settings: "HarnessSettings") -> Fast
     app.state.main_process = main_process
     app.state.settings = settings
 
+    # ── Static UI assets (production build) ───────────────────────────────────
+    # When a `react/dist/assets/` directory exists (i.e. the frontend has been
+    # built with `npm run build`), serve those files at /assets/… so the
+    # built index.html can load its JS/CSS bundles even without a running Vite
+    # dev server.  This mount is intentionally placed *before* the API routers
+    # so asset requests short-circuit without going through route matching.
+    _react_dist = Path(__file__).parent.parent.parent / "react" / "dist"
+    _assets_dir = _react_dist / "assets"
+    if _assets_dir.is_dir():
+        from fastapi.staticfiles import StaticFiles
+
+        app.mount("/assets", StaticFiles(directory=str(_assets_dir)), name="react_assets")
+
     # ── Routers ───────────────────────────────────────────────────────────────
     app.include_router(components.router)
     app.include_router(ws.router)
@@ -149,6 +164,7 @@ def create_app(main_process: "MainProcess", settings: "HarnessSettings") -> Fast
     app.include_router(agent_router)
     app.include_router(app_router)
     app.include_router(eval_router)
+    app.include_router(service_router)
     app.include_router(proxy.router)  # catch-all last
 
     @app.get("/")

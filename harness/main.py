@@ -6,25 +6,26 @@ Boot sequence:
   2. Configure AI engine (DSPy)
   3. Build MainProcess
   4. Create FastAPI app
-  5. Start Vite dev server subprocess
-  6. Start uvicorn on background thread
-  7. Open PyWebView root window (blocks until closed)
+  5. Build ServiceManager with backend (UvicornService) and optional
+     frontend (SubprocessService for Vite dev server)
+  6. Start all services via ServiceManager
+  7. Attach ServiceManager to MainProcess so API routes can query/control it
+  8. Open PyWebView root window (blocks until closed)
 """
 
 from __future__ import annotations
 
 import asyncio
 import socket
-import subprocess
 import sys
-import threading
 import time
+import threading
 from pathlib import Path
 
 import typer
-import uvicorn
 
 from harness.core.main_process import MainProcess
+from harness.core.service_manager import ServiceManager, SubprocessService, UvicornService
 from harness.engine.config import EngineConfig
 from harness.engine.dspy_engine import DSPyEngine
 from harness.server.app import create_app
@@ -77,33 +78,6 @@ def _start_global_hotkey(window: "RootWindow") -> None:
     listener.join()
 
 
-def _start_vite(vite_port: int, react_dir: Path) -> subprocess.Popen[bytes]:
-    cmd = ["npm", "run", "dev", "--", "--port", str(vite_port), "--host"]
-    proc = subprocess.Popen(
-        cmd,
-        cwd=str(react_dir),
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.PIPE,  # capture for diagnostics on failure
-    )
-    if not _wait_for_port("localhost", vite_port, timeout=30.0):
-        stderr_out = b""
-        try:
-            proc.kill()
-            stderr_out = proc.stderr.read() if proc.stderr else b""
-        except Exception:
-            pass
-        raise RuntimeError(
-            f"Vite failed to start on port {vite_port}.\n"
-            "Ensure node_modules are installed: cd react && npm install\n"
-            + stderr_out.decode(errors="replace")
-        )
-    return proc
-
-
-def _run_uvicorn(fastapi_app: "fastapi.FastAPI", host: str, port: int) -> None:  # type: ignore[name-defined]
-    uvicorn.run(fastapi_app, host=host, port=port, log_level="warning")
-
-
 @app.command()
 def run(
     host: str = typer.Option("localhost", envvar="HARNESS_HOST"),
@@ -132,33 +106,56 @@ def run(
                 err=True,
             )
 
-    # ── FastAPI ───────────────────────────────────────────────────────────────
+    # ── FastAPI app ────────────────────────────────────────────────────────────
     fastapi_app = create_app(main_process=main_process, settings=settings)
 
-    server_thread = threading.Thread(
-        target=_run_uvicorn,
-        args=(fastapi_app, host, port),
-        daemon=True,
+    # ── Service manager ────────────────────────────────────────────────────────
+    service_manager = ServiceManager(logger=main_process.logger)
+
+    # Backend: FastAPI/uvicorn running in a daemon thread
+    backend_service = UvicornService(
+        app=fastapi_app,
+        host=host,
+        port=port,
+        display_name="FastAPI Backend",
     )
-    server_thread.start()
-    typer.echo(f"API server starting on http://{host}:{port}")
+    service_manager.register(backend_service)
 
-    if not _wait_for_port(host, port, timeout=15.0):
-        typer.echo(f"Error: API server failed to bind on {host}:{port}", err=True)
-        sys.exit(1)
-    typer.echo(f"API server ready on http://{host}:{port}")
-
-    # ── Vite dev server ───────────────────────────────────────────────────────
-    vite_proc: subprocess.Popen[str] | None = None
+    # Frontend: Vite dev server subprocess (optional)
     react_dir = Path(__file__).parent.parent / "react"
     if not no_vite and react_dir.exists():
-        try:
-            vite_proc = _start_vite(settings.vite_port, react_dir)
+        frontend_service = SubprocessService(
+            name="frontend",
+            display_name="React Dev Server (Vite)",
+            cmd=["npm", "run", "dev", "--", "--port", str(settings.vite_port), "--host"],
+            cwd=str(react_dir),
+            health_check=(settings.vite_host, settings.vite_port),
+            health_timeout=30.0,
+        )
+        service_manager.register(frontend_service)
+
+    # Start all services synchronously (run the async start_all on a new loop)
+    async def _start_services() -> None:
+        await service_manager.start_all()
+
+    try:
+        asyncio.run(_start_services())
+    except Exception as exc:
+        typer.echo(f"Error: failed to start services — {exc}", err=True)
+        sys.exit(1)
+
+    typer.echo(f"API server ready on http://{host}:{port}")
+
+    if not no_vite and react_dir.exists() and service_manager.get("frontend"):
+        frontend = service_manager.get("frontend")
+        if frontend and frontend.status.value == "running":
             typer.echo(
-                f"Vite dev server started on http://{settings.vite_host}:{settings.vite_port}"
+                f"Vite dev server started on "
+                f"http://{settings.vite_host}:{settings.vite_port}"
             )
-        except Exception as exc:
-            typer.echo(f"Warning: Vite failed to start ({exc})", err=True)
+
+    # Attach ServiceManager to MainProcess so route handlers can use it
+    main_process.attach_service_manager(service_manager)
 
     # ── Root window ───────────────────────────────────────────────────────────
     root_url = f"http://{host}:{port}/ui/root"
@@ -172,16 +169,19 @@ def run(
         typer.echo(f"Headless mode — visit {root_url} in your browser")
         typer.echo("Press Ctrl+C to stop.")
         try:
-            server_thread.join()
+            # Keep the main thread alive; backend runs on its daemon thread
+            backend_service._thread.join()  # type: ignore[union-attr]
         except KeyboardInterrupt:
             pass
 
     # ── Cleanup ───────────────────────────────────────────────────────────────
-    if vite_proc:
-        vite_proc.terminate()
+    async def _stop_services() -> None:
+        await service_manager.stop_all()
 
+    asyncio.run(_stop_services())
     typer.echo("Harness stopped.")
 
 
 if __name__ == "__main__":
     app()
+
