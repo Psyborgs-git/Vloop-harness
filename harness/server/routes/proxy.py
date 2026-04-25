@@ -7,11 +7,15 @@ React app's JS/CSS from the FastAPI origin.
 
 Static fallback
 ───────────────
-When the Vite dev server is not running, all UI routes fall back to the built
-static files in ``react/dist/``.  Run ``npm run build`` inside the ``react/``
-directory to produce these files.  The ``/assets/…`` paths in the built
+When the Vite dev server is not running, ``/ui/root`` (the root index) falls back to the
+pre-built static files in ``react/dist/``.  Run ``npm run build`` inside the ``react/``
+directory to produce these files.  The ``/assets/…`` paths referenced by the built
 ``index.html`` are served by the ``StaticFiles`` mount registered in
 ``harness/server/app.py``.
+
+Sub-paths under ``/ui/root/{path}`` (e.g. Vite HMR requests) are only proxied to the Vite
+dev server.  They are never needed in production because the built ``index.html`` only
+references ``/assets/…`` paths.
 """
 
 from __future__ import annotations
@@ -20,7 +24,7 @@ from pathlib import Path
 
 import httpx
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import FileResponse, HTMLResponse, Response
+from fastapi.responses import HTMLResponse, Response
 
 from harness.server.injector import inject_harness_vars
 
@@ -77,21 +81,6 @@ async def _serve_static_root(settings: object) -> HTMLResponse:
     return _inject_and_return(index.read_text(), settings)
 
 
-async def _serve_static_asset(rel_path: str) -> Response:
-    """Serve a static file from the built ``react/dist/`` tree."""
-    # Reject path traversal sequences before any filesystem access
-    if ".." in rel_path or rel_path.startswith("/"):
-        raise HTTPException(status_code=400, detail="Invalid asset path")
-    dist_resolved = _REACT_DIST.resolve()
-    target = (dist_resolved / rel_path).resolve()
-    # Double-check resolved path is still inside the dist tree
-    if not str(target).startswith(str(dist_resolved) + "/") and target != dist_resolved:
-        raise HTTPException(status_code=400, detail="Invalid asset path")
-    if target.is_file():
-        return FileResponse(str(target))
-    raise HTTPException(status_code=404, detail=f"Static asset not found: {rel_path}")
-
-
 # ── Root dashboard (special-cased — not a legacy component) ──────────────────
 
 
@@ -100,20 +89,19 @@ async def _serve_static_asset(rel_path: str) -> Response:
 async def serve_root_ui(request: Request, path: str = "") -> Response:
     """Serve the main VLoop Harness dashboard.
 
-    Tries the Vite dev server first; falls back to the pre-built ``react/dist/``
-    files when Vite is unreachable.
+    Tries the Vite dev server first.  For the root (no sub-path), falls back
+    to pre-built static files in ``react/dist/`` when Vite is unreachable.
+    Sub-paths (Vite HMR/WS requests) are dev-only and return 503 when Vite is
+    down — production builds never request sub-paths under ``/ui/root/``.
     """
     settings = request.app.state.settings
     vite_url = f"http://{settings.vite_host}:{settings.vite_port}"
 
-    # Non-HTML sub-paths (e.g. HMR WebSocket upgrade requests) — try Vite then static.
+    # Sub-paths (Vite HMR, hot-update, etc.) are forwarded to Vite only.
     if path:
-        try:
-            return await _proxy_to_vite(path, vite_url)
-        except HTTPException:
-            return await _serve_static_asset(path)
+        return await _proxy_to_vite(path, vite_url)
 
-    # Root index.html — try Vite then static dist.
+    # Root index.html — try Vite, fall back to built dist.
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(f"{vite_url}/", follow_redirects=True, timeout=10)
@@ -203,4 +191,5 @@ async def serve_component_ui(
         permissions=perms,
     )
     return HTMLResponse(content=html, status_code=resp.status_code)
+
 

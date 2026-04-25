@@ -170,7 +170,7 @@ def run(
         typer.echo("Press Ctrl+C to stop.")
         try:
             # Keep the main thread alive; backend runs on its daemon thread
-            backend_service._thread.join()  # type: ignore[union-attr]
+            backend_service.wait()
         except KeyboardInterrupt:
             pass
 

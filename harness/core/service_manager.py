@@ -175,6 +175,11 @@ class UvicornService(ManagedService):
         await self.stop()
         await self.start()
 
+    def wait(self, timeout: float | None = None) -> None:
+        """Block until the backend thread exits (or ``timeout`` seconds pass)."""
+        if self._thread is not None:
+            self._thread.join(timeout=timeout)
+
     def info(self) -> dict[str, Any]:
         base = super().info()
         base["type"] = "uvicorn"
