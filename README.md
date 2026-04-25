@@ -2,6 +2,12 @@
 
 A native binary harness where Python components run logic/state/events and pair 1:1 with React UI apps served dynamically from a shared Vite dev server. Components run as mini-apps inside a resizable root window. Python is the brain. React is the face.
 
+> **Current implementation note:** the repository currently has a chat-first
+> root dashboard with DSPy, pipeline, tools, settings, and generated-view panels.
+> The resizable multi-view window manager described below is target architecture.
+> See [`DOCS/full-stack-agents-harness-plan.md`](DOCS/full-stack-agents-harness-plan.md)
+> for the updated full-stack agents harness plan and implementation parity map.
+
 -----
 
 ## Top-Level Overview
