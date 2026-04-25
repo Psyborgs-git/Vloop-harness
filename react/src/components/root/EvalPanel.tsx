@@ -36,13 +36,13 @@ interface Props {
   componentId?: string;
 }
 
-const SX_LABEL: React.CSSProperties = { fontSize: "0.82rem" };
+const SX_COMPACT: React.CSSProperties = { fontSize: "0.82rem" };
 
 export default function EvalPanel({ componentId }: Props) {
   if (!componentId) {
     return (
       <Box sx={{ p: 2 }}>
-        <Typography variant="body2" color="text.secondary" sx={SX_LABEL}>
+        <Typography variant="body2" color="text.secondary" sx={SX_COMPACT}>
           Select a DSPy component to view eval datasets.
         </Typography>
       </Box>
@@ -140,7 +140,7 @@ function EvalDatasetsSection({ componentId }: { componentId: string }) {
   return (
     <Box sx={{ p: 1.5 }}>
       <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-        <Typography variant="subtitle2" fontWeight={600} sx={{ flexGrow: 1, ...SX_LABEL }}>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ flexGrow: 1, ...SX_COMPACT }}>
           Eval Datasets
         </Typography>
         <Tooltip title="New dataset">
@@ -170,7 +170,7 @@ function EvalDatasetsSection({ componentId }: { componentId: string }) {
             onChange={(e) => setNewName(e.target.value)}
             size="small"
             fullWidth
-            inputProps={{ style: SX_LABEL }}
+            inputProps={{ style: SX_COMPACT }}
           />
           <TextField
             label="Description"
@@ -178,7 +178,7 @@ function EvalDatasetsSection({ componentId }: { componentId: string }) {
             onChange={(e) => setNewDesc(e.target.value)}
             size="small"
             fullWidth
-            inputProps={{ style: SX_LABEL }}
+            inputProps={{ style: SX_COMPACT }}
           />
           <TextField
             label="Examples (JSON array)"
@@ -189,7 +189,7 @@ function EvalDatasetsSection({ componentId }: { componentId: string }) {
             multiline
             minRows={3}
             placeholder='[{"inputs": {}, "expected_outputs": {}}]'
-            inputProps={{ style: { ...SX_LABEL, fontFamily: "monospace" } }}
+            inputProps={{ style: { ...SX_COMPACT, fontFamily: "monospace" } }}
           />
           {formError && (
             <Typography variant="caption" color="error">
@@ -331,7 +331,7 @@ function SnapshotsSection({ componentId }: { componentId: string }) {
     <Box sx={{ p: 1.5 }}>
       <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
         <HistoryIcon sx={{ fontSize: 15, mr: 0.5, color: "text.secondary" }} />
-        <Typography variant="subtitle2" fontWeight={600} sx={{ flexGrow: 1, ...SX_LABEL }}>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ flexGrow: 1, ...SX_COMPACT }}>
           Snapshots
         </Typography>
         <Button
