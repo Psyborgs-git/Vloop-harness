@@ -79,11 +79,13 @@ async def _serve_static_root(settings: object) -> HTMLResponse:
 
 async def _serve_static_asset(rel_path: str) -> Response:
     """Serve a static file from the built ``react/dist/`` tree."""
-    target = (_REACT_DIST / rel_path).resolve()
-    # Guard against path-traversal outside dist
-    try:
-        target.relative_to(_REACT_DIST.resolve())
-    except ValueError:
+    # Reject path traversal sequences before any filesystem access
+    if ".." in rel_path or rel_path.startswith("/"):
+        raise HTTPException(status_code=400, detail="Invalid asset path")
+    dist_resolved = _REACT_DIST.resolve()
+    target = (dist_resolved / rel_path).resolve()
+    # Double-check resolved path is still inside the dist tree
+    if not str(target).startswith(str(dist_resolved) + "/") and target != dist_resolved:
         raise HTTPException(status_code=400, detail="Invalid asset path")
     if target.is_file():
         return FileResponse(str(target))
