@@ -79,10 +79,8 @@ export interface RunResult {
   outputs: Record<string, unknown>;
 }
 
-export type NavTab = "chat";
-
 /** Panel shown in the right contextual drawer. */
-export type ContextPanelType = "dspy" | "pipelines" | "tools" | "view" | "agents" | "manifests" | null;
+export type ContextPanelType = "dspy" | "pipelines" | "tools" | "view" | "agents" | "manifests" | "eval" | null;
 
 export interface ContextPanelState {
   type: ContextPanelType;

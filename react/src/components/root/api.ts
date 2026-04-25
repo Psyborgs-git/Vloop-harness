@@ -376,6 +376,94 @@ export const executeBrowser = (params: {
     body: JSON.stringify(params),
   });
 
+// ── Component versions (eval/rollback) ────────────────────────────────────────
+
+export interface ComponentVersion {
+  id: string;
+  component_id: string;
+  version_number: number;
+  name: string;
+  description: string;
+  code: string;
+  module_type: string;
+  change_summary: string;
+  created_at: string;
+}
+
+export interface EvalDataset {
+  id: string;
+  component_id: string;
+  name: string;
+  description: string;
+  examples: Array<{ inputs: Record<string, unknown>; expected_outputs: Record<string, unknown> }>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EvalResult {
+  component_id: string;
+  dataset_id: string;
+  total: number;
+  passed: number;
+  failed: number;
+  results: Array<{
+    index: number;
+    passed: boolean;
+    inputs: Record<string, unknown>;
+    expected_outputs: Record<string, unknown>;
+    actual_outputs: Record<string, unknown>;
+    error?: string;
+  }>;
+}
+
+export const listComponentVersions = (componentId: string) =>
+  request<ComponentVersion[]>(`/api/dspy/components/${componentId}/versions`);
+
+export const snapshotComponent = (componentId: string, changeSummary = "") =>
+  request<ComponentVersion>(`/api/dspy/components/${componentId}/snapshot`, {
+    method: "POST",
+    body: JSON.stringify({ change_summary: changeSummary }),
+  });
+
+export const rollbackComponent = (componentId: string, versionId: string) =>
+  request<{ component_id: string; rolled_back_to: number; snapshot_id: string }>(
+    `/api/dspy/components/${componentId}/rollback`,
+    { method: "POST", body: JSON.stringify({ version_id: versionId }) },
+  );
+
+export const listEvalDatasets = (componentId: string) =>
+  request<EvalDataset[]>(`/api/dspy/components/${componentId}/eval-datasets`);
+
+export const createEvalDataset = (
+  componentId: string,
+  data: { name: string; description?: string; examples?: unknown[] },
+) =>
+  request<EvalDataset>(`/api/dspy/components/${componentId}/eval-datasets`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+export const updateEvalDataset = (
+  componentId: string,
+  datasetId: string,
+  data: Partial<{ name: string; description: string; examples: unknown[] }>,
+) =>
+  request<EvalDataset>(`/api/dspy/components/${componentId}/eval-datasets/${datasetId}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+
+export const deleteEvalDataset = (componentId: string, datasetId: string) =>
+  request<void>(`/api/dspy/components/${componentId}/eval-datasets/${datasetId}`, {
+    method: "DELETE",
+  });
+
+export const evaluateComponent = (componentId: string, datasetId?: string) =>
+  request<EvalResult>(`/api/dspy/components/${componentId}/evaluate`, {
+    method: "POST",
+    body: JSON.stringify({ dataset_id: datasetId }),
+  });
+
 // ── Database tool ──────────────────────────────────────────────────────────
 
 export const executeDatabase = (params: {

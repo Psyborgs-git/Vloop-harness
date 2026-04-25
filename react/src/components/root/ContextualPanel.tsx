@@ -32,6 +32,7 @@ import * as api from "./api";
 import AgentRunPanel from "./AgentRunPanel";
 import AppManifestPanel from "./AppManifestPanel";
 import DSPyPanel from "./DSPyPanel";
+import EvalPanel from "./EvalPanel";
 import PipelinePanel from "./PipelinePanel";
 import ToolsPanel from "./ToolsPanel";
 import type { ContextPanelType, GeneratedView } from "./types";
@@ -93,6 +94,7 @@ export default function ContextualPanel({ open, panelType, panelId, onClose }: P
           {panelType === "view" && "Generated View"}
           {panelType === "agents" && "Agent Runs"}
           {panelType === "manifests" && "App Manifests"}
+          {panelType === "eval" && "Component Evals"}
         </Typography>
         <Tooltip title="Close panel">
           <IconButton size="small" onClick={onClose}>
@@ -119,6 +121,7 @@ export default function ContextualPanel({ open, panelType, panelId, onClose }: P
         {panelType === "manifests" && (
           <AppManifestPanel focusManifestId={panelId} onFocused={() => {}} />
         )}
+        {panelType === "eval" && <EvalPanel componentId={panelId} />}
       </Box>
     </Drawer>
   );
