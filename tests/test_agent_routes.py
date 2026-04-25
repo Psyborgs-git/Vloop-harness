@@ -200,3 +200,26 @@ class TestAppManifestRoutes:
         resp = await app_client.get("/api/apps/traces")
         assert resp.status_code == 200
         assert isinstance(resp.json(), list)
+
+    async def test_ui_contract_manifest_react_views_produce_stable_workspace_url(
+        self, app_client: AsyncClient
+    ) -> None:
+        """UI contract: workspace-open URL is derived from first react view."""
+        create = await app_client.post(
+            "/api/apps/manifests",
+            json={
+                "name": "Finance Cockpit",
+                "status": "active",
+                "react_views": ["RevenueDashboard", "OpsView"],
+            },
+        )
+        assert create.status_code == 201
+        manifest_id = create.json()["id"]
+
+        get_resp = await app_client.get(f"/api/apps/manifests/{manifest_id}")
+        assert get_resp.status_code == 200
+        manifest = get_resp.json()
+
+        # Matches AppManifestPanel's `href={`/ui/${m.react_views[0]}`}` contract.
+        first_view_url = f"/ui/{manifest['react_views'][0]}"
+        assert first_view_url == "/ui/RevenueDashboard"

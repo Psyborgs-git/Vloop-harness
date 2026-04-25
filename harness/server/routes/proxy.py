@@ -8,6 +8,8 @@ React app's JS/CSS from the FastAPI origin.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import httpx
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, Response
@@ -15,6 +17,14 @@ from fastapi.responses import HTMLResponse, Response
 from harness.server.injector import inject_harness_vars
 
 router = APIRouter()
+
+
+def _react_dist_dir(settings: object) -> Path:
+    """Resolve the built React dist directory for static mode."""
+    configured = getattr(settings, "react_dist_dir", "")
+    if configured:
+        return Path(str(configured)).expanduser().resolve()
+    return (Path(__file__).resolve().parents[3] / "react" / "dist").resolve()
 
 
 async def _proxy_to_vite(path: str, vite_url: str) -> Response:
@@ -40,6 +50,36 @@ async def serve_root_ui(request: Request, path: str = "") -> Response:
     """Serve the main VLoop Harness dashboard from react/index.html."""
     settings = request.app.state.settings
     vite_url = f"http://{settings.vite_host}:{settings.vite_port}"
+    debug_mode = bool(getattr(settings, "harness_debug", True))
+
+    if not debug_mode:
+        dist_dir = _react_dist_dir(settings)
+        if not dist_dir.exists():
+            raise HTTPException(status_code=503, detail=f"React dist directory not found: {dist_dir}")
+
+        rel = path or "index.html"
+        candidate = (dist_dir / rel).resolve()
+        try:
+            candidate.relative_to(dist_dir)
+        except ValueError as exc:
+            raise HTTPException(status_code=404, detail="Asset not found") from exc
+        if not candidate.exists() or not candidate.is_file():
+            raise HTTPException(status_code=404, detail="Asset not found")
+        content = candidate.read_text(encoding="utf-8") if candidate.suffix == ".html" else candidate.read_bytes()
+        if candidate.suffix != ".html":
+            return Response(content=content)
+
+        api_base = f"http://{settings.harness_host}:{settings.harness_port}"
+        ws_base = f"ws://{settings.harness_host}:{settings.harness_port}"
+        html = inject_harness_vars(
+            html=str(content),
+            component_id="root",
+            api_base=api_base,
+            ws_base=ws_base,
+            initial_state={},
+            permissions=[],
+        )
+        return HTMLResponse(content=html)
 
     # Non-HTML sub-paths (e.g. HMR WebSocket upgrade requests) go straight to Vite.
     if path:
