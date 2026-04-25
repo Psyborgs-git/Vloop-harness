@@ -42,6 +42,7 @@ import type { AgentRun, AgentRunStep } from "./types";
 interface Props {
   focusRunId?: string;
   onFocused?: () => void;
+  onOpenWorkspace?: (url: string, title: string) => void;
 }
 
 const STATUS_COLOR: Record<string, "default" | "warning" | "info" | "success" | "error"> = {
@@ -53,7 +54,7 @@ const STATUS_COLOR: Record<string, "default" | "warning" | "info" | "success" | 
   failed: "error",
 };
 
-export default function AgentRunPanel({ focusRunId, onFocused }: Props) {
+export default function AgentRunPanel({ focusRunId, onFocused, onOpenWorkspace }: Props) {
   const [runs, setRuns] = useState<AgentRun[]>([]);
   const [loading, setLoading] = useState(false);
   const [showNew, setShowNew] = useState(false);
@@ -106,6 +107,13 @@ export default function AgentRunPanel({ focusRunId, onFocused }: Props) {
   const loadRunDetail = async (runId: string) => {
     const full = await api.getAgentRun(runId);
     setExpandedRun(full);
+    if (
+      full.status === "completed" &&
+      full.result &&
+      typeof full.result["view_url"] === "string"
+    ) {
+      onOpenWorkspace?.(full.result["view_url"], full.goal);
+    }
   };
 
   const handleExpand = (id: string) => {

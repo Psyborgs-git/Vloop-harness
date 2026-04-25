@@ -178,6 +178,16 @@ export interface AgentRun {
   steps?: AgentRunStep[];
 }
 
+// ── Workspace windows ─────────────────────────────────────────────────────
+
+export interface WorkspaceWindow {
+  id: string;
+  title: string;
+  url: string;
+  minimized: boolean;
+  focusedAt: number;
+}
+
 // ── App manifests ──────────────────────────────────────────────────────────
 
 export interface AppManifest {

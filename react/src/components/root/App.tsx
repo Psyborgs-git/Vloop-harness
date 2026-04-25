@@ -1,22 +1,31 @@
 /**
- * VLoop Harness — Root Dashboard (Chat-First)
+ * VLoop Harness — Root Dashboard (Chat-First + Workspace Mode)
  *
- * Layout:
+ * Layout (chat mode — default):
  *  ┌─ TopBar ─────────────────────────────────────────────────────────┐
  *  │  VLoop Harness    [provider status]  [connection]  [⚙ settings]  │
  *  ├─ Main (full width) ──────────────────────────────────────────────┤
  *  │  ChatPanel (session sidebar + conversation)                       │
  *  └──────────────────────────────────────────────────────────────────┘
  *
+ * Layout (workspace mode):
+ *  ┌─ TopBar ───────────────────────────────────────────────────────────────┐
+ *  ├─ Chat sidebar (350 px, collapsible) │ WorkspaceArea (iframe tabs)      │
+ *  └────────────────────────────────────────────────────────────────────────┘
+ *
  *  Settings opens as a Dialog (desktop) or bottom Drawer ≤80vh (mobile).
  *  DSPy / Pipelines / Tools open as a contextual right Drawer from chat actions.
  */
 
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import DashboardIcon from "@mui/icons-material/Dashboard";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import SettingsIcon from "@mui/icons-material/Settings";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import {
   AppBar,
+  Badge,
   Box,
   Chip,
   CssBaseline,
@@ -41,7 +50,8 @@ import CommandPalette from "./CommandPalette";
 import type { PaletteNavType } from "./CommandPalette";
 import ContextualPanel from "./ContextualPanel";
 import SettingsPanel from "./SettingsPanel";
-import type { ContextPanelState, Provider } from "./types";
+import type { ContextPanelState, Provider, WorkspaceWindow } from "./types";
+import WorkspaceArea from "./WorkspaceArea";
 
 // ── MUI dark theme ────────────────────────────────────────────────────────────
 
@@ -114,6 +124,8 @@ const darkTheme = createTheme({
 
 // ── Root app ──────────────────────────────────────────────────────────────────
 
+const WORKSPACE_STORAGE_KEY = "vloop_workspace_windows";
+
 export default function App() {
   const { connected } = useHarness();
   const [defaultProvider, setDefaultProvider] = useState<Provider | null>(null);
@@ -122,7 +134,32 @@ export default function App() {
   const [focusId, setFocusId] = useState<string | null>(null);
   const [contextPanel, setContextPanel] = useState<ContextPanelState>({ type: null });
 
+  // ── Workspace state ────────────────────────────────────────────────────────
+  const [workspaceMode, setWorkspaceMode] = useState(false);
+  const [chatCollapsed, setChatCollapsed] = useState(false);
+  const [windows, setWindows] = useState<WorkspaceWindow[]>([]);
+  const [focusedWindowId, setFocusedWindowId] = useState<string | null>(null);
+
   const isMobile = useMediaQuery(darkTheme.breakpoints.down("md"));
+
+  // ── Load workspace from localStorage ──────────────────────────────────────
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(WORKSPACE_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as { windows: WorkspaceWindow[]; focusedWindowId: string | null };
+        setWindows(parsed.windows ?? []);
+        setFocusedWindowId(parsed.focusedWindowId ?? null);
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }, []);
+
+  // ── Persist workspace to localStorage ─────────────────────────────────────
+  useEffect(() => {
+    localStorage.setItem(WORKSPACE_STORAGE_KEY, JSON.stringify({ windows, focusedWindowId }));
+  }, [windows, focusedWindowId]);
 
   useEffect(() => {
     api.listProviders().then((providers) => {
@@ -153,6 +190,49 @@ export default function App() {
   function openContextPanel(type: ContextPanelState["type"], id?: string) {
     setContextPanel({ type, id });
   }
+
+  // ── Open a URL in the workspace ────────────────────────────────────────────
+  function openInWorkspace(url: string, title: string) {
+    const now = Date.now();
+    const existing = windows.find((w) => w.url === url);
+    if (existing) {
+      setWindows((prev) =>
+        prev.map((w) => w.id === existing.id ? { ...w, minimized: false, focusedAt: now } : w)
+      );
+      setFocusedWindowId(existing.id);
+    } else {
+      const id = `w-${now}-${Math.random().toString(36).slice(2)}`;
+      const newWindow: WorkspaceWindow = { id, title, url, minimized: false, focusedAt: now };
+      setWindows((prev) => [...prev, newWindow]);
+      setFocusedWindowId(id);
+    }
+    setWorkspaceMode(true);
+  }
+
+  function handleCloseWindow(id: string) {
+    setWindows((prev) => {
+      const remaining = prev.filter((w) => w.id !== id);
+      if (focusedWindowId === id) {
+        setFocusedWindowId(remaining[0]?.id ?? null);
+      }
+      return remaining;
+    });
+  }
+
+  function handleMinimizeWindow(id: string) {
+    setWindows((prev) => prev.map((w) => w.id === id ? { ...w, minimized: !w.minimized } : w));
+    // If we just minimized the focused window, focus the next visible one
+    setWindows((prev) => {
+      const win = prev.find((w) => w.id === id);
+      if (win?.minimized && focusedWindowId === id) {
+        const next = prev.find((w) => w.id !== id && !w.minimized);
+        setFocusedWindowId(next?.id ?? null);
+      }
+      return prev;
+    });
+  }
+
+  const openWindowCount = windows.filter((w) => !w.minimized).length;
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -214,6 +294,23 @@ export default function App() {
               }}
             />
 
+            {/* Workspace toggle */}
+            <Tooltip title={workspaceMode ? "Exit workspace" : "Open workspace"}>
+              <IconButton
+                size="small"
+                onClick={() => setWorkspaceMode((v) => !v)}
+                sx={{ color: workspaceMode ? "primary.main" : "text.secondary" }}
+              >
+                <Badge
+                  badgeContent={openWindowCount > 0 ? openWindowCount : undefined}
+                  color="primary"
+                  sx={{ "& .MuiBadge-badge": { fontSize: "0.6rem", minWidth: 14, height: 14 } }}
+                >
+                  <DashboardIcon fontSize="small" />
+                </Badge>
+              </IconButton>
+            </Tooltip>
+
             {/* Settings gear */}
             <Tooltip title="Settings">
               <IconButton size="small" onClick={() => setSettingsOpen(true)} sx={{ color: "text.secondary" }}>
@@ -223,13 +320,85 @@ export default function App() {
           </Toolbar>
         </AppBar>
 
-        {/* ── Main content (chat always full-width) ────────────────────────── */}
+        {/* ── Main content ─────────────────────────────────────────────────── */}
         <Box sx={{ flexGrow: 1, overflow: "hidden" }}>
-          <ChatPanel
-            focusSessionId={focusId}
-            onFocused={() => setFocusId(null)}
-            onOpenPanel={openContextPanel}
-          />
+          {workspaceMode ? (
+            /* ── Workspace mode: split chat + iframe area ── */
+            <Box sx={{ display: "flex", height: "100%", overflow: "hidden" }}>
+
+              {/* Collapsible chat sidebar */}
+              <Box sx={{ display: "flex", flexShrink: 0, position: "relative" }}>
+                <Box
+                  sx={{
+                    width: chatCollapsed ? 0 : 350,
+                    overflow: "hidden",
+                    transition: "width 0.2s ease",
+                    height: "100%",
+                  }}
+                >
+                  <Box sx={{ width: 350, height: "100%" }}>
+                    <ChatPanel
+                      focusSessionId={focusId}
+                      onFocused={() => setFocusId(null)}
+                      onOpenPanel={openContextPanel}
+                      onOpenWorkspace={openInWorkspace}
+                    />
+                  </Box>
+                </Box>
+
+                {/* Collapse / expand toggle */}
+                <Box
+                  sx={{
+                    position: "absolute",
+                    right: -16,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    zIndex: 10,
+                  }}
+                >
+                  <Tooltip title={chatCollapsed ? "Expand chat" : "Collapse chat"}>
+                    <IconButton
+                      size="small"
+                      onClick={() => setChatCollapsed((v) => !v)}
+                      sx={{
+                        bgcolor: "background.paper",
+                        border: "1px solid",
+                        borderColor: "divider",
+                        width: 24,
+                        height: 24,
+                        "&:hover": { bgcolor: "action.hover" },
+                      }}
+                    >
+                      {chatCollapsed
+                        ? <ChevronRightIcon sx={{ fontSize: 16 }} />
+                        : <ChevronLeftIcon sx={{ fontSize: 16 }} />
+                      }
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </Box>
+
+              {/* Workspace area */}
+              <Box sx={{ flexGrow: 1, overflow: "hidden", minWidth: 0 }}>
+                <WorkspaceArea
+                  windows={windows}
+                  focusedId={focusedWindowId}
+                  onFocus={setFocusedWindowId}
+                  onClose={handleCloseWindow}
+                  onMinimize={handleMinimizeWindow}
+                  onOpenNew={openInWorkspace}
+                />
+              </Box>
+            </Box>
+          ) : (
+            /* ── Chat mode: full-width ChatPanel ── */
+            <ChatPanel
+              focusSessionId={focusId}
+              onFocused={() => setFocusId(null)}
+              onOpenPanel={openContextPanel}
+              onOpenWorkspace={openInWorkspace}
+            />
+          )}
         </Box>
       </Box>
 

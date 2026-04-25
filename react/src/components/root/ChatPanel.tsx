@@ -55,9 +55,10 @@ interface Props {
   focusSessionId?: string | null;
   onFocused?: () => void;
   onOpenPanel?: (type: ContextPanelState["type"], id?: string) => void;
+  onOpenWorkspace?: (url: string, title: string) => void;
 }
 
-export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel }: Props) {
+export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel, onOpenWorkspace }: Props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -219,6 +220,7 @@ export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel }: Pr
       api.listMessages(activeId).then(setMessages);
     }
     onOpenPanel?.("view", view.id);
+    onOpenWorkspace?.("/ui/" + view.component_name, view.component_name);
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
