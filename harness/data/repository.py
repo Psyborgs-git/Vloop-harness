@@ -19,7 +19,9 @@ from harness.data.models import (
     AppManifest,
     ChatMessage,
     ChatSession,
+    ComponentVersion,
     DSPyComponentDef,
+    EvalDataset,
     GeneratedView,
     PipelineDef,
     ProviderConfigDB,
@@ -423,3 +425,93 @@ class Repository:
             q = q.where(ToolTrace.run_step_id == run_step_id)
         result = await self.session.execute(q)
         return list(result.scalars().all())
+
+    # ── Component versions ────────────────────────────────────────────────────
+
+    async def create_component_version(
+        self,
+        component_id: str,
+        name: str,
+        code: str,
+        description: str = "",
+        module_type: str = "ChainOfThought",
+        change_summary: str = "",
+    ) -> ComponentVersion:
+        """Snapshot a component at its current state, auto-incrementing version_number."""
+        result = await self.session.execute(
+            select(ComponentVersion)
+            .where(ComponentVersion.component_id == component_id)
+            .order_by(ComponentVersion.version_number.desc())
+            .limit(1)
+        )
+        latest = result.scalar_one_or_none()
+        next_version = (latest.version_number + 1) if latest else 1
+
+        version = ComponentVersion(
+            component_id=component_id,
+            version_number=next_version,
+            name=name,
+            description=description,
+            code=code,
+            module_type=module_type,
+            change_summary=change_summary,
+        )
+        self.session.add(version)
+        await self.session.commit()
+        await self.session.refresh(version)
+        return version
+
+    async def list_component_versions(self, component_id: str) -> list[ComponentVersion]:
+        result = await self.session.execute(
+            select(ComponentVersion)
+            .where(ComponentVersion.component_id == component_id)
+            .order_by(ComponentVersion.version_number.desc())
+        )
+        return list(result.scalars().all())
+
+    async def get_component_version(self, version_id: str) -> ComponentVersion | None:
+        return await self.session.get(ComponentVersion, version_id)
+
+    # ── Eval datasets ─────────────────────────────────────────────────────────
+
+    async def create_eval_dataset(
+        self,
+        component_id: str,
+        name: str,
+        description: str = "",
+        examples: list[dict[str, Any]] | None = None,
+    ) -> EvalDataset:
+        dataset = EvalDataset(
+            component_id=component_id,
+            name=name,
+            description=description,
+            examples=examples or [],
+        )
+        self.session.add(dataset)
+        await self.session.commit()
+        await self.session.refresh(dataset)
+        return dataset
+
+    async def list_eval_datasets(self, component_id: str) -> list[EvalDataset]:
+        result = await self.session.execute(
+            select(EvalDataset)
+            .where(EvalDataset.component_id == component_id)
+            .order_by(EvalDataset.created_at.desc())
+        )
+        return list(result.scalars().all())
+
+    async def get_eval_dataset(self, dataset_id: str) -> EvalDataset | None:
+        return await self.session.get(EvalDataset, dataset_id)
+
+    async def update_eval_dataset(self, dataset_id: str, **kwargs: Any) -> None:
+        kwargs["updated_at"] = _utcnow()
+        await self.session.execute(
+            update(EvalDataset).where(EvalDataset.id == dataset_id).values(**kwargs)
+        )
+        await self.session.commit()
+
+    async def delete_eval_dataset(self, dataset_id: str) -> None:
+        d = await self.session.get(EvalDataset, dataset_id)
+        if d:
+            await self.session.delete(d)
+            await self.session.commit()

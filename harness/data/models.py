@@ -13,6 +13,8 @@ Tables
   agent_run_steps     — append-only audit log of each step in a run
   app_manifests       — links backend components/pipelines to React views
   tool_traces         — enriched records of every tool call
+  component_versions  — point-in-time snapshots of DSPy component definitions (for rollback)
+  eval_datasets       — input/output example pairs for evaluating DSPy components
 """
 
 from __future__ import annotations
@@ -335,3 +337,51 @@ class ToolTrace(Base):
     duration_ms: Mapped[int | None] = mapped_column(nullable=True)
     success: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
+# ── Component versions ─────────────────────────────────────────────────────────
+
+
+class ComponentVersion(Base):
+    """A point-in-time snapshot of a DSPyComponentDef for versioning and rollback.
+
+    ``component_id``   — ID of the source component (no FK so deleted comps can still be versioned).
+    ``version_number`` — monotonically increasing per component_id.
+    ``change_summary`` — human-readable description of what changed in this version.
+    """
+
+    __tablename__ = "component_versions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_new_uuid)
+    component_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    version_number: Mapped[int] = mapped_column(default=1)
+    name: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str] = mapped_column(Text, default="")
+    code: Mapped[str] = mapped_column(Text)
+    module_type: Mapped[str] = mapped_column(String(50), default="ChainOfThought")
+    change_summary: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
+# ── Eval datasets ──────────────────────────────────────────────────────────────
+
+
+class EvalDataset(Base):
+    """A set of input/output example pairs for evaluating a DSPy component.
+
+    ``examples`` is a list of dicts with the shape::
+
+        {"inputs": {"field": "value", ...}, "expected_outputs": {"field": "value", ...}}
+    """
+
+    __tablename__ = "eval_datasets"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_new_uuid)
+    component_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    name: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str] = mapped_column(Text, default="")
+    examples: Mapped[list[dict]] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, onupdate=_utcnow
+    )
