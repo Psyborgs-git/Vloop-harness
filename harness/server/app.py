@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, AsyncIterator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from harness.server.routes import components, proxy, ws
 from harness.server.routes.agent_routes import router as agent_router
@@ -137,6 +138,15 @@ def create_app(main_process: "MainProcess", settings: "HarnessSettings") -> Fast
     # Attach shared state available before lifespan (settings, main_process)
     app.state.main_process = main_process
     app.state.settings = settings
+    app.state.react_dist_dir = Path(__file__).resolve().parents[2] / "react" / "dist"
+
+    # In production/static mode, serve built frontend assets directly.
+    if not settings.harness_debug:
+        app.mount(
+            "/assets",
+            StaticFiles(directory=app.state.react_dist_dir / "assets", check_dir=False),
+            name="ui-assets",
+        )
 
     # ── Routers ───────────────────────────────────────────────────────────────
     app.include_router(components.router)
