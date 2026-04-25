@@ -344,6 +344,23 @@ export const promoteAppManifest = (id: string, status: string) =>
 export const deleteAppManifest = (id: string) =>
   request<void>(`/api/apps/manifests/${id}`, { method: "DELETE" });
 
+export const getAppManifestLaunch = (id: string) =>
+  request<{
+    target_type: "manifest";
+    manifest_id: string;
+    view_id: string;
+    component_name: string;
+    mount_url: string;
+  }>(`/api/apps/manifests/${id}/launch`);
+
+export const getViewLaunch = (viewRef: string) =>
+  request<{
+    target_type: "view";
+    view_id: string;
+    component_name: string;
+    mount_url: string;
+  }>(`/api/apps/views/${encodeURIComponent(viewRef)}/launch`);
+
 // ── Tool traces ────────────────────────────────────────────────────────────
 
 export const listToolTraces = (params?: {

@@ -63,6 +63,7 @@ export default function AppManifestPanel({ focusManifestId, onFocused }: Props) 
   const [backendType, setBackendType] = useState("pipeline");
   const [backendId, setBackendId] = useState("");
   const [saving, setSaving] = useState(false);
+  const [launchError, setLaunchError] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -113,6 +114,17 @@ export default function AppManifestPanel({ focusManifestId, onFocused }: Props) 
   const handleDelete = async (id: string) => {
     await api.deleteAppManifest(id);
     setManifests((prev) => prev.filter((m) => m.id !== id));
+  };
+
+  const handleOpenManifest = async (manifest: AppManifest) => {
+    setLaunchError(null);
+    try {
+      const launch = await api.getAppManifestLaunch(manifest.id);
+      window.open(launch.mount_url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unable to open app manifest UI";
+      setLaunchError(msg);
+    }
   };
 
   return (
@@ -183,6 +195,11 @@ export default function AppManifestPanel({ focusManifestId, onFocused }: Props) 
 
       {/* Manifest list */}
       <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
+        {launchError && (
+          <Typography variant="caption" color="error" sx={{ px: 1.5, py: 0.75, display: "block" }}>
+            {launchError}
+          </Typography>
+        )}
         {manifests.length === 0 && !loading && (
           <Typography variant="caption" color="text.secondary" sx={{ p: 2, display: "block" }}>
             No app manifests yet. Click + to create one.
@@ -222,10 +239,7 @@ export default function AppManifestPanel({ focusManifestId, onFocused }: Props) 
                   <Tooltip title="Open first view">
                     <IconButton
                       size="small"
-                      component="a"
-                      href={`/ui/${m.react_views[0]}`}
-                      target="_blank"
-                      rel="noopener"
+                      onClick={() => handleOpenManifest(m)}
                     >
                       <OpenInNewIcon fontSize="small" />
                     </IconButton>

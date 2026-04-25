@@ -131,16 +131,36 @@ export default function ContextualPanel({ open, panelType, panelId, onClose }: P
 
 function ViewPreview({ viewId }: { viewId: string }) {
   const [view, setView] = useState<GeneratedView | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<"preview" | "source">("preview");
 
   useEffect(() => {
-    api.listViews().then((views) => {
-      const found = views.find((v) => v.id === viewId);
-      if (found) setView(found);
-    });
+    setError(null);
+    api.listViews()
+      .then((views) => {
+        const found = views.find((v) => v.id === viewId);
+        if (!found) {
+          setError("Generated view not found. It may have been deleted.");
+          setView(null);
+          return;
+        }
+        setView(found);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "Failed to load generated view");
+        setView(null);
+      });
   }, [viewId]);
 
-  if (!view) return null;
+  if (!view) {
+    return (
+      <Box sx={{ p: 2 }}>
+        <Typography variant="caption" color={error ? "error" : "text.secondary"}>
+          {error ?? "Loading view…"}
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
@@ -167,7 +187,7 @@ function ViewPreview({ viewId }: { viewId: string }) {
               <IconButton
                 size="small"
                 component="a"
-                href={`/ui/${view.component_name}`}
+                href={`/ui/views/${view.id}`}
                 target="_blank"
                 rel="noopener"
               >
@@ -177,7 +197,7 @@ function ViewPreview({ viewId }: { viewId: string }) {
           </Box>
           <Box
             component="iframe"
-            src={`/ui/${view.component_name}`}
+            src={`/ui/views/${view.id}`}
             sx={{
               flexGrow: 1,
               border: "1px solid",

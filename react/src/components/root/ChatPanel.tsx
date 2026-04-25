@@ -220,7 +220,7 @@ export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel, onOp
       api.listMessages(activeId).then(setMessages);
     }
     onOpenPanel?.("view", view.id);
-    onOpenWorkspace?.("/ui/" + view.component_name, view.component_name);
+    onOpenWorkspace?.(`/ui/views/${view.id}`, view.component_name);
   }
 
   // ── Render ────────────────────────────────────────────────────────────────

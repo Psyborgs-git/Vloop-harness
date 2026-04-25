@@ -235,6 +235,22 @@ class Repository:
     async def get_view(self, view_id: str) -> GeneratedView | None:
         return await self.session.get(GeneratedView, view_id)
 
+    async def get_view_by_component_name(self, component_name: str) -> GeneratedView | None:
+        result = await self.session.execute(
+            select(GeneratedView)
+            .where(GeneratedView.component_name == component_name)
+            .order_by(GeneratedView.created_at.desc())
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
+    async def resolve_view_ref(self, view_ref: str) -> GeneratedView | None:
+        """Resolve a view ref stored in manifests (view id OR component_name)."""
+        view = await self.get_view(view_ref)
+        if view is not None:
+            return view
+        return await self.get_view_by_component_name(view_ref)
+
     async def delete_view(self, view_id: str) -> None:
         v = await self.session.get(GeneratedView, view_id)
         if v:

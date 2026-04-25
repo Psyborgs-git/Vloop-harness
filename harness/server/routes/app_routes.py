@@ -199,6 +199,56 @@ async def delete_manifest(
     await repo.delete_app_manifest(manifest_id)
 
 
+@router.get("/manifests/{manifest_id}/launch")
+async def launch_manifest(
+    manifest_id: str,
+    db: AsyncSession = Depends(get_session),
+) -> dict[str, str]:
+    repo = Repository(db)
+    manifest = await repo.get_app_manifest(manifest_id)
+    if manifest is None:
+        raise HTTPException(status_code=404, detail="App manifest not found")
+
+    if not manifest.react_views:
+        raise HTTPException(
+            status_code=404,
+            detail="App manifest has no linked React views",
+        )
+
+    first_ref = manifest.react_views[0]
+    view = await repo.resolve_view_ref(first_ref)
+    if view is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Linked view {first_ref!r} not found for app manifest",
+        )
+
+    return {
+        "target_type": "manifest",
+        "manifest_id": manifest.id,
+        "view_id": view.id,
+        "component_name": view.component_name,
+        "mount_url": f"/ui/apps/{manifest.id}",
+    }
+
+
+@router.get("/views/{view_ref}/launch")
+async def launch_view(
+    view_ref: str,
+    db: AsyncSession = Depends(get_session),
+) -> dict[str, str]:
+    repo = Repository(db)
+    view = await repo.resolve_view_ref(view_ref)
+    if view is None:
+        raise HTTPException(status_code=404, detail="Generated view not found")
+    return {
+        "target_type": "view",
+        "view_id": view.id,
+        "component_name": view.component_name,
+        "mount_url": f"/ui/views/{view.id}",
+    }
+
+
 # ── Tool traces ───────────────────────────────────────────────────────────────
 
 
