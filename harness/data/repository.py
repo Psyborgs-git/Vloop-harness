@@ -14,6 +14,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from harness.data.models import (
+    AgentRun,
+    AgentRunStep,
+    AppManifest,
     ChatMessage,
     ChatSession,
     DSPyComponentDef,
@@ -21,6 +24,7 @@ from harness.data.models import (
     PipelineDef,
     ProviderConfigDB,
     TelemetryEvent,
+    ToolTrace,
 )
 
 
@@ -246,3 +250,176 @@ class Repository:
         t = TelemetryEvent(event_type=event_type, component_id=component_id, data=data)
         self.session.add(t)
         await self.session.commit()
+
+    # ── Agent runs ────────────────────────────────────────────────────────────
+
+    async def create_agent_run(
+        self,
+        goal: str,
+        session_id: str | None = None,
+        autonomy_mode: str = "suggest",
+    ) -> AgentRun:
+        run = AgentRun(goal=goal, session_id=session_id, autonomy_mode=autonomy_mode)
+        self.session.add(run)
+        await self.session.commit()
+        await self.session.refresh(run)
+        return run
+
+    async def get_agent_run(self, run_id: str) -> AgentRun | None:
+        result = await self.session.execute(
+            select(AgentRun)
+            .options(selectinload(AgentRun.steps))
+            .where(AgentRun.id == run_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def list_agent_runs(self, limit: int = 50) -> list[AgentRun]:
+        result = await self.session.execute(
+            select(AgentRun).order_by(AgentRun.created_at.desc()).limit(limit)
+        )
+        return list(result.scalars().all())
+
+    async def update_agent_run(
+        self,
+        run_id: str,
+        **kwargs: Any,
+    ) -> None:
+        kwargs["updated_at"] = _utcnow()
+        await self.session.execute(
+            update(AgentRun).where(AgentRun.id == run_id).values(**kwargs)
+        )
+        await self.session.commit()
+
+    async def delete_agent_run(self, run_id: str) -> None:
+        r = await self.session.get(AgentRun, run_id)
+        if r:
+            await self.session.delete(r)
+            await self.session.commit()
+
+    async def add_run_step(
+        self,
+        run_id: str,
+        step_type: str,
+        input_data: dict[str, Any] | None = None,
+        output_data: dict[str, Any] | None = None,
+        tool_name: str | None = None,
+        status: str = "completed",
+        error: str | None = None,
+        confirmation_token: str | None = None,
+        duration_ms: int | None = None,
+    ) -> AgentRunStep:
+        step = AgentRunStep(
+            run_id=run_id,
+            step_type=step_type,
+            tool_name=tool_name,
+            input_data=input_data,
+            output_data=output_data,
+            status=status,
+            error=error,
+            confirmation_token=confirmation_token,
+            duration_ms=duration_ms,
+        )
+        self.session.add(step)
+        await self.session.commit()
+        await self.session.refresh(step)
+        return step
+
+    # ── App manifests ─────────────────────────────────────────────────────────
+
+    async def create_app_manifest(
+        self,
+        name: str,
+        description: str = "",
+        backend_type: str = "pipeline",
+        backend_id: str | None = None,
+        react_views: list[str] | None = None,
+        permissions: list[str] | None = None,
+        state_schema: dict[str, Any] | None = None,
+        agent_run_id: str | None = None,
+    ) -> AppManifest:
+        manifest = AppManifest(
+            name=name,
+            description=description,
+            backend_type=backend_type,
+            backend_id=backend_id,
+            react_views=react_views or [],
+            permissions=permissions or [],
+            state_schema=state_schema or {},
+            agent_run_id=agent_run_id,
+        )
+        self.session.add(manifest)
+        await self.session.commit()
+        await self.session.refresh(manifest)
+        return manifest
+
+    async def get_app_manifest(self, manifest_id: str) -> AppManifest | None:
+        return await self.session.get(AppManifest, manifest_id)
+
+    async def list_app_manifests(self, status: str | None = None) -> list[AppManifest]:
+        q = select(AppManifest).order_by(AppManifest.created_at.desc())
+        if status:
+            q = q.where(AppManifest.status == status)
+        result = await self.session.execute(q)
+        return list(result.scalars().all())
+
+    async def update_app_manifest(self, manifest_id: str, **kwargs: Any) -> None:
+        kwargs["updated_at"] = _utcnow()
+        await self.session.execute(
+            update(AppManifest).where(AppManifest.id == manifest_id).values(**kwargs)
+        )
+        await self.session.commit()
+
+    async def delete_app_manifest(self, manifest_id: str) -> None:
+        m = await self.session.get(AppManifest, manifest_id)
+        if m:
+            await self.session.delete(m)
+            await self.session.commit()
+
+    # ── Tool traces ───────────────────────────────────────────────────────────
+
+    async def record_tool_trace(
+        self,
+        tool_name: str,
+        inputs: dict[str, Any] | None = None,
+        outputs: dict[str, Any] | None = None,
+        component_id: str | None = None,
+        session_id: str | None = None,
+        run_step_id: str | None = None,
+        risk_level: str = "safe",
+        confirmation_token: str | None = None,
+        duration_ms: int | None = None,
+        success: bool = True,
+    ) -> ToolTrace:
+        trace = ToolTrace(
+            tool_name=tool_name,
+            component_id=component_id,
+            session_id=session_id,
+            run_step_id=run_step_id,
+            inputs=inputs,
+            outputs=outputs,
+            risk_level=risk_level,
+            confirmation_token=confirmation_token,
+            duration_ms=duration_ms,
+            success=success,
+        )
+        self.session.add(trace)
+        await self.session.commit()
+        await self.session.refresh(trace)
+        return trace
+
+    async def list_tool_traces(
+        self,
+        tool_name: str | None = None,
+        session_id: str | None = None,
+        run_step_id: str | None = None,
+        limit: int = 100,
+    ) -> list[ToolTrace]:
+        q = select(ToolTrace).order_by(ToolTrace.created_at.desc()).limit(limit)
+        if tool_name:
+            q = q.where(ToolTrace.tool_name == tool_name)
+        if session_id:
+            q = q.where(ToolTrace.session_id == session_id)
+        if run_step_id:
+            q = q.where(ToolTrace.run_step_id == run_step_id)
+        result = await self.session.execute(q)
+        return list(result.scalars().all())

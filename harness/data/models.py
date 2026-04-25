@@ -7,7 +7,12 @@ Tables
   dspy_components     — generated/saved DSPy component definitions
   pipelines           — ordered compositions of DSPy components
   provider_configs    — AI inference provider configurations (API keys encrypted)
+  generated_views     — AI-generated React view stubs
   telemetry           — structured usage events
+  agent_runs          — durable agent task runs
+  agent_run_steps     — append-only audit log of each step in a run
+  app_manifests       — links backend components/pipelines to React views
+  tool_traces         — enriched records of every tool call
 """
 
 from __future__ import annotations
@@ -199,4 +204,134 @@ class TelemetryEvent(Base):
     event_type: Mapped[str] = mapped_column(String(100))
     component_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     data: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
+# ── Agent runs ─────────────────────────────────────────────────────────────────
+
+
+class AgentRun(Base):
+    """A durable record of a single agent task execution.
+
+    ``goal``         — natural-language description of what the agent was asked to do.
+    ``plan``         — the agent's generated plan (may be updated as the run progresses).
+    ``status``       — one of: pending | running | paused | completed | cancelled | failed.
+    ``autonomy_mode``— one of: observe | suggest | write_approval | test_approval | autonomous.
+    ``session_id``   — optional chat session that triggered this run.
+    ``result``       — final structured result from the run.
+    ``error``        — last error message if the run failed.
+    """
+
+    __tablename__ = "agent_runs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_new_uuid)
+    goal: Mapped[str] = mapped_column(Text)
+    plan: Mapped[str] = mapped_column(Text, default="")
+    status: Mapped[str] = mapped_column(String(20), default="pending")
+    autonomy_mode: Mapped[str] = mapped_column(String(20), default="suggest")
+    session_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    result: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, onupdate=_utcnow
+    )
+
+    steps: Mapped[list["AgentRunStep"]] = relationship(
+        "AgentRunStep", back_populates="run", cascade="all, delete-orphan", order_by="AgentRunStep.created_at"
+    )
+
+
+class AgentRunStep(Base):
+    """A single step in an agent run — append-only audit log.
+
+    ``step_type``    — one of: plan | dspy_call | tool_call | file_write | confirmation | message | error.
+    ``tool_name``    — populated for tool_call steps.
+    ``input_data``   — inputs passed to this step.
+    ``output_data``  — outputs produced by this step.
+    ``status``       — one of: pending | running | completed | failed | skipped.
+    ``confirmation_token`` — non-null when this step is waiting for human approval.
+    """
+
+    __tablename__ = "agent_run_steps"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_new_uuid)
+    run_id: Mapped[str] = mapped_column(String(36), ForeignKey("agent_runs.id"), nullable=False)
+    step_type: Mapped[str] = mapped_column(String(30))
+    tool_name: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    input_data: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    output_data: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    status: Mapped[str] = mapped_column(String(20), default="completed")
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    confirmation_token: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    duration_ms: Mapped[int | None] = mapped_column(nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+    run: Mapped["AgentRun"] = relationship("AgentRun", back_populates="steps")
+
+
+# ── App manifests ──────────────────────────────────────────────────────────────
+
+
+class AppManifest(Base):
+    """Links a backend (Python component or DSPy pipeline) to one or more React views.
+
+    ``backend_type``   — "component" | "pipeline" | "dspy_module".
+    ``backend_id``     — ID of the backend object (component, pipeline, or dspy_component).
+    ``react_views``    — list of GeneratedView IDs or component_names this manifest includes.
+    ``permissions``    — list of Permission value strings this app may exercise.
+    ``state_schema``   — JSON schema describing the backend's expected state.
+    ``status``         — one of: draft | validated | active | archived.
+    ``agent_run_id``   — optional run that created this manifest.
+    """
+
+    __tablename__ = "app_manifests"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_new_uuid)
+    name: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str] = mapped_column(Text, default="")
+    backend_type: Mapped[str] = mapped_column(String(30), default="pipeline")
+    backend_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    react_views: Mapped[list[str]] = mapped_column(JSON, default=list)
+    permissions: Mapped[list[str]] = mapped_column(JSON, default=list)
+    state_schema: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    status: Mapped[str] = mapped_column(String(20), default="draft")
+    agent_run_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, onupdate=_utcnow
+    )
+
+
+# ── Tool traces ────────────────────────────────────────────────────────────────
+
+
+class ToolTrace(Base):
+    """Enriched record of a single tool call.
+
+    ``tool_name``        — "terminal" | "filesystem" | "browser" | "database".
+    ``component_id``     — component that invoked the tool (null for direct UI calls).
+    ``session_id``       — chat session context (if any).
+    ``run_step_id``      — optional AgentRunStep that triggered this call.
+    ``inputs``           — sanitized input params (secrets redacted).
+    ``outputs``          — sanitized output (secrets redacted, truncated at 8 KiB).
+    ``risk_level``       — "safe" | "caution" | "destructive".
+    ``confirmation_token``— set when this trace was preceded by a confirmation.
+    ``duration_ms``      — wall-clock execution time.
+    ``success``          — whether the call succeeded.
+    """
+
+    __tablename__ = "tool_traces"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_new_uuid)
+    tool_name: Mapped[str] = mapped_column(String(64))
+    component_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    session_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    run_step_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    inputs: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    outputs: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    risk_level: Mapped[str] = mapped_column(String(20), default="safe")
+    confirmation_token: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    duration_ms: Mapped[int | None] = mapped_column(nullable=True)
+    success: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)

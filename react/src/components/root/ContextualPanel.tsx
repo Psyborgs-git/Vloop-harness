@@ -29,6 +29,8 @@ import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { useEffect, useState } from "react";
 
 import * as api from "./api";
+import AgentRunPanel from "./AgentRunPanel";
+import AppManifestPanel from "./AppManifestPanel";
 import DSPyPanel from "./DSPyPanel";
 import PipelinePanel from "./PipelinePanel";
 import ToolsPanel from "./ToolsPanel";
@@ -89,6 +91,8 @@ export default function ContextualPanel({ open, panelType, panelId, onClose }: P
           {panelType === "pipelines" && "Pipelines"}
           {panelType === "tools" && "Tools"}
           {panelType === "view" && "Generated View"}
+          {panelType === "agents" && "Agent Runs"}
+          {panelType === "manifests" && "App Manifests"}
         </Typography>
         <Tooltip title="Close panel">
           <IconButton size="small" onClick={onClose}>
@@ -108,6 +112,12 @@ export default function ContextualPanel({ open, panelType, panelId, onClose }: P
         {panelType === "tools" && <ToolsPanel />}
         {panelType === "view" && panelId && (
           <ViewPreview viewId={panelId} />
+        )}
+        {panelType === "agents" && (
+          <AgentRunPanel focusRunId={panelId} onFocused={() => {}} />
+        )}
+        {panelType === "manifests" && (
+          <AppManifestPanel focusManifestId={panelId} onFocused={() => {}} />
         )}
       </Box>
     </Drawer>

@@ -319,6 +319,13 @@ export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel }: Pr
           <AccountTreeIcon fontSize="small" />
         </IconButton>
       </Tooltip>
+
+      {/* Open Agent Runs panel shortcut */}
+      <Tooltip title="Agent runs">
+        <IconButton size="small" onClick={() => onOpenPanel?.("agents")} sx={{ color: "text.secondary" }}>
+          <SmartToyIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
     </>
   );
 

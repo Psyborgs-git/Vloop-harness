@@ -16,6 +16,9 @@ Endpoints
   POST   /api/tools/filesystem/delete      — delete (202 if confirmation needed)
   POST   /api/tools/filesystem/move        — move / rename (202 if confirmation needed)
 
+  POST   /api/tools/browser                — browser automation (navigate, screenshot, …)
+  POST   /api/tools/database               — database inspect / query
+
   POST   /api/tools/confirm/{token}        — confirm a pending destructive action
   DELETE /api/tools/confirm/{token}        — cancel a pending confirmation
 """
@@ -61,6 +64,21 @@ class PolicyUpdateRequest(BaseModel):
     permanent_blocklist: list[str] = []
     denylist: list[str] = []
     directories: list[dict[str, Any]] = []
+
+
+class BrowserRequest(ToolContext):
+    operation: str
+    url: str = ""
+    selector: str = ""
+    value: str = ""
+    expression: str = ""
+    full_page: bool = False
+
+
+class DatabaseRequest(ToolContext):
+    operation: str
+    sql: str = ""
+    params: dict[str, Any] = {}
 
 
 # ── Helper ────────────────────────────────────────────────────────────────────
@@ -247,6 +265,68 @@ async def fs_move(body: FilesystemRequest, request: Request) -> Any:
             "session_id": body.session_id,
         },
     )
+
+
+# ── Browser ───────────────────────────────────────────────────────────────────
+
+
+@router.post("/browser")
+async def execute_browser(body: BrowserRequest, request: Request) -> Any:
+    """Execute a browser automation operation."""
+    from harness.tools.exceptions import ConfirmationRequired
+
+    params: dict[str, Any] = {"operation": body.operation}
+    if body.url:
+        params["url"] = body.url
+    if body.selector:
+        params["selector"] = body.selector
+    if body.value:
+        params["value"] = body.value
+    if body.expression:
+        params["expression"] = body.expression
+    if body.full_page:
+        params["full_page"] = body.full_page
+
+    try:
+        result = await _mp(request).tools.execute(
+            tool_name="browser",
+            component_id=body.component_id,
+            session_id=body.session_id,
+            params=params,
+        )
+        return result.to_dict()
+    except ConfirmationRequired as exc:
+        return _confirmation_response(exc)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+# ── Database ──────────────────────────────────────────────────────────────────
+
+
+@router.post("/database")
+async def execute_database(body: DatabaseRequest, request: Request) -> Any:
+    """Execute a database inspection or query operation."""
+    from harness.tools.exceptions import ConfirmationRequired
+
+    params: dict[str, Any] = {
+        "operation": body.operation,
+        "sql": body.sql,
+        "params": body.params,
+    }
+
+    try:
+        result = await _mp(request).tools.execute(
+            tool_name="database",
+            component_id=body.component_id,
+            session_id=body.session_id,
+            params=params,
+        )
+        return result.to_dict()
+    except ConfirmationRequired as exc:
+        return _confirmation_response(exc)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
 
 # ── Confirmation ──────────────────────────────────────────────────────────────
