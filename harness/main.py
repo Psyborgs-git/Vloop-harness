@@ -1,37 +1,26 @@
-"""
-Harness entrypoint.
-
-Boot sequence:
-  1. Load settings
-  2. Configure AI engine (DSPy)
-  3. Build MainProcess
-  4. Create FastAPI app
-  5. Start Vite dev server subprocess
-  6. Start uvicorn on background thread
-  7. Open PyWebView root window (blocks until closed)
-"""
+"""Harness CLI entrypoint."""
 
 from __future__ import annotations
 
-import asyncio
-import socket
-import subprocess
 import sys
 import threading
 import time
-from pathlib import Path
+from typing import Literal
 
 import typer
 import uvicorn
 
 from harness.core.main_process import MainProcess
-from harness.engine.config import EngineConfig
-from harness.engine.dspy_engine import DSPyEngine
+from harness.core.service_manager import ServiceManager, ServiceStatus, ServiceTarget
 from harness.server.app import create_app
 from harness.settings import HarnessSettings
 from harness.window import RootWindow
 
 app = typer.Typer(name="harness", help="Vloop Harness CLI", no_args_is_help=True)
+services_app = typer.Typer(help="Manage harness backend/frontend services")
+internal_app = typer.Typer(help="Internal worker commands", hidden=True)
+app.add_typer(services_app, name="services")
+app.add_typer(internal_app, name="internal")
 
 
 @app.callback()
@@ -39,16 +28,9 @@ def _callback() -> None:
     """Vloop Harness — Python brain, React face."""
 
 
-def _wait_for_port(host: str, port: int, timeout: float = 30.0, interval: float = 0.3) -> bool:
-    """Poll host:port until TCP connect succeeds or timeout expires."""
-    deadline = time.time() + timeout
-    while time.time() < deadline:
-        try:
-            with socket.create_connection((host, port), timeout=0.5):
-                return True
-        except OSError:
-            time.sleep(interval)
-    return False
+def _build_fastapi_app(settings: HarnessSettings) -> "fastapi.FastAPI":  # type: ignore[name-defined]
+    main_process = MainProcess(state_db=settings.state_db_path)
+    return create_app(main_process=main_process, settings=settings)
 
 
 def _start_global_hotkey(window: "RootWindow") -> None:
@@ -77,31 +59,14 @@ def _start_global_hotkey(window: "RootWindow") -> None:
     listener.join()
 
 
-def _start_vite(vite_port: int, react_dir: Path) -> subprocess.Popen[bytes]:
-    cmd = ["npm", "run", "dev", "--", "--port", str(vite_port), "--host"]
-    proc = subprocess.Popen(
-        cmd,
-        cwd=str(react_dir),
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.PIPE,  # capture for diagnostics on failure
-    )
-    if not _wait_for_port("localhost", vite_port, timeout=30.0):
-        stderr_out = b""
-        try:
-            proc.kill()
-            stderr_out = proc.stderr.read() if proc.stderr else b""
-        except Exception:
-            pass
-        raise RuntimeError(
-            f"Vite failed to start on port {vite_port}.\n"
-            "Ensure node_modules are installed: cd react && npm install\n"
-            + stderr_out.decode(errors="replace")
+def _print_service_status(statuses: list[ServiceStatus]) -> None:
+    for status in statuses:
+        marker = "healthy" if status.healthy else ("running" if status.running else "stopped")
+        pid_part = f"pid={status.pid}" if status.pid else "pid=-"
+        detail = f" ({status.detail})" if status.detail else ""
+        typer.echo(
+            f"{status.name:<8} {marker:<8} {pid_part:<12} log={status.log_path}{detail}"
         )
-    return proc
-
-
-def _run_uvicorn(fastapi_app: "fastapi.FastAPI", host: str, port: int) -> None:  # type: ignore[name-defined]
-    uvicorn.run(fastapi_app, host=host, port=port, log_level="warning")
 
 
 @app.command()
@@ -111,76 +76,114 @@ def run(
     no_window: bool = typer.Option(
         False, help="Skip opening the native window (headless mode)"
     ),
-    no_ai: bool = typer.Option(False, help="Skip AI engine initialisation"),
-    no_vite: bool = typer.Option(False, help="Skip starting the Vite dev server"),
+    frontend_mode: Literal["dev", "static"] = typer.Option(
+        "dev", help="Frontend mode. 'static' skips Vite dev server process."
+    ),
 ) -> None:
-    """Start the Vloop Harness."""
-    settings = HarnessSettings()
-    main_process = MainProcess(state_db=settings.state_db_path)
-
-    # ── AI engine ─────────────────────────────────────────────────────────────
-    if not no_ai:
-        engine_cfg = EngineConfig()
-        engine = DSPyEngine(config=engine_cfg)
-        try:
-            engine.configure()
-            main_process.attach_ai_engine(engine)
-            typer.echo(f"AI engine ready: {engine}")
-        except Exception as exc:
-            typer.echo(
-                f"Warning: AI engine failed to configure ({exc}). Running without AI.",
-                err=True,
-            )
-
-    # ── FastAPI ───────────────────────────────────────────────────────────────
-    fastapi_app = create_app(main_process=main_process, settings=settings)
-
-    server_thread = threading.Thread(
-        target=_run_uvicorn,
-        args=(fastapi_app, host, port),
-        daemon=True,
+    """Start the Vloop Harness orchestrator."""
+    settings = HarnessSettings(harness_host=host, harness_port=port)
+    manager = ServiceManager(
+        settings=settings,
+        backend_host=host,
+        backend_port=port,
+        frontend_mode=frontend_mode,
     )
-    server_thread.start()
-    typer.echo(f"API server starting on http://{host}:{port}")
+    manager.cleanup_orphans()
 
-    if not _wait_for_port(host, port, timeout=15.0):
-        typer.echo(f"Error: API server failed to bind on {host}:{port}", err=True)
-        sys.exit(1)
-    typer.echo(f"API server ready on http://{host}:{port}")
+    started_targets: list[ServiceTarget] = []
 
-    # ── Vite dev server ───────────────────────────────────────────────────────
-    vite_proc: subprocess.Popen[str] | None = None
-    react_dir = Path(__file__).parent.parent / "react"
-    if not no_vite and react_dir.exists():
-        try:
-            vite_proc = _start_vite(settings.vite_port, react_dir)
-            typer.echo(
-                f"Vite dev server started on http://{settings.vite_host}:{settings.vite_port}"
-            )
-        except Exception as exc:
-            typer.echo(f"Warning: Vite failed to start ({exc})", err=True)
+    try:
+        backend_status = manager.start("backend")
+        started_targets.append("backend")
+        _print_service_status(backend_status)
 
-    # ── Root window ───────────────────────────────────────────────────────────
-    root_url = f"http://{host}:{port}/ui/root"
-    if not no_window:
-        window = RootWindow(url=root_url)
-        typer.echo(f"Opening root window → {root_url}")
-        # Global double-Cmd hotkey — runs in its own daemon thread
-        threading.Thread(target=_start_global_hotkey, args=(window,), daemon=True).start()
-        window.open()  # blocks until window is closed
-    else:
-        typer.echo(f"Headless mode — visit {root_url} in your browser")
-        typer.echo("Press Ctrl+C to stop.")
-        try:
-            server_thread.join()
-        except KeyboardInterrupt:
-            pass
+        if frontend_mode == "dev":
+            frontend_status = manager.start("frontend")
+            started_targets.append("frontend")
+            _print_service_status(frontend_status)
+        else:
+            _print_service_status(manager.status())
 
-    # ── Cleanup ───────────────────────────────────────────────────────────────
-    if vite_proc:
-        vite_proc.terminate()
+        root_url = f"http://{host}:{port}/ui/root"
+        if not no_window:
+            window = RootWindow(url=root_url)
+            typer.echo(f"Opening root window → {root_url}")
+            threading.Thread(target=_start_global_hotkey, args=(window,), daemon=True).start()
+            window.open()  # blocks until window is closed
+        else:
+            typer.echo(f"Headless mode — visit {root_url} in your browser")
+            typer.echo("Press Ctrl+C to stop.")
+            while True:
+                time.sleep(1)
 
-    typer.echo("Harness stopped.")
+    except KeyboardInterrupt:
+        typer.echo("Received Ctrl+C. Shutting down services...")
+    except RuntimeError as exc:
+        typer.echo(f"Startup failure: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    finally:
+        for target in reversed(started_targets):
+            manager.stop(target)
+        typer.echo("Harness stopped.")
+
+
+@services_app.command("start")
+def services_start(target: ServiceTarget = typer.Argument("all")) -> None:
+    """Start backend/frontend services."""
+    settings = HarnessSettings()
+    manager = ServiceManager(settings=settings)
+    manager.cleanup_orphans()
+    try:
+        statuses = manager.start(target)
+    except RuntimeError as exc:
+        typer.echo(f"Start failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    _print_service_status(statuses)
+
+
+@services_app.command("stop")
+def services_stop(target: ServiceTarget = typer.Argument("all")) -> None:
+    """Stop backend/frontend services."""
+    manager = ServiceManager(settings=HarnessSettings())
+    statuses = manager.stop(target)
+    _print_service_status(statuses)
+
+
+@services_app.command("restart")
+def services_restart(target: ServiceTarget = typer.Argument("all")) -> None:
+    """Restart backend/frontend services."""
+    settings = HarnessSettings()
+    manager = ServiceManager(settings=settings)
+    manager.cleanup_orphans()
+    try:
+        statuses = manager.restart(target)
+    except RuntimeError as exc:
+        typer.echo(f"Restart failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    _print_service_status(statuses)
+
+
+@services_app.command("status")
+def services_status() -> None:
+    """Show backend/frontend service status."""
+    manager = ServiceManager(settings=HarnessSettings())
+    manager.cleanup_orphans()
+    _print_service_status(manager.status())
+
+
+@internal_app.command("backend-worker")
+def backend_worker(
+    host: str = typer.Option("localhost"),
+    port: int = typer.Option(8000),
+) -> None:
+    """Internal command used by ServiceManager to launch uvicorn as a subprocess."""
+    settings = HarnessSettings(harness_host=host, harness_port=port)
+    fastapi_app = _build_fastapi_app(settings=settings)
+
+    try:
+        uvicorn.run(fastapi_app, host=host, port=port, log_level="warning")
+    except KeyboardInterrupt:
+        pass
 
 
 if __name__ == "__main__":
