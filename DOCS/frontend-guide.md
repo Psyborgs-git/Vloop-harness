@@ -143,4 +143,16 @@ cd react
 npm run build
 ```
 
-Output goes to `react/dist/`. The FastAPI proxy will serve these static files instead of forwarding to Vite when `HARNESS_DEBUG=false`.
+Output goes to `react/dist/`.
+
+Runtime behavior is controlled by `HARNESS_DEBUG`:
+
+- `HARNESS_DEBUG=true` (default): `/ui/*` routes proxy to the Vite dev server.
+- `HARNESS_DEBUG=false`: `/ui/*` routes serve prebuilt files from `react/dist`:
+  - `/ui/root` and `/ui/root/*` resolve to `react/dist/root.html` (or a matching static file if present).
+  - `/ui/<component_id>` and `/ui/<component_id>/*` resolve to `react/dist/<component_id>.html` (or a matching static file if present).
+  - `/assets/*` is served directly from `react/dist/assets`.
+
+In both modes, HTML responses still pass through `inject_harness_vars(...)` before being returned.
+
+If `react/dist` (or required entry HTML files) is missing in static mode, the backend returns clear `503` diagnostics instructing you to rebuild (`cd react && npm run build`) or re-enable debug mode.

@@ -1,6 +1,6 @@
 # HARNESS — Architecture README
 
-A native binary harness where Python components run logic/state/events and pair 1:1 with React UI apps served dynamically from a shared Vite dev server. Components run as mini-apps inside a resizable root window. Python is the brain. React is the face.
+A native binary harness where Python components run logic/state/events and pair 1:1 with React UI apps. In debug, UI is served through a shared Vite dev server; in production/static mode, UI is served from prebuilt `react/dist` files. Components run as mini-apps inside a resizable root window. Python is the brain. React is the face.
 
 > **Current implementation note:** the repository currently has a chat-first
 > root dashboard with DSPy, pipeline, tools, settings, and generated-view panels.
@@ -196,7 +196,8 @@ Dynamic Routes (registered on component mount):
 
 UI Serving:
   GET  /ui/{component_id}/{*react_routes}
-       → FastAPI proxies Vite dev server
+       → If HARNESS_DEBUG=true: FastAPI proxies Vite dev server
+       → If HARNESS_DEBUG=false: FastAPI serves files from react/dist
        → Injects into <head>:
            window.__HARNESS__ = {
              COMPONENT_ID: "{id}",
@@ -206,6 +207,16 @@ UI Serving:
              PERMISSIONS: [...]
            }
 ```
+
+### Frontend serving mode (`HARNESS_DEBUG`)
+
+- `HARNESS_DEBUG=true` (default): `/ui/*` routes proxy to Vite (`localhost:5173`) for HMR/dev workflows.
+- `HARNESS_DEBUG=false`: `/ui/*` routes serve static build artifacts from `react/dist`:
+  - `/ui/root` → `react/dist/root.html`
+  - `/ui/<component_id>` → `react/dist/<component_id>.html`
+  - `/assets/*` → `react/dist/assets/*`
+
+In both modes, HTML responses are processed by `inject_harness_vars(...)` before being returned so runtime component metadata is always available.
 
 -----
 
