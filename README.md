@@ -1,455 +1,158 @@
-# HARNESS — Architecture README
+# Vloop Harness
+Vloop Harness is a local-first AI engineering workbench that combines a Python orchestration backend with a React control-plane UI for building, running, and evaluating DSPy-based agents and pipelines.
 
-A native binary harness where Python components run logic/state/events and pair 1:1 with React UI apps. In debug, UI is served through a shared Vite dev server; in production/static mode, UI is served from prebuilt `react/dist` files. Components run as mini-apps inside a resizable root window. Python is the brain. React is the face.
+## Overview
+Vloop Harness provides a FastAPI backend, a dynamic tool runtime (terminal, filesystem, browser, database), and a React dashboard for chat, component authoring, pipeline execution, view generation, and agent run orchestration. It is designed for engineers iterating on AI components with auditable state and policy-constrained tool access. The backend persists metadata in SQLite by default (with optional PostgreSQL), including chat transcripts, provider configs, component definitions, pipeline specs, app manifests, tool traces, and agent run logs. Architecturally, the system separates runtime concerns into core process orchestration, API routes, AI engine modules, and persistence layers, while keeping UI concerns in a separate Vite/React project.
 
-> **Current implementation note:** the repository currently has a chat-first
-> root dashboard with DSPy, pipeline, tools, settings, and generated-view panels.
-> The resizable multi-view window manager described below is target architecture.
-> See [`DOCS/full-stack-agents-harness-plan.md`](DOCS/full-stack-agents-harness-plan.md)
-> for the updated full-stack agents harness plan and implementation parity map.
-
------
-
-## Top-Level Overview
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  NATIVE BINARY (PyInstaller)                                                │
-│                                                                             │
-│  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │  Root Window (PyWebView)                                             │   │
-│  │                                                                      │   │
-│  │  ┌─────────────────────────────────────────────────────────────┐     │   │
-│  │  │  Root UI  (localhost:3000/root)                             │     │   │
-│  │  │                                                             │     │   │
-│  │  │  ┌──────────────────┐  ┌──────────────────┐                 │     │   │
-│  │  │  │  View A          │  │  View B          │  ...            │     │   │
-│  │  │  │  /ui/comp_a/     │  │  /ui/comp_b/     │                 │     │   │
-│  │  │  │                  │  │                  │                 │     │   │
-│  │  │  │  [React App A]   │  │  [React App B]   │                 │     │   │
-│  │  │  │                  │  │                  │                 │     │   │
-│  │  │  │  [resize/move]   │  │  [minimise/close]│                 │     │   │
-│  │  │  └──────────────────┘  └──────────────────┘                 │     │   │
-│  │  └─────────────────────────────────────────────────────────────┘     │   │
-│  └──────────────────────────────────────────────────────────────────────┘   │
-│                                                                             │
-│  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │  MainProcess (Python)                                                │   │
-│  │  ├─ ComponentTree                                                    │   │
-│  │  ├─ ProcessManager                                                   │   │
-│  │  ├─ PermissionsGuard                                                 │   │
-│  │  ├─ StateStore                                                       │   │
-│  │  └─ Logger                                                           │   │
-│  └──────────────────────────────────────────────────────────────────────┘   │
-│                                                                             │
-│  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │  FastAPI Server                                                      │   │
-│  │  ├─ REST  /api/{component_id}/*                                      │   │
-│  │  ├─ WS    /ws/{component_id}                                         │   │
-│  │  └─ SERVE /ui/{component_id}/{*react_routes}  (injects env vars)     │   │
-│  └──────────────────────────────────────────────────────────────────────┘   │
-│                                                                             │
-│  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │  Vite Dev Server  (localhost:5173)                                   │   │
-│  │  ├─ Single React monorepo                                            │   │
-│  │  ├─ One entry per component: src/components/{component_id}/App.tsx   │   │
-│  │  └─ Hot module reload on file change                                 │   │
-│  └──────────────────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────────────┘
+## Architecture
+```mermaid
+flowchart LR
+  UI[React Dashboard\nVite on :5173 in dev] -->|HTTP/WS| API[FastAPI Server]
+  API --> MP[MainProcess\nComponent + Tool Orchestration]
+  API --> ENG[DSPy Engine\nProviderManager\nPipelineBuilder]
+  API --> REPO[Repository Layer]
+  REPO --> DB[(SQLite/PostgreSQL)]
+  MP --> TOOLS[Tool Registry\nTerminal/Filesystem/Browser/DB]
+  API --> VSTORE[VLoop Storage\n.vloop files + logs]
+  ENG --> LLM[Anthropic/OpenAI/Ollama]
 ```
 
------
+## Tech Stack
+| Layer | Technology | Version | Purpose |
+|---|---|---|---|
+| Backend runtime | Python | >=3.11 | Core runtime for API, orchestration, tools |
+| Backend framework | FastAPI | >=0.115.0 | HTTP + WebSocket API |
+| ASGI server | Uvicorn | >=0.32.0 | FastAPI serving |
+| CLI | Typer | >=0.15.0 | `harness` command and service control |
+| AI orchestration | DSPy | >=2.5.0 | LLM module/pipeline execution |
+| LLM providers | anthropic/openai SDKs | >=0.40.0 / >=1.57.0 | Hosted model access |
+| Data access | SQLAlchemy asyncio | >=2.0.0 | ORM + async DB sessions |
+| Default DB | SQLite + aiosqlite | >=0.20.0 | Local metadata persistence |
+| Optional DB | PostgreSQL + asyncpg | >=0.30.0 | External production-style DB |
+| Frontend runtime | Node.js + npm | >=18.18.0 | React/Vite toolchain |
+| Frontend framework | React | ^18.3.1 | Root dashboard UI |
+| Frontend build tool | Vite | ^6.0.3 | Dev server + bundling |
+| UI component library | MUI | ^5.16.x | Dashboard components |
+| E2E testing | Playwright | ^1.56.1 | Browser-level tests |
+| Python testing | pytest/pytest-asyncio | >=8.3.0 / >=0.24.0 | Unit/integration tests |
+| Linting/type checks | Ruff + mypy + TypeScript | >=0.8.0 / >=1.13.0 / ^5.6.3 | Static quality checks |
 
-## Python Component System
-
-### BaseComponent
-
-Every component inherits from `BaseComponent`. Pure Python — no UI code.
-
-```
-BaseComponent
-├── id: str                     (auto-generated UUID)
-├── props: dict                 (passed from parent or MainProcess)
-├── state: dict                 (internal, managed by Python)
-├── children: list[BaseComponent]
-├── permissions: PermissionSet
-│
-├── on_mount()                  → called when view opens
-├── on_unmount()                → called when view is closed (hard)
-├── on_hide()                   → called when view is minimised
-├── on_show()                   → called when view is restored
-├── on_update(new_props)        → called when parent pushes new props
-├── on_event(name, payload)     → called when React emits event
-│
-├── emit(name, payload)         → push event to paired React UI
-├── update_state(patch)         → merge patch into state, notify React
-├── get_snapshot()              → return serialisable state dict
-└── cleanup()                   → release resources, kill threads
+## Prerequisites
+```bash
+python --version      # must be 3.11+
+node --version        # must be >=18.18.0
+npm --version
 ```
 
-### Component Lifecycle
+## Getting Started
+```bash
+git clone <repo-url>
+cd Vloop-harness
 
-```
-CREATE
-  ↓
-MainProcess.register(component)
-  ↓
-ProcessManager.start(component)     → on_mount()
-  ↓
-FastAPI registers /api/{id}/* routes
-FastAPI registers /ws/{id}
-  ↓
-RootUI told: "mount view for {id}"
-  ↓
-View iframe loads /ui/{id}/
-  ↓
-Vite serves HTML with injected:
-  COMPONENT_ID, API_URL, WS_URL, INITIAL_STATE
-  ↓
-React app boots, connects WS, renders UI
-  ↓
-RUNNING (events flow both ways)
+# 1) Python environment + backend dependencies
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
 
-────────── HIDE (minimise) ──────────
-RootUI hides iframe (display:none)
-Component.on_hide()
-Process stays alive. State preserved.
+# 2) Frontend dependencies
+cd react
+npm install
+cd ..
 
-────────── SHOW (restore) ───────────
-RootUI shows iframe
-Component.on_show()
-React re-syncs state via WS
+# 3) Environment setup
+cp .env.example .env
+# Edit .env and set API keys if using hosted providers.
 
-────────── CLOSE (unmount) ──────────
-RootUI removes iframe
-Component.on_unmount()
-Component.cleanup()
-ProcessManager.stop(component)
-FastAPI removes routes for {id}
-StateStore flushes component state
-Logger records shutdown
+# 4) Start backend + frontend services
+python -m harness.main services start all
+
+# 5) Open app
+# Visit http://localhost:8000/ui/root
+
+# 6) Stop services when done
+python -m harness.main services stop all
 ```
 
------
-
-## MainProcess
-
-Owns everything. Single entrypoint.
-
-```
-MainProcess
-│
-├── ComponentTree
-│   ├── root: RootComponent
-│   ├── register(component)
-│   ├── unregister(component_id)
-│   ├── get(component_id)
-│   ├── list_all()
-│   └── broadcast(event)           → sends to all components
-│
-├── ProcessManager
-│   ├── start(component)           → on_mount + route registration
-│   ├── stop(component)            → on_unmount + cleanup
-│   ├── restart(component)         → stop → start (hot reload)
-│   ├── list_running()
-│   └── watchdog()                 → monitor crashed components
-│
-├── StateStore
-│   ├── set(component_id, key, val)
-│   ├── get(component_id, key)
-│   ├── persist()                  → save to disk (JSON/SQLite)
-│   ├── restore()                  → load from disk on boot
-│   └── flush(component_id)        → clear on unmount
-│
-├── PermissionsGuard
-│   ├── PermissionSet per component (filesystem, network, shell, ipc)
-│   ├── check(component_id, permission)
-│   ├── grant(component_id, permission)
-│   └── revoke(component_id, permission)
-│
-└── Logger
-    ├── Per-component log streams
-    ├── Log levels: DEBUG, INFO, WARN, ERROR
-    ├── log(component_id, level, message)
-    ├── tail(component_id, n)
-    └── export(component_id, path)
+## Project Structure
+```text
+.
+├── harness/                 # Python backend package
+│   ├── core/                # MainProcess, lifecycle, permissions, state/log orchestration
+│   ├── data/                # SQLAlchemy models, DB initialization, repository layer
+│   ├── engine/              # DSPy engine, providers, pipeline builder, agent modules
+│   ├── server/              # FastAPI app factory, routes, HTML injector
+│   ├── tools/               # Tool implementations + policy/confirmation runtime
+│   ├── vloop/               # Project storage + encryption + redaction helpers
+│   ├── components/          # Example/legacy Python components
+│   ├── main.py              # CLI entrypoint (`harness`)
+│   └── settings.py          # Env-backed settings model
+├── react/                   # React/Vite dashboard
+│   ├── src/components/root/ # Main root dashboard panels
+│   ├── src/harness/         # Frontend harness types/hooks/provider
+│   └── tests/e2e/           # Playwright tests
+├── tests/                   # Python backend test suite
+├── docs/                    # Project documentation set
+├── DOCS/                    # Legacy docs (historical/reference)
+├── .env.example             # Environment variable template
+└── pyproject.toml           # Python project metadata and tooling config
 ```
 
------
+## Environment Variables
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| HARNESS_HOST | No | `localhost` | FastAPI host bind/address |
+| HARNESS_PORT | No | `8000` | FastAPI port |
+| HARNESS_DEBUG | No | `true` | `true`: proxy Vite dev server; `false`: serve `react/dist` |
+| VITE_HOST | No | `localhost` | Vite host used by proxy/health checks |
+| VITE_PORT | No | `5173` | Vite port |
+| DSPY_LM_PROVIDER | No | `anthropic` | Active provider type (`anthropic` / `openai` / `ollama`) |
+| DSPY_LM_MODEL | No | `claude-sonnet-4-6` | Default model name |
+| ANTHROPIC_API_KEY | Yes* | none | **Secret**. Required when using Anthropic |
+| OPENAI_API_KEY | Yes* | none | **Secret**. Required when using OpenAI |
+| OLLAMA_BASE_URL | No | `http://localhost:11434` | Ollama endpoint |
+| STATE_DB_PATH | No | `.harness/state.db` | Legacy harness state DB path |
+| LOG_DIR | No | `.harness/logs` | Harness logs directory |
+| VLOOP_DB_URL | No | empty -> SQLite fallback | Async SQLAlchemy DB URL override |
+| VLOOP_PROJECT_DIR | No | empty -> CWD/.vloop | Override `.vloop` data directory |
+| TOOLS_POLICY_PATH | No | `<workspace>/.vloop/policy.json` | Optional tool policy override |
 
-## FastAPI Layer
+\* Required only for corresponding provider.
 
-Single server. Routes dynamically registered per component.
+## Available Scripts
+### Python (`pyproject.toml` / CLI)
+- `harness run`: start orchestrator; optional `--no-window` and `--frontend-mode dev|static`.
+- `harness services start [backend|frontend|all]`: start managed subprocess services.
+- `harness services stop [backend|frontend|all]`: stop services.
+- `harness services restart [backend|frontend|all]`: restart services.
+- `harness services status`: report PID + health for services.
+- `harness internal backend-worker`: internal-only backend launch command.
 
+### Frontend (`react/package.json`)
+- `npm run dev`: start Vite dev server.
+- `npm run build`: run TS check then build production assets.
+- `npm run preview`: preview production build.
+- `npm run typecheck`: TypeScript no-emit type check.
+- `npm run test:e2e`: run headless Playwright suite.
+- `npm run test:e2e:headed`: run headed Playwright suite.
+
+## Testing
+```bash
+# Python tests
+pytest
+
+# Optional with coverage
+pytest --cov=harness --cov-report=term-missing
+
+# Frontend type safety
+cd react && npm run typecheck
+
+# Frontend e2e
+cd react && npm run test:e2e
 ```
-Static Routes:
-  GET  /                          → root window HTML
-  GET  /api/components            → list all running components
-  POST /api/components            → create new component (runtime)
-  DELETE /api/components/{id}     → destroy component
+Python tests cover route behavior, permissions/policy, storage/repository behavior, and tool execution flows. E2E coverage exists for key root UI behavior via Playwright.
 
-Dynamic Routes (registered on component mount):
-  GET  /api/{component_id}/state          → current state snapshot
-  POST /api/{component_id}/event          → React → Python event
-  POST /api/{component_id}/props          → update props from parent
-  WS   /ws/{component_id}                 → bidirectional event stream
+## Deployment
+Current deployment is process-managed local service startup via the CLI service manager. `frontend_mode=static` enables production-style serving from `react/dist` directly behind FastAPI. CI/CD workflow files are not present in this repository, so deployment checks are currently expected to run locally (`pytest`, TypeScript checks, and optional Playwright e2e) before merge.
 
-UI Serving:
-  GET  /ui/{component_id}/{*react_routes}
-       → If HARNESS_DEBUG=true: FastAPI proxies Vite dev server
-       → If HARNESS_DEBUG=false: FastAPI serves files from react/dist
-       → Injects into <head>:
-           window.__HARNESS__ = {
-             COMPONENT_ID: "{id}",
-             API_URL: "http://localhost:8000/api/{id}",
-             WS_URL:  "ws://localhost:8000/ws/{id}",
-             INITIAL_STATE: {...},
-             PERMISSIONS: [...]
-           }
-```
-
-### Frontend serving mode (`HARNESS_DEBUG`)
-
-- `HARNESS_DEBUG=true` (default): `/ui/*` routes proxy to Vite (`localhost:5173`) for HMR/dev workflows.
-- `HARNESS_DEBUG=false`: `/ui/*` routes serve static build artifacts from `react/dist`:
-  - `/ui/root` → `react/dist/root.html`
-  - `/ui/<component_id>` → `react/dist/<component_id>.html`
-  - `/assets/*` → `react/dist/assets/*`
-
-In both modes, HTML responses are processed by `inject_harness_vars(...)` before being returned so runtime component metadata is always available.
-
------
-
-## Vite / React Layer
-
-Single Vite monorepo. One shared dev server. Each component has its own React app entry.
-
-```
-react/
-├── src/
-│   ├── harness/
-│   │   ├── useHarness.ts       → hook: connects WS, exposes state + emit
-│   │   ├── HarnessProvider.tsx → context: wraps app with WS connection
-│   │   └── types.ts            → shared types
-│   │
-│   └── components/
-│       ├── {component_id_a}/
-│       │   ├── App.tsx         → root of React app for this component
-│       │   └── *.tsx           → any custom UI files
-│       │
-│       └── {component_id_b}/
-│           ├── App.tsx
-│           └── ...
-│
-├── vite.config.ts              → multi-entry: each component_id = own entry
-└── package.json
-```
-
-### useHarness Hook (available in every React app)
-
-```typescript
-const { state, emit, props } = useHarness()
-
-// state   → live Python state (auto-updated via WS)
-// emit    → send event to Python:  emit("click", { x, y })
-// props   → read-only props from Python parent
-```
-
-### HTML Injection (FastAPI does this at serve time)
-
-```html
-<script>
-  window.__HARNESS__ = {
-    COMPONENT_ID: "comp_abc123",
-    API_URL: "http://localhost:8000/api/comp_abc123",
-    WS_URL:  "ws://localhost:8000/ws/comp_abc123",
-    INITIAL_STATE: { "counter": 0 },
-    PERMISSIONS: ["read_state", "emit_events"]
-  }
-</script>
-```
-
-React reads `window.__HARNESS__` on boot. No env files needed per component.
-
------
-
-## Root UI — Window Manager
-
-Root window is a React app at `/root`. It is the shell. Manages views.
-
-```
-RootUI
-├── ViewManager
-│   ├── views: Map<component_id, ViewState>
-│   ├── open(component_id)       → mount iframe, tell Python on_mount
-│   ├── close(component_id)      → remove iframe, tell Python on_unmount
-│   ├── minimize(component_id)   → hide iframe (display:none), tell Python on_hide
-│   └── restore(component_id)    → show iframe, tell Python on_show
-│
-└── View (per component)
-    ├── <iframe src="/ui/{component_id}/" />
-    ├── Resizable  (drag corners)
-    ├── Moveable   (drag title bar)
-    ├── Title bar:
-    │   ├── [─]  minimise  → hide view, process lives
-    │   └── [✕]  close     → remove view, process dies
-    └── Position + size persisted in StateStore
-```
-
-Views float freely in the root window. Can overlap, stack, arrange as needed. Root UI has no knowledge of iframe content — that is the paired React app’s concern.
-
------
-
-## Inter-Component Communication
-
-React apps never talk to each other. All cross-component comms go through Python.
-
-```
-React App A
-  → emit("send_data", payload)
-  → WS → Python Component A.on_event()
-  → Component A calls: MainProcess.ComponentTree.get("comp_b").on_event(...)
-  → Python Component B updates state
-  → Component B.emit("data_received", payload)
-  → WS → React App B re-renders
-```
-
------
-
-## Hot Reload
-
-### Python Components
-
-```
-File watcher monitors /components/*.py
-  → Change detected
-  → ProcessManager.restart(component)
-  → on_unmount() → reimport class → on_mount()
-  → State optionally restored from StateStore
-  → WS notifies React: { type: "reloading" }
-  → React shows loader → reconnects when ready
-```
-
-### React UI
-
-```
-Vite HMR handles automatically.
-  → Edit src/components/{id}/App.tsx
-  → Vite pushes update to iframe
-  → React hot reloads in place
-  → No Python restart needed
-```
-
------
-
-## Runtime Component Creation
-
-```
-1. User opens "New Component" in Root UI
-2. Fills: name, permissions, initial props
-3. Root UI: POST /api/components
-4. MainProcess:
-   ├── Instantiates BaseComponent subclass
-   ├── Registers in ComponentTree
-   └── ProcessManager.start()
-5. Vite stub created: src/components/{new_id}/App.tsx
-6. FastAPI registers routes for {new_id}
-7. Root UI opens view for {new_id}
-8. User edits React file in editor (built-in or external)
-9. Vite HMR updates live in view
-```
-
------
-
-## Directory Structure
-
-```
-harness/
-│
-├── main.py                     → entrypoint: boots everything
-├── window.py                   → PyWebView root window
-│
-├── core/
-│   ├── base_component.py
-│   ├── main_process.py
-│   ├── component_tree.py
-│   ├── process_manager.py
-│   ├── state_store.py
-│   ├── permissions.py
-│   └── logger.py
-│
-├── server/
-│   ├── app.py                  → FastAPI app
-│   ├── routes/
-│   │   ├── components.py       → CRUD
-│   │   ├── proxy.py            → /ui/{id}/* → Vite proxy + injection
-│   │   └── ws.py               → /ws/{id} WebSocket handler
-│   └── injector.py             → injects window.__HARNESS__ into HTML
-│
-├── components/                 → user Python components live here
-│   ├── counter.py
-│   └── dashboard.py
-│
-└── react/                      → Vite monorepo
-    ├── src/
-    │   ├── harness/            → shared hook + context
-    │   └── components/         → one folder per component ID
-    ├── vite.config.ts
-    └── package.json
-```
-
------
-
-## Startup Sequence
-
-```
-1. main.py
-   ├── Boot Logger
-   ├── Boot StateStore (restore persisted state from disk)
-   ├── Boot MainProcess
-   ├── Boot ComponentTree (re-register saved components)
-   ├── Start FastAPI (uvicorn on background thread)
-   ├── Start Vite dev server (subprocess)
-   └── Open PyWebView window → loads localhost:8000/root
-
-2. Root UI loads
-   ├── Connects WS to MainProcess
-   ├── GET /api/components
-   └── Restores saved view layout from StateStore
-
-3. Components mount (on_mount per component)
-
-4. Ready
-```
-
------
-
-## Permissions
-
-Declared per component. Enforced by MainProcess. Components cannot self-escalate.
-
-```
-filesystem.read        → read files from disk
-filesystem.write       → write files to disk
-network.outbound       → make HTTP requests
-network.inbound        → open ports / receive
-shell.exec             → run terminal commands
-ipc.broadcast          → send events to other components
-ipc.receive            → receive events from other components
-state.persist          → write state to disk
-ui.resize              → resize own view
-ui.spawn               → create new child components
-```
-
------
-
-## Core Rules
-
-1. Python is the brain. React renders only.
-1. One Python component ↔ one React app. No sharing.
-1. Cross-component comms via Python only. React is isolated.
-1. View close = process kill. View minimise = process lives.
-1. All state lives in Python. React is stateless beyond UI ephemera.
-1. Permissions are hard enforced. No self-escalation.
-1. Every component has its own log stream.
-1. StateStore persists across restarts. Components resume last state.
+## Contributing
+See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
