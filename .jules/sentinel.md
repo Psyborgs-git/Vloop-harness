@@ -1,0 +1,4 @@
+## 2025-02-23 - [Fix XSS Vulnerability in Injector]
+**Vulnerability:** In `harness/server/injector.py`, user-controlled state (`initial_state`) was being serialized via `json.dumps()` and injected directly into an inline `<script>` tag within the HTML response. If a string in `initial_state` contained `</script>`, it could prematurely close the script tag, leading to a Cross-Site Scripting (XSS) vulnerability.
+**Learning:** `json.dumps` natively escapes many characters but doesn't escape HTML-specific ones like `<`, `>`, and `&`. Injecting raw JSON directly into HTML (even inside a `<script>` tag) is dangerous and breaks out of the context.
+**Prevention:** Always replace sensitive HTML characters (`<`, `>`, `&`) with their unicode escapes (`\u003c`, `\u003e`, `\u0026`) after serialization when embedding JSON in a `<script>` tag.
