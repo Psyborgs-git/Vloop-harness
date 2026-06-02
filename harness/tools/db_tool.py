@@ -41,11 +41,71 @@ _PERMANENT_BLOCK_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Only SELECT is allowed for query_read
-_SELECT_ONLY_RE = re.compile(r"^\s*SELECT\b", re.IGNORECASE)
+import sqlglot
+import sqlglot.expressions as exp
 
-# INSERT / UPDATE / DELETE allowed for query_write
-_WRITE_RE = re.compile(r"^\s*(INSERT|UPDATE|DELETE)\b", re.IGNORECASE)
+def _is_safe_read_query(sql: str) -> bool:
+    try:
+        # read_sqlite is appropriate as this targets a SQLite harness DB, though we can omit dialect
+        # if we want to allow standard features. Falling back to default if parsing fails.
+        parsed = sqlglot.parse(sql, read="sqlite")
+    except Exception:
+        try:
+            parsed = sqlglot.parse(sql)
+        except Exception:
+            return False
+
+    if not parsed:
+        return False
+    for stmt in parsed:
+        if not stmt:
+            continue
+        if not isinstance(stmt, (exp.Select, exp.SetOperation)):
+            return False
+        # Ensure no data-modifying statements are embedded in CTEs or subqueries
+        mutations = list(stmt.find_all((
+            exp.Insert, exp.Update, exp.Delete,
+            exp.Drop, exp.Alter, exp.Command, exp.Merge
+        )))
+        if mutations:
+            return False
+    return True
+
+def _is_safe_write_query(sql: str) -> bool:
+    try:
+        parsed = sqlglot.parse(sql, read="sqlite")
+    except Exception:
+        try:
+            parsed = sqlglot.parse(sql)
+        except Exception:
+            return False
+
+    if not parsed:
+        return False
+
+    has_write = False
+    for stmt in parsed:
+        if not stmt:
+            continue
+        # Check for explicitly allowed mutating statements
+        if isinstance(stmt, (exp.Insert, exp.Update, exp.Delete, exp.Merge)):
+            has_write = True
+            continue
+        # Check if it's a SELECT that contains a mutation (e.g. inside a CTE)
+        if isinstance(stmt, (exp.Select, exp.SetOperation)):
+            mutations = list(stmt.find_all((exp.Insert, exp.Update, exp.Delete, exp.Merge)))
+            if mutations:
+                has_write = True
+            else:
+                # Select with no mutations is safe but doesn't count as a write by itself
+                pass
+            continue
+
+        # If we encounter any other statement type (e.g. ALTER, DROP, PRAGMA, ATTACH, etc.)
+        # then this query is unsafe.
+        return False
+
+    return has_write
 
 
 class DatabaseTool(AbstractTool):
@@ -159,7 +219,7 @@ class DatabaseTool(AbstractTool):
                 error="Query contains a permanently blocked statement (DROP/TRUNCATE/ALTER).",
             )
 
-        if not _SELECT_ONLY_RE.match(sql):
+        if not _is_safe_read_query(sql):
             return ToolResult(
                 success=False,
                 error="query_read only accepts SELECT statements. Use query_write for mutations.",
@@ -212,7 +272,7 @@ class DatabaseTool(AbstractTool):
                 error="Query contains a permanently blocked statement (DROP/TRUNCATE/ALTER).",
             )
 
-        if not _WRITE_RE.match(sql):
+        if not _is_safe_write_query(sql):
             return ToolResult(
                 success=False,
                 error="query_write only accepts INSERT/UPDATE/DELETE statements.",

@@ -42,6 +42,9 @@ dependencies = [
     "rich>=13.9.0",
     "typer>=0.15.0",
     "python-dotenv>=1.0.1",
+
+    # Security/SQL Parsing
+    "sqlglot>=20.0.0",
 ]
 
 [project.optional-dependencies]
