@@ -10,3 +10,7 @@
 **Vulnerability:** Missing audit logs for tool executions. Tool actions (like filesystem reads/writes, terminal commands) were executing without a centralized trace record, meaning potentially destructive actions lacked accountability or observability.
 **Learning:** The database repository already had a `ToolTrace` model and `record_tool_trace` function, and a robust `redact_secrets` utility existed, but the integration in the central tool dispatcher (`ToolRegistry.execute`) was missing.
 **Prevention:** Always ensure that sensitive and potentially destructive actions triggered by users or AI agents are recorded in an audit log with robust secret redaction.
+## 2025-02-23 - [Fix SQL Injection Bypass via AST Parsing]
+**Vulnerability:** The `DatabaseTool` used regexes like `^\s*SELECT\b` and `^\s*(INSERT|UPDATE|DELETE)\b` to validate SQL queries for `query_read` and `query_write` operations. This allowed bypassing validation via statement chaining (e.g. `WITH cte AS (SELECT 1) SELECT * FROM cte; UPDATE users SET role='admin'`).
+**Learning:** Regex is inherently unsuited for robust SQL query validation because it cannot accurately parse statement boundaries or understand complex structures like CTEs.
+**Prevention:** Always use a proper Abstract Syntax Tree (AST) parser like `sqlglot` to parse and validate every statement in a given SQL query block instead of using naive regex.

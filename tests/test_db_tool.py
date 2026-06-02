@@ -58,3 +58,24 @@ async def test_query_read_success_with_bound_params(monkeypatch: pytest.MonkeyPa
     assert "alpha" in result.output
 
     await engine.dispose()
+
+@pytest.mark.asyncio
+async def test_query_read_blocks_mutations(tmp_path: Path) -> None:
+    tool = DatabaseTool(_make_mp(tmp_path))
+    result = await tool.execute(None, None, {"operation": "query_read", "sql": "WITH cte AS (SELECT 1) SELECT * FROM cte; UPDATE x SET y=1"})
+    assert not result.success
+    assert "query_read only accepts read-only SELECT/UNION statements" in (result.error or "")
+
+@pytest.mark.asyncio
+async def test_query_write_blocks_drop(tmp_path: Path) -> None:
+    tool = DatabaseTool(_make_mp(tmp_path))
+    result = await tool.execute(None, None, {"operation": "query_write", "sql": "DROP TABLE x", "_confirmation_token": "ok"})
+    assert not result.success
+    assert "permanently blocked" in (result.error or "")
+
+@pytest.mark.asyncio
+async def test_query_write_blocks_select(tmp_path: Path) -> None:
+    tool = DatabaseTool(_make_mp(tmp_path))
+    result = await tool.execute(None, None, {"operation": "query_write", "sql": "SELECT 1", "_confirmation_token": "ok"})
+    assert not result.success
+    assert "only accepts INSERT/UPDATE/DELETE" in (result.error or "")

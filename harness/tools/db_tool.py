@@ -26,6 +26,9 @@ import time
 import asyncio
 from typing import TYPE_CHECKING, Any
 
+import sqlglot
+import sqlglot.expressions as exp
+
 from harness.core.permissions import Permission
 from harness.tools.base_tool import AbstractTool, ToolResult
 from harness.tools.exceptions import ConfirmationRequired
@@ -36,17 +39,6 @@ if TYPE_CHECKING:
 _MAX_ROWS = 500
 _QUERY_TIMEOUT_S = 10
 
-# Statements that are always blocked
-_PERMANENT_BLOCK_RE = re.compile(
-    r"\b(DROP\s+TABLE|DROP\s+DATABASE|TRUNCATE|ALTER\s+TABLE)\b",
-    re.IGNORECASE,
-)
-
-# Only SELECT is allowed for query_read
-_SELECT_ONLY_RE = re.compile(r"^\s*SELECT\b", re.IGNORECASE)
-
-# INSERT / UPDATE / DELETE allowed for query_write
-_WRITE_RE = re.compile(r"^\s*(INSERT|UPDATE|DELETE)\b", re.IGNORECASE)
 _PARAM_TOKEN_RE = re.compile(r":[a-zA-Z_][a-zA-Z0-9_]*")
 
 
@@ -154,18 +146,20 @@ class DatabaseTool(AbstractTool):
         if not sql.strip():
             return ToolResult(success=False, error="'sql' parameter is required")
 
-        # Block permanently dangerous statements
-        if _PERMANENT_BLOCK_RE.search(sql):
-            return ToolResult(
-                success=False,
-                error="Query contains a permanently blocked statement (DROP/TRUNCATE/ALTER).",
-            )
+        try:
+            statements = sqlglot.parse(sql)
+            if not statements:
+                return ToolResult(success=False, error="No SQL statements found.")
 
-        if not _SELECT_ONLY_RE.match(sql):
-            return ToolResult(
-                success=False,
-                error="query_read only accepts SELECT statements. Use query_write for mutations.",
-            )
+            for stmt in statements:
+                if not isinstance(stmt, (exp.Select, exp.Union)):
+                    return ToolResult(
+                        success=False,
+                        error="query_read only accepts read-only SELECT/UNION statements. Use query_write for mutations.",
+                    )
+        except Exception as exc:
+            return ToolResult(success=False, error=f"Failed to parse SQL: {exc}")
+
         if not isinstance(bind_params, dict):
             return ToolResult(success=False, error="'params' must be an object/dict")
 
@@ -211,18 +205,26 @@ class DatabaseTool(AbstractTool):
         if not sql.strip():
             return ToolResult(success=False, error="'sql' parameter is required")
 
-        # Block permanently dangerous statements
-        if _PERMANENT_BLOCK_RE.search(sql):
-            return ToolResult(
-                success=False,
-                error="Query contains a permanently blocked statement (DROP/TRUNCATE/ALTER).",
-            )
+        try:
+            statements = sqlglot.parse(sql)
+            if not statements:
+                return ToolResult(success=False, error="No SQL statements found.")
 
-        if not _WRITE_RE.match(sql):
-            return ToolResult(
-                success=False,
-                error="query_write only accepts INSERT/UPDATE/DELETE statements.",
-            )
+            for stmt in statements:
+                if isinstance(stmt, (exp.Drop, exp.Alter, exp.Command, exp.TruncateTable)):
+                    # A basic catch for permanently blocked statements
+                    return ToolResult(
+                        success=False,
+                        error="Query contains a permanently blocked statement (DROP/TRUNCATE/ALTER).",
+                    )
+                if not isinstance(stmt, (exp.Insert, exp.Update, exp.Delete)):
+                    return ToolResult(
+                        success=False,
+                        error="query_write only accepts INSERT/UPDATE/DELETE statements.",
+                    )
+        except Exception as exc:
+            return ToolResult(success=False, error=f"Failed to parse SQL: {exc}")
+
         if not isinstance(bind_params, dict):
             return ToolResult(success=False, error="'params' must be an object/dict")
         if _PARAM_TOKEN_RE.search(sql) and not bind_params:
