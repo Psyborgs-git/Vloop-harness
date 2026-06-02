@@ -5,6 +5,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from harness.tools.base_tool import AbstractTool, ToolResult
+from harness.vloop.redaction import redact_secrets
+from harness.data.db import get_session_factory
+from harness.data.repository import Repository
 
 if TYPE_CHECKING:
     from harness.core.main_process import MainProcess
@@ -45,7 +48,37 @@ class ToolRegistry:
                 success=False,
                 error=f"Unknown tool: {tool_name!r}",
             )
-        return await tool.execute(component_id, session_id, params or {})
+
+        safe_params = params or {}
+
+        # Determine token for pending confirmations if present
+        confirmation_token = safe_params.get("_confirmation_token")
+
+        # Execute the tool
+        result = await tool.execute(component_id, session_id, safe_params)
+
+        # Save trace
+        try:
+            factory = get_session_factory()
+            async with factory() as session:
+                repo = Repository(session)
+                await repo.record_tool_trace(
+                    tool_name=tool_name,
+                    inputs=redact_secrets(safe_params),
+                    outputs=redact_secrets(result.to_dict()),
+                    component_id=component_id,
+                    session_id=session_id,
+                    run_step_id=None,
+                    risk_level=tool.risk_level,
+                    confirmation_token=confirmation_token,
+                    duration_ms=result.metadata.get("duration_ms"),
+                    success=result.success,
+                )
+        except Exception:
+            # We don't want tool tracing failures to bring down the whole app
+            self._mp.logger.error(f"Failed to record tool trace for {tool_name}")
+
+        return result
 
     # ── Catalog ───────────────────────────────────────────────────────────────
 
