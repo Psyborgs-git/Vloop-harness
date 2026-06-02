@@ -113,7 +113,50 @@ class BrowserTool(AbstractTool):
         except Exception:
             pass
 
-        if not any(url.startswith(prefix) for prefix in allowed_prefixes):
+        from urllib.parse import urlparse
+
+        try:
+            parsed = urlparse(url)
+            hostname = parsed.hostname or ""
+            scheme = parsed.scheme
+            port = parsed.port
+
+            allowed = False
+            for prefix in allowed_prefixes:
+                try:
+                    p_prefix = urlparse(prefix)
+                    p_hostname = p_prefix.hostname or ""
+                    p_scheme = p_prefix.scheme
+                    p_port = p_prefix.port
+
+                    # If the prefix does not specify a port, we allow any port (which maintains the behavior of original startswith)
+                    # Alternatively, if prefix starts with http/https but specifies no port, we only check hostname and scheme.
+                    # Wait, startswith("http://localhost") allowed "http://localhost:8080".
+                    # It also allowed "http://localhost/path"
+                    # However, if allowed prefix has a path like "http://localhost/secure", startswith would require the path.
+
+                    # More robust matching:
+                    # Construct normalized base of the prefix to see if the URL starts with it,
+                    # BUT enforce that the hostname matches exactly.
+
+                    if scheme == p_scheme and hostname == p_hostname:
+                        # Check port
+                        if p_port is not None and port != p_port:
+                            continue
+
+                        # Check path prefix
+                        p_path = p_prefix.path
+                        if p_path and not parsed.path.startswith(p_path):
+                            continue
+
+                        allowed = True
+                        break
+                except Exception:
+                    pass
+        except Exception:
+            allowed = False
+
+        if not allowed:
             raise WorkspaceEscape(
                 f"URL {url!r} is not in the browser allowed-origins list. "
                 "Configure browser_allowed_origins in your policy.json to allow it."
