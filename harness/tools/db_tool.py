@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import re
 import time
+import asyncio
 from typing import TYPE_CHECKING, Any
 
 from harness.core.permissions import Permission
@@ -46,6 +47,7 @@ _SELECT_ONLY_RE = re.compile(r"^\s*SELECT\b", re.IGNORECASE)
 
 # INSERT / UPDATE / DELETE allowed for query_write
 _WRITE_RE = re.compile(r"^\s*(INSERT|UPDATE|DELETE)\b", re.IGNORECASE)
+_PARAM_TOKEN_RE = re.compile(r":[a-zA-Z_][a-zA-Z0-9_]*")
 
 
 class DatabaseTool(AbstractTool):
@@ -164,10 +166,14 @@ class DatabaseTool(AbstractTool):
                 success=False,
                 error="query_read only accepts SELECT statements. Use query_write for mutations.",
             )
+        if not isinstance(bind_params, dict):
+            return ToolResult(success=False, error="'params' must be an object/dict")
 
         factory = get_session_factory()
         async with factory() as session:
-            result = await session.execute(text(sql), bind_params)
+            result = await asyncio.wait_for(
+                session.execute(text(sql), bind_params), timeout=_QUERY_TIMEOUT_S
+            )
             rows = result.fetchmany(_MAX_ROWS)
             columns = list(result.keys()) if rows else []
             data = [dict(zip(columns, row)) for row in rows]
@@ -217,6 +223,13 @@ class DatabaseTool(AbstractTool):
                 success=False,
                 error="query_write only accepts INSERT/UPDATE/DELETE statements.",
             )
+        if not isinstance(bind_params, dict):
+            return ToolResult(success=False, error="'params' must be an object/dict")
+        if _PARAM_TOKEN_RE.search(sql) and not bind_params:
+            return ToolResult(
+                success=False,
+                error="SQL contains named parameters but no 'params' payload was provided.",
+            )
 
         # Require confirmation unless token already provided
         if not confirmation_token:
@@ -235,7 +248,9 @@ class DatabaseTool(AbstractTool):
 
         factory = get_session_factory()
         async with factory() as session:
-            result = await session.execute(text(sql), bind_params)
+            result = await asyncio.wait_for(
+                session.execute(text(sql), bind_params), timeout=_QUERY_TIMEOUT_S
+            )
             await session.commit()
             rowcount = result.rowcount
 
