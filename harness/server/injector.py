@@ -30,9 +30,15 @@ def inject_harness_vars(
         "INITIAL_STATE": initial_state,
         "PERMISSIONS": permissions,
     }
+    safe_payload = (
+        json.dumps(payload, indent=2)
+        .replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+        .replace("&", "\\u0026")
+    )
     script = (
         "<script>\n"
-        f"  window.__HARNESS__ = {json.dumps(payload, indent=2)};\n"
+        f"  window.__HARNESS__ = {safe_payload};\n"
         "</script>\n"
     )
 
