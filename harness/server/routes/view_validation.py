@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import re
 
-
 # ── Component name validation ─────────────────────────────────────────────────
 
 _COMPONENT_NAME_RE = re.compile(r"^[A-Z][a-zA-Z0-9]{1,63}$")
@@ -51,7 +50,7 @@ def validate_react_code(code: str) -> None:
 
 # ── File writing helper ───────────────────────────────────────────────────────
 
-def write_view_stub(react_root: "Any", component_name: str, react_code: str) -> str | None:  # noqa: F821
+def write_view_stub(react_root: Any, component_name: str, react_code: str) -> str | None:  # noqa: F821
     """Write ``App.tsx`` (and a ``main.tsx`` entry) under ``react_root/{component_name}/``.
 
     Returns the absolute path of the written ``App.tsx``, or ``None`` if writing

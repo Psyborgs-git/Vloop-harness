@@ -41,9 +41,9 @@ class VectorRetriever(dspy.Module):
         self.top_k = top_k
 
     def forward(self, query: str) -> dspy.Prediction:
-        import json
         import asyncio
         import concurrent.futures
+        import json
 
         def _run_async() -> Any:
             loop = asyncio.new_event_loop()
@@ -103,7 +103,7 @@ class VectorRetriever(dspy.Module):
                 source=source,
                 embedding=emb,
             )
-            for i, (text, source, emb) in enumerate(zip(texts, sources, embeddings))
+            for i, (text, source, emb) in enumerate(zip(texts, sources, embeddings, strict=False))
         ]
         await self.store.add(docs)
 

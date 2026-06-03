@@ -7,7 +7,6 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 import httpx
-import numpy as np
 
 
 class EmbeddingProvider(ABC):

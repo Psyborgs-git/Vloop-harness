@@ -89,7 +89,7 @@ class ConversationMemory:
         }, ensure_ascii=False)
 
     @classmethod
-    def from_json(cls, raw: str) -> "ConversationMemory":
+    def from_json(cls, raw: str) -> ConversationMemory:
         data = json.loads(raw)
         mem = cls()
         mem._summary = data.get("summary", "")

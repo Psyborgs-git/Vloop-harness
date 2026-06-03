@@ -4,13 +4,12 @@ from __future__ import annotations
 
 import asyncio
 import functools
-import json
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 import dspy
-
 
 MetricFunction = Callable[[dspy.Example, dspy.Prediction, Any | None], float]
 
@@ -131,7 +130,7 @@ class Evaluator:
     ) -> list[EvalResult]:
         """Evaluate multiple components and return ranked results."""
         results = []
-        for name, module in components:
+        for _name, module in components:
             result = await self.evaluate(module, dataset, metric_name)
             results.append(result)
         results.sort(key=lambda r: r.score, reverse=True)

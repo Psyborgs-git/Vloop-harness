@@ -92,12 +92,13 @@ async def evaluate_component(
     request: Request,
 ) -> dict[str, Any]:
     """Evaluate a compiled component against a dataset."""
+    from sqlalchemy.ext.asyncio import AsyncSession
+
     from harness.data.db import get_session
     from harness.data.repository import Repository
     from harness.engine.optimization.evaluator import Evaluator
-    from sqlalchemy.ext.asyncio import AsyncSession
 
-    ai = _ai(request)
+    _ai(request)
     registry = _registry(request)
     module = registry.instantiate(body.component_id)
     if module is None:
@@ -166,9 +167,10 @@ async def compare_versions(
     # Use a minimal testset for comparison
     testset: list[Any] = []
     if body.dataset_id:
+        from sqlalchemy.ext.asyncio import AsyncSession
+
         from harness.data.db import get_session
         from harness.data.repository import Repository
-        from sqlalchemy.ext.asyncio import AsyncSession
 
         db: AsyncSession = await get_session().__anext__()  # type: ignore[attr-defined]
         repo = Repository(db)

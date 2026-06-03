@@ -78,7 +78,7 @@ async def add_documents(
     sources = body.sources or [""] * len(body.texts)
     metas = body.metadata or [{}] * len(body.texts)
 
-    for text, source, meta in zip(body.texts, sources, metas):
+    for text, source, meta in zip(body.texts, sources, metas, strict=False):
         chunks = config.chunk(text)
         for chunk in chunks:
             all_chunks.append(chunk)
@@ -96,7 +96,7 @@ async def add_documents(
             embedding=emb,
         )
         for i, (text, source, meta, emb) in enumerate(
-            zip(all_chunks, all_sources, all_meta, embeddings)
+            zip(all_chunks, all_sources, all_meta, embeddings, strict=False)
         )
     ]
     await store.add(docs)

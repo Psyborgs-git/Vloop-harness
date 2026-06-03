@@ -17,7 +17,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from harness.core.alerting import AlertManager, AlertRule, AlertSeverity, get_alert_manager
+from harness.core.alerting import AlertRule, AlertSeverity, get_alert_manager
 
 router = APIRouter(prefix="/api/alerts", tags=["alerts"])
 

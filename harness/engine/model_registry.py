@@ -7,15 +7,14 @@ token pricing hints, and provider routing info.
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 import httpx
 
 
-class ModelCapability(str, Enum):
+class ModelCapability(StrEnum):
     CHAT = "chat"
     COMPLETION = "completion"
     VISION = "vision"

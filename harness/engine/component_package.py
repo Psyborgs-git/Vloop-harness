@@ -6,13 +6,13 @@ which include metadata, source code, tests, dependencies, and versioning.
 
 from __future__ import annotations
 
+import ast
 import hashlib
 import json
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-import ast
 
 
 @dataclass
@@ -23,8 +23,8 @@ class ComponentMetadata:
     version: str
     description: str
     author: str = ""
-    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    updated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
+    updated_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     tags: list[str] = field(default_factory=list)
     category: str = "general"
     dspy_version: str = "2.5+"
@@ -45,14 +45,14 @@ class ComponentMetadata:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "ComponentMetadata":
+    def from_dict(cls, data: dict[str, Any]) -> ComponentMetadata:
         return cls(
             name=data["name"],
             version=data["version"],
             description=data["description"],
             author=data.get("author", ""),
-            created_at=data.get("created_at", datetime.now(timezone.utc).isoformat()),
-            updated_at=data.get("updated_at", datetime.now(timezone.utc).isoformat()),
+            created_at=data.get("created_at", datetime.now(UTC).isoformat()),
+            updated_at=data.get("updated_at", datetime.now(UTC).isoformat()),
             tags=data.get("tags", []),
             category=data.get("category", "general"),
             dspy_version=data.get("dspy_version", "2.5+"),
@@ -76,7 +76,7 @@ class ComponentSignature:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "ComponentSignature":
+    def from_dict(cls, data: dict[str, Any]) -> ComponentSignature:
         return cls(
             input_schema=data["input_schema"],
             output_schema=data["output_schema"],
@@ -100,7 +100,7 @@ class ComponentDependencies:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "ComponentDependencies":
+    def from_dict(cls, data: dict[str, Any]) -> ComponentDependencies:
         return cls(
             python_packages=data.get("python_packages", []),
             harness_components=data.get("harness_components", []),
@@ -124,7 +124,7 @@ class ComponentTests:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "ComponentTests":
+    def from_dict(cls, data: dict[str, Any]) -> ComponentTests:
         return cls(
             smoke_tests=data.get("smoke_tests", []),
             integration_tests=data.get("integration_tests", []),
@@ -156,7 +156,7 @@ class OptimizerConfig:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "OptimizerConfig":
+    def from_dict(cls, data: dict[str, Any]) -> OptimizerConfig:
         return cls(
             optimizer_type=data.get("optimizer_type", "BootstrapFewShot"),
             max_rounds=data.get("max_rounds", 10),
@@ -213,7 +213,7 @@ class ComponentPackage:
         return json.dumps(self.to_dict(), indent=2)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "ComponentPackage":
+    def from_dict(cls, data: dict[str, Any]) -> ComponentPackage:
         return cls(
             metadata=ComponentMetadata.from_dict(data["metadata"]),
             signature=ComponentSignature.from_dict(data["signature"]),
@@ -225,7 +225,7 @@ class ComponentPackage:
         )
 
     @classmethod
-    def from_json(cls, json_str: str) -> "ComponentPackage":
+    def from_json(cls, json_str: str) -> ComponentPackage:
         return cls.from_dict(json.loads(json_str))
 
     def verify_checksum(self) -> bool:
@@ -239,7 +239,7 @@ class ComponentPackage:
         path.write_text(self.to_json(), encoding="utf-8")
 
     @classmethod
-    def load_from_file(cls, path: Path) -> "ComponentPackage":
+    def load_from_file(cls, path: Path) -> ComponentPackage:
         """Load package from a JSON file."""
         return cls.from_json(path.read_text(encoding="utf-8"))
 

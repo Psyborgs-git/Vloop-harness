@@ -53,7 +53,7 @@ class BrowserTool(AbstractTool):
     required_permission = Permission.NETWORK_OUTBOUND
     risk_level = "caution"
 
-    def __init__(self, main_process: "MainProcess") -> None:
+    def __init__(self, main_process: MainProcess) -> None:
         super().__init__(main_process)
         self._playwright: Any = None
         self._browser: Any = None

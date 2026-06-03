@@ -4,10 +4,9 @@ Caching module for VLoop Harness.
 Supports in-memory caching with optional Redis backend for distributed scenarios.
 """
 
-import json
 import time
-from dataclasses import dataclass, field
-from typing import Any, Optional
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -15,7 +14,7 @@ class CacheEntry:
     """Cache entry with expiration."""
     
     value: Any
-    expires_at: Optional[float] = None
+    expires_at: float | None = None
     
     def is_expired(self) -> bool:
         """Check if the entry has expired."""
@@ -30,7 +29,7 @@ class Cache:
     def __init__(self):
         self._store: dict[str, CacheEntry] = {}
     
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Get a value from the cache."""
         entry = self._store.get(key)
         if entry is None:
@@ -40,7 +39,7 @@ class Cache:
             return None
         return entry.value
     
-    def set(self, key: str, value: Any, ttl_seconds: Optional[int] = None) -> None:
+    def set(self, key: str, value: Any, ttl_seconds: int | None = None) -> None:
         """Set a value in the cache with optional TTL."""
         expires_at = None
         if ttl_seconds is not None:
@@ -68,7 +67,7 @@ class Cache:
                 result[key] = value
         return result
     
-    def set_many(self, mapping: dict[str, Any], ttl_seconds: Optional[int] = None) -> None:
+    def set_many(self, mapping: dict[str, Any], ttl_seconds: int | None = None) -> None:
         """Set multiple values in the cache."""
         for key, value in mapping.items():
             self.set(key, value, ttl_seconds)
@@ -134,7 +133,7 @@ class CacheManager:
 
 
 # Global cache manager instance
-_cache_manager: Optional[CacheManager] = None
+_cache_manager: CacheManager | None = None
 
 
 def get_cache_manager() -> CacheManager:
@@ -167,7 +166,7 @@ def cache_component(component_id: str, component_data: dict, ttl_seconds: int = 
     cache.set(f"component:{component_id}", component_data, ttl_seconds)
 
 
-def get_cached_component(component_id: str) -> Optional[dict]:
+def get_cached_component(component_id: str) -> dict | None:
     """Get a cached component."""
     cache = get_cache(CACHE_NAMESPACES["components"])
     return cache.get(f"component:{component_id}")
@@ -179,7 +178,7 @@ def cache_agent_run(run_id: str, run_data: dict, ttl_seconds: int = 1800) -> Non
     cache.set(f"run:{run_id}", run_data, ttl_seconds)
 
 
-def get_cached_agent_run(run_id: str) -> Optional[dict]:
+def get_cached_agent_run(run_id: str) -> dict | None:
     """Get a cached agent run."""
     cache = get_cache(CACHE_NAMESPACES["agent_runs"])
     return cache.get(f"run:{run_id}")
@@ -191,7 +190,7 @@ def cache_provider(provider_id: str, provider_data: dict, ttl_seconds: int = 720
     cache.set(f"provider:{provider_id}", provider_data, ttl_seconds)
 
 
-def get_cached_provider(provider_id: str) -> Optional[dict]:
+def get_cached_provider(provider_id: str) -> dict | None:
     """Get a cached provider."""
     cache = get_cache(CACHE_NAMESPACES["providers"])
     return cache.get(f"provider:{provider_id}")
@@ -203,7 +202,7 @@ def cache_api_response(cache_key: str, response_data: Any, ttl_seconds: int = 30
     cache.set(f"api:{cache_key}", response_data, ttl_seconds)
 
 
-def get_cached_api_response(cache_key: str) -> Optional[Any]:
+def get_cached_api_response(cache_key: str) -> Any | None:
     """Get a cached API response."""
     cache = get_cache(CACHE_NAMESPACES["api_responses"])
     return cache.get(f"api:{cache_key}")

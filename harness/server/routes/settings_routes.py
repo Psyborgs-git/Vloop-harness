@@ -210,9 +210,7 @@ async def test_provider(
     if not provider:
         raise HTTPException(status_code=404, detail="Provider not found")
 
-    pm = request.app.state.provider_manager
     vault = request.app.state.vault
-    mp = request.app.state.main_process
 
     api_key = vault.decrypt(provider.encrypted_api_key) if provider.encrypted_api_key else ""
 

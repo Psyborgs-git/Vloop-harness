@@ -1,8 +1,7 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
 import logging
-import httpx
-from typing import Optional, List
+
+from fastapi import APIRouter
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/sandbox", tags=["sandbox"])
 logger = logging.getLogger(__name__)
@@ -10,10 +9,10 @@ logger = logging.getLogger(__name__)
 class SandboxRequest(BaseModel):
     sandbox_type: str
     command: str
-    args: List[str]
-    image: Optional[str] = None
-    host: Optional[str] = None
-    user: Optional[str] = None
+    args: list[str]
+    image: str | None = None
+    host: str | None = None
+    user: str | None = None
 
 @router.post("/execute")
 async def execute_in_sandbox(req: SandboxRequest):

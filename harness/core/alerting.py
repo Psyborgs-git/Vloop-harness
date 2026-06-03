@@ -11,11 +11,12 @@ from __future__ import annotations
 
 import time
 from collections import deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
 from threading import Lock
+from typing import Any
 
 
 class AlertSeverity(Enum):
@@ -37,9 +38,9 @@ class Alert:
     value: float
     threshold: float
     timestamp: datetime
-    tags: Dict[str, str] = field(default_factory=dict)
+    tags: dict[str, str] = field(default_factory=dict)
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "metric_name": self.metric_name,
@@ -63,7 +64,7 @@ class AlertRule:
     window_seconds: int = 60
     min_samples: int = 1
     enabled: bool = True
-    tags: Dict[str, str] = field(default_factory=dict)
+    tags: dict[str, str] = field(default_factory=dict)
     
     def should_alert(self, value: float) -> bool:
         """Check if the value should trigger an alert."""
@@ -83,9 +84,9 @@ class AlertManager:
     """Manages alert rules and alert history."""
     
     def __init__(self) -> None:
-        self._rules: Dict[str, AlertRule] = {}
+        self._rules: dict[str, AlertRule] = {}
         self._alerts: deque[Alert] = deque(maxlen=1000)
-        self._alert_handlers: List[Callable[[Alert], None]] = []
+        self._alert_handlers: list[Callable[[Alert], None]] = []
         self._lock = Lock()
     
     def add_rule(self, rule: AlertRule) -> None:
@@ -98,17 +99,17 @@ class AlertManager:
         with self._lock:
             self._rules.pop(metric_name, None)
     
-    def get_rule(self, metric_name: str) -> Optional[AlertRule]:
+    def get_rule(self, metric_name: str) -> AlertRule | None:
         """Get an alert rule by metric name."""
         with self._lock:
             return self._rules.get(metric_name)
     
-    def list_rules(self) -> List[AlertRule]:
+    def list_rules(self) -> list[AlertRule]:
         """List all alert rules."""
         with self._lock:
             return list(self._rules.values())
     
-    def check_metric(self, metric_name: str, value: float) -> Optional[Alert]:
+    def check_metric(self, metric_name: str, value: float) -> Alert | None:
         """Check if a metric value should trigger an alert."""
         rule = self.get_rule(metric_name)
         if not rule or not rule.enabled:
@@ -122,7 +123,7 @@ class AlertManager:
                 message=f"{metric_name} {rule.comparison} {rule.threshold}: {value}",
                 value=value,
                 threshold=rule.threshold,
-                timestamp=datetime.now(timezone.utc),
+                timestamp=datetime.now(UTC),
                 tags=rule.tags,
             )
             
@@ -151,13 +152,13 @@ class AlertManager:
             if handler in self._alert_handlers:
                 self._alert_handlers.remove(handler)
     
-    def get_recent_alerts(self, limit: int = 50) -> List[Alert]:
+    def get_recent_alerts(self, limit: int = 50) -> list[Alert]:
         """Get recent alerts."""
         with self._lock:
             alerts = list(self._alerts)
             return alerts[-limit:]
     
-    def get_alerts_by_severity(self, severity: AlertSeverity, limit: int = 50) -> List[Alert]:
+    def get_alerts_by_severity(self, severity: AlertSeverity, limit: int = 50) -> list[Alert]:
         """Get alerts by severity level."""
         with self._lock:
             alerts = [a for a in self._alerts if a.severity == severity]

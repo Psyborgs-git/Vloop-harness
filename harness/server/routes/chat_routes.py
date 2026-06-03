@@ -210,8 +210,8 @@ async def send_message(
     # Auto-save generated component if code was returned
     if component_code.strip():
         try:
-            from harness.engine.component_registry import DSPyComponentRegistry
             from harness.data.models import DSPyComponentDef
+            from harness.engine.component_registry import DSPyComponentRegistry
 
             sig_fields = DSPyComponentRegistry.extract_signature_fields(component_code)
             comp_name = _extract_module_class_name(component_code) or "GeneratedComponent"
@@ -254,7 +254,6 @@ async def send_message(
                             stripped = _re.sub(r"\{[^}]+\}", "placeholder", command)
                             argv = shlex.split(stripped)
                             if argv:
-                                from pathlib import Path as _Path
                                 policy.check_command(argv[0], argv[1:], mp.workspace_root)
             except Exception as policy_exc:
                 # Do not save a pipeline with policy violations; inform via response

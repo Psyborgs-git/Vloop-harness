@@ -20,7 +20,7 @@ Tables
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, String, Text
@@ -30,7 +30,7 @@ from harness.data.db import Base
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _new_uuid() -> str:
@@ -239,7 +239,7 @@ class AgentRun(Base):
         DateTime(timezone=True), default=_utcnow, onupdate=_utcnow
     )
 
-    steps: Mapped[list["AgentRunStep"]] = relationship(
+    steps: Mapped[list[AgentRunStep]] = relationship(
         "AgentRunStep", back_populates="run", cascade="all, delete-orphan", order_by="AgentRunStep.created_at"
     )
 
@@ -269,7 +269,7 @@ class AgentRunStep(Base):
     duration_ms: Mapped[int | None] = mapped_column(nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
-    run: Mapped["AgentRun"] = relationship("AgentRun", back_populates="steps")
+    run: Mapped[AgentRun] = relationship("AgentRun", back_populates="steps")
 
 
 # ── App manifests ──────────────────────────────────────────────────────────────

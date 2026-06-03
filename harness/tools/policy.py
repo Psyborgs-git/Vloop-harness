@@ -40,7 +40,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-
 # ── Default hard limits ───────────────────────────────────────────────────────
 
 DEFAULT_MAX_RUNTIME_SECONDS = 30
@@ -88,7 +87,7 @@ class DirectoryPolicy:
     max_output_bytes: int = DEFAULT_MAX_OUTPUT_BYTES
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "DirectoryPolicy":
+    def from_dict(cls, data: dict[str, Any]) -> DirectoryPolicy:
         return cls(
             directory=data.get("directory", "."),
             allowed_commands=data.get("allowed_commands", []),
@@ -116,7 +115,7 @@ class PolicyConfig:
     directories: list[DirectoryPolicy] = field(default_factory=list)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "PolicyConfig":
+    def from_dict(cls, data: dict[str, Any]) -> PolicyConfig:
         return cls(
             permanent_blocklist=data.get("permanent_blocklist", []),
             denylist=data.get("denylist", []),
@@ -133,7 +132,7 @@ class PolicyConfig:
         }
 
     @classmethod
-    def default(cls) -> "PolicyConfig":
+    def default(cls) -> PolicyConfig:
         return cls(
             permanent_blocklist=list(_BUILTIN_PERMANENT_BLOCKLIST),
             denylist=["sudo", "su", "passwd", "chown", "chmod"],
@@ -261,7 +260,7 @@ class PolicyEngine:
         PolicyBlocked
             If the command is in the denylist, or if no allowlist entry permits it.
         """
-        from harness.tools.exceptions import PermissionDenied, PolicyBlocked, PermanentlyBlocked
+        from harness.tools.exceptions import PermanentlyBlocked, PolicyBlocked
 
         binary_name = Path(binary).name  # strip path prefix
 

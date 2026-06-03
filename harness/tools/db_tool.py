@@ -61,7 +61,7 @@ class DatabaseTool(AbstractTool):
     required_permission = Permission.FILESYSTEM_READ
     risk_level = "safe"
 
-    def __init__(self, main_process: "MainProcess") -> None:
+    def __init__(self, main_process: MainProcess) -> None:
         super().__init__(main_process)
 
     # ── Dispatch ──────────────────────────────────────────────────────────────
@@ -108,7 +108,7 @@ class DatabaseTool(AbstractTool):
 
     async def _schema_info(self) -> ToolResult:
         """Return table names and column definitions for the harness DB."""
-        from sqlalchemy import inspect, text
+        from sqlalchemy import inspect
 
         from harness.data.db import get_session_factory
 
@@ -170,7 +170,7 @@ class DatabaseTool(AbstractTool):
             result = await session.execute(text(sql), bind_params)
             rows = result.fetchmany(_MAX_ROWS)
             columns = list(result.keys()) if rows else []
-            data = [dict(zip(columns, row)) for row in rows]
+            data = [dict(zip(columns, row, strict=False)) for row in rows]
 
         return ToolResult(
             success=True,
@@ -182,7 +182,6 @@ class DatabaseTool(AbstractTool):
         self, params: dict[str, Any], component_id: str | None
     ) -> ToolResult:
         """Execute a parameterized INSERT/UPDATE/DELETE — requires confirmation."""
-        import json
 
         from sqlalchemy import text
 

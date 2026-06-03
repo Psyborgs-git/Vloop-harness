@@ -9,9 +9,7 @@ import dspy
 from harness.engine.pipelines.base import (
     Condition,
     NodeType,
-    PipelineEdge,
     PipelineGraph,
-    PipelineNode,
 )
 from harness.engine.pipelines.executor import ExecutionContext, PipelineExecutor
 
@@ -23,7 +21,7 @@ class SequentialPipeline:
         self.name = name
         self._steps: list[tuple[str, dict[str, Any]]] = []
 
-    def add_step(self, step_name: str, config: dict[str, Any]) -> "SequentialPipeline":
+    def add_step(self, step_name: str, config: dict[str, Any]) -> SequentialPipeline:
         self._steps.append((step_name, config))
         return self
 

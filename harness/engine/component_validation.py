@@ -11,9 +11,8 @@ from __future__ import annotations
 
 import ast
 import re
-from typing import Any, List
 from dataclasses import dataclass
-
+from typing import Any
 
 # Dangerous imports that should be blocked
 DANGEROUS_IMPORTS = {
@@ -70,8 +69,8 @@ class ValidationResult:
     """Result of a component validation."""
 
     is_valid: bool
-    errors: List[str]
-    warnings: List[str]
+    errors: list[str]
+    warnings: list[str]
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -84,7 +83,7 @@ class ValidationResult:
 class ComponentValidator:
     """Validates component source code for safety and correctness."""
 
-    def __init__(self, allow_list: List[str] | None = None) -> None:
+    def __init__(self, allow_list: list[str] | None = None) -> None:
         """Initialize the validator.
 
         Args:
@@ -136,7 +135,7 @@ class ComponentValidator:
             warnings=warnings,
         )
 
-    def _check_import(self, import_name: str, errors: List[str], warnings: List[str]) -> None:
+    def _check_import(self, import_name: str, errors: list[str], warnings: list[str]) -> None:
         """Check if an import is allowed.
 
         Args:

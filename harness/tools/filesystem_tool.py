@@ -8,10 +8,8 @@ require human confirmation via the ConfirmationStore.
 from __future__ import annotations
 
 import base64
-import os
 import shutil
 import stat
-import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -38,7 +36,7 @@ class FilesystemTool(AbstractTool):
     required_permission = Permission.FILESYSTEM_READ  # minimum; write ops checked inline
     risk_level = "safe"
 
-    def __init__(self, main_process: "MainProcess") -> None:
+    def __init__(self, main_process: MainProcess) -> None:
         super().__init__(main_process)
         from harness.core.rollback import RollbackManager
         self._rollback = RollbackManager()
@@ -233,7 +231,7 @@ class FilesystemTool(AbstractTool):
         overwriting = abs_path.exists() and abs_path.is_file()
         if overwriting:
             # Generate diff preview for overwrites
-            from harness.core.diff_utils import generate_file_diff, diff_summary
+            from harness.core.diff_utils import diff_summary, generate_file_diff
 
             diff = generate_file_diff(abs_path, content)
             summary = diff_summary(diff)

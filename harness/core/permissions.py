@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 
-class Permission(str, Enum):
+class Permission(StrEnum):
     FILESYSTEM_READ = "filesystem.read"
     FILESYSTEM_WRITE = "filesystem.write"
     NETWORK_OUTBOUND = "network.outbound"
@@ -39,10 +39,10 @@ class PermissionSet:
 
     # ── Mutation (only MainProcess/PermissionsGuard may call these) ───────────
 
-    def grant(self, permission: Permission) -> "PermissionSet":
+    def grant(self, permission: Permission) -> PermissionSet:
         return PermissionSet(self._granted | {permission})
 
-    def revoke(self, permission: Permission) -> "PermissionSet":
+    def revoke(self, permission: Permission) -> PermissionSet:
         return PermissionSet(self._granted - {permission})
 
     def __repr__(self) -> str:
@@ -65,8 +65,9 @@ class PermissionsGuard:
     def register(self, component_id: str, initial: set[Permission] | None = None) -> None:
         self._sets[component_id] = PermissionSet(initial)
         if self._rust_url and initial:
-            import httpx
             import threading
+
+            import httpx
             def reg():
                 with httpx.Client() as client:
                     for p in initial:

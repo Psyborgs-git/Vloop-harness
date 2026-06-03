@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 class AgentOrchestrator:
     """Coordinates agent runs: plan → execute → record → (resume)."""
 
-    def __init__(self, main_process: "MainProcess", db_session: "AsyncSession") -> None:
+    def __init__(self, main_process: MainProcess, db_session: AsyncSession) -> None:
         self._mp = main_process
         self._session = db_session
 
@@ -218,7 +218,7 @@ class AgentOrchestrator:
             step_type: str = step.get("step_type", "message")
             description: str = step.get("description", "")
             requires_confirmation: bool = step.get("requires_confirmation", False)
-            params: dict[str, Any] = step.get("params", {})
+            step.get("params", {})
             tool_name: str | None = step.get("tool_name")
 
             # Enforce autonomy modes

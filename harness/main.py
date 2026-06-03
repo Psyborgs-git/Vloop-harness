@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import sys
 import threading
 import time
 from typing import Literal
@@ -28,12 +27,12 @@ def _callback() -> None:
     """Vloop Harness — Python brain, React face."""
 
 
-def _build_fastapi_app(settings: HarnessSettings) -> "fastapi.FastAPI":  # type: ignore[name-defined]
+def _build_fastapi_app(settings: HarnessSettings) -> fastapi.FastAPI:  # type: ignore[name-defined]
     main_process = MainProcess(state_db=settings.state_db_path)
     return create_app(main_process=main_process, settings=settings)
 
 
-def _start_global_hotkey(window: "RootWindow") -> None:
+def _start_global_hotkey(window: RootWindow) -> None:
     """Daemon thread: double-tap Cmd brings the PyWebView window to front."""
     try:
         from pynput import keyboard as kb
@@ -43,7 +42,7 @@ def _start_global_hotkey(window: "RootWindow") -> None:
     last_cmd_time = 0.0
     DOUBLE_TAP_S = 0.4
 
-    def on_press(key: "kb.Key") -> None:
+    def on_press(key: kb.Key) -> None:
         nonlocal last_cmd_time
         if key in (kb.Key.cmd, kb.Key.cmd_l, kb.Key.cmd_r):
             now = time.time()

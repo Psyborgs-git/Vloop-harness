@@ -11,11 +11,10 @@ This module provides functions to collect and aggregate metrics about:
 from __future__ import annotations
 
 import time
-from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Dict, List
+from datetime import datetime
 from threading import Lock
+from typing import Any
 
 
 @dataclass
@@ -24,9 +23,9 @@ class MetricPoint:
 
     timestamp: datetime
     value: float
-    tags: Dict[str, str] = field(default_factory=dict)
+    tags: dict[str, str] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "timestamp": self.timestamp.isoformat(),
             "value": self.value,
@@ -40,13 +39,13 @@ class CounterMetric:
 
     name: str
     value: int = 0
-    tags: Dict[str, str] = field(default_factory=dict)
+    tags: dict[str, str] = field(default_factory=dict)
 
     def increment(self, amount: int = 1) -> None:
         """Increment the counter."""
         self.value += amount
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "name": self.name,
             "value": self.value,
@@ -60,7 +59,7 @@ class GaugeMetric:
 
     name: str
     value: float = 0.0
-    tags: Dict[str, str] = field(default_factory=dict)
+    tags: dict[str, str] = field(default_factory=dict)
 
     def set(self, value: float) -> None:
         """Set the gauge value."""
@@ -74,7 +73,7 @@ class GaugeMetric:
         """Decrement the gauge."""
         self.value -= amount
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "name": self.name,
             "value": self.value,
@@ -87,8 +86,8 @@ class HistogramMetric:
     """A histogram metric for tracking distributions."""
 
     name: str
-    values: List[float] = field(default_factory=list)
-    tags: Dict[str, str] = field(default_factory=dict)
+    values: list[float] = field(default_factory=list)
+    tags: dict[str, str] = field(default_factory=dict)
     max_samples: int = 1000
 
     def observe(self, value: float) -> None:
@@ -97,7 +96,7 @@ class HistogramMetric:
         if len(self.values) > self.max_samples:
             self.values.pop(0)
 
-    def summary(self) -> Dict[str, float]:
+    def summary(self) -> dict[str, float]:
         """Calculate summary statistics."""
         if not self.values:
             return {
@@ -123,7 +122,7 @@ class HistogramMetric:
             "p99": sorted_values[int(n * 0.99)],
         }
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "name": self.name,
             "summary": self.summary(),
@@ -135,12 +134,12 @@ class MetricsRegistry:
     """Central registry for all metrics."""
 
     def __init__(self) -> None:
-        self._counters: Dict[str, CounterMetric] = {}
-        self._gauges: Dict[str, GaugeMetric] = {}
-        self._histograms: Dict[str, HistogramMetric] = {}
+        self._counters: dict[str, CounterMetric] = {}
+        self._gauges: dict[str, GaugeMetric] = {}
+        self._histograms: dict[str, HistogramMetric] = {}
         self._lock = Lock()
 
-    def counter(self, name: str, tags: Dict[str, str] | None = None) -> CounterMetric:
+    def counter(self, name: str, tags: dict[str, str] | None = None) -> CounterMetric:
         """Get or create a counter metric."""
         key = self._make_key(name, tags)
         with self._lock:
@@ -148,7 +147,7 @@ class MetricsRegistry:
                 self._counters[key] = CounterMetric(name=name, tags=tags or {})
             return self._counters[key]
 
-    def gauge(self, name: str, tags: Dict[str, str] | None = None) -> GaugeMetric:
+    def gauge(self, name: str, tags: dict[str, str] | None = None) -> GaugeMetric:
         """Get or create a gauge metric."""
         key = self._make_key(name, tags)
         with self._lock:
@@ -156,7 +155,7 @@ class MetricsRegistry:
                 self._gauges[key] = GaugeMetric(name=name, tags=tags or {})
             return self._gauges[key]
 
-    def histogram(self, name: str, tags: Dict[str, str] | None = None) -> HistogramMetric:
+    def histogram(self, name: str, tags: dict[str, str] | None = None) -> HistogramMetric:
         """Get or create a histogram metric."""
         key = self._make_key(name, tags)
         with self._lock:
@@ -164,14 +163,14 @@ class MetricsRegistry:
                 self._histograms[key] = HistogramMetric(name=name, tags=tags or {})
             return self._histograms[key]
 
-    def _make_key(self, name: str, tags: Dict[str, str] | None) -> str:
+    def _make_key(self, name: str, tags: dict[str, str] | None) -> str:
         """Create a unique key for a metric with tags."""
         if not tags:
             return name
         tag_str = ",".join(f"{k}={v}" for k, v in sorted(tags.items()))
         return f"{name}{{{tag_str}}}"
 
-    def get_all_metrics(self) -> Dict[str, Any]:
+    def get_all_metrics(self) -> dict[str, Any]:
         """Get all metrics as a dictionary."""
         with self._lock:
             return {
@@ -200,19 +199,19 @@ def get_metrics_registry() -> MetricsRegistry:
 # ── Metric helpers ───────────────────────────────────────────────────────────
 
 
-def increment_counter(name: str, amount: int = 1, tags: Dict[str, str] | None = None) -> None:
+def increment_counter(name: str, amount: int = 1, tags: dict[str, str] | None = None) -> None:
     """Increment a counter metric."""
     if tags is None:
         tags = {}
     _registry.counter(name, tags).increment(amount)
 
 
-def set_gauge(name: str, value: float, tags: Dict[str, str] | None = None) -> None:
+def set_gauge(name: str, value: float, tags: dict[str, str] | None = None) -> None:
     """Set a gauge metric."""
     _registry.gauge(name, tags).set(value)
 
 
-def observe_histogram(name: str, value: float, tags: Dict[str, str] | None = None) -> None:
+def observe_histogram(name: str, value: float, tags: dict[str, str] | None = None) -> None:
     """Observe a value in a histogram."""
     _registry.histogram(name, tags).observe(value)
 
@@ -223,12 +222,12 @@ def observe_histogram(name: str, value: float, tags: Dict[str, str] | None = Non
 class Timer:
     """Context manager for timing operations."""
 
-    def __init__(self, metric_name: str, tags: Dict[str, str] | None = None) -> None:
+    def __init__(self, metric_name: str, tags: dict[str, str] | None = None) -> None:
         self._metric_name = metric_name
         self._tags = tags
         self._start_time: float = 0.0
 
-    def __enter__(self) -> "Timer":
+    def __enter__(self) -> Timer:
         self._start_time = time.time()
         return self
 
@@ -243,7 +242,7 @@ class Timer:
             increment_counter(f"{self._metric_name}_error", tags=self._tags)
 
 
-def time_operation(metric_name: str, tags: Dict[str, str] | None = None) -> Timer:
+def time_operation(metric_name: str, tags: dict[str, str] | None = None) -> Timer:
     """Create a timer context manager."""
     return Timer(metric_name, tags)
 
