@@ -8,8 +8,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
-from pathlib import Path
+from typing import Any
 
 
 @dataclass
@@ -20,11 +19,11 @@ class AppSpec:
     description: str
     backend_type: str  # "component" | "pipeline" | "dspy_module"
     backend_logic: str  # Python code or DSPy pipeline definition
-    frontend_views: List[Dict[str, Any]] = field(default_factory=list)
-    state_schema: Dict[str, Any] = field(default_factory=dict)
-    permissions: List[str] = field(default_factory=list)
+    frontend_views: list[dict[str, Any]] = field(default_factory=list)
+    state_schema: dict[str, Any] = field(default_factory=dict)
+    permissions: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "name": self.name,
             "description": self.description,
@@ -36,7 +35,7 @@ class AppSpec:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "AppSpec":
+    def from_dict(cls, data: dict[str, Any]) -> AppSpec:
         return cls(
             name=data["name"],
             description=data["description"],
@@ -53,10 +52,10 @@ class GeneratedApp:
     """Result of app generation."""
 
     backend_code: str
-    frontend_code: Dict[str, str]  # Map of view name to React code
-    app_manifest: Dict[str, Any]
+    frontend_code: dict[str, str]  # Map of view name to React code
+    app_manifest: dict[str, Any]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "backend_code": self.backend_code,
             "frontend_code": self.frontend_code,
@@ -225,7 +224,7 @@ class {self._to_class_name(spec.name)}Module(dspy.Module):
 '''
         return code
 
-    def _generate_view(self, view_spec: Dict[str, Any], spec: AppSpec) -> str:
+    def _generate_view(self, view_spec: dict[str, Any], spec: AppSpec) -> str:
         """Generate React view code from spec.
 
         Args:
@@ -235,7 +234,7 @@ class {self._to_class_name(spec.name)}Module(dspy.Module):
         Returns:
             React TypeScript code.
         """
-        view_name = view_spec.get("name", "View")
+        view_spec.get("name", "View")
         view_type = view_spec.get("type", "form")
 
         if view_type == "form":
@@ -247,7 +246,7 @@ class {self._to_class_name(spec.name)}Module(dspy.Module):
         else:
             return self._generate_generic_view(view_spec, spec)
 
-    def _generate_form_view(self, view_spec: Dict[str, Any], spec: AppSpec) -> str:
+    def _generate_form_view(self, view_spec: dict[str, Any], spec: AppSpec) -> str:
         """Generate a form view.
 
         Args:
@@ -299,7 +298,7 @@ export default function {self._to_class_name(view_spec.get("name", "View"))}View
 '''
         return code
 
-    def _generate_form_fields(self, fields: List[Dict[str, Any]]) -> str:
+    def _generate_form_fields(self, fields: list[dict[str, Any]]) -> str:
         """Generate form field code.
 
         Args:
@@ -314,18 +313,18 @@ export default function {self._to_class_name(view_spec.get("name", "View"))}View
             field_label = field.get("label", field_name)
             field_type = field.get("type", "text")
 
-            code += f'      <TextField\n'
+            code += '      <TextField\n'
             code += f'        label="{field_label}"\n'
             code += f'        type="{field_type}"\n'
             code += f'        value={{formData["{field_name}"] || ""}}\n'
             code += f'        onChange={{(e) => setFormData({{ ...formData, "{field_name}": e.target.value }})}}\n'
-            code += f'        fullWidth\n'
-            code += f'        size="small"\n'
-            code += f'      />\n'
+            code += '        fullWidth\n'
+            code += '        size="small"\n'
+            code += '      />\n'
 
         return code
 
-    def _generate_list_view(self, view_spec: Dict[str, Any], spec: AppSpec) -> str:
+    def _generate_list_view(self, view_spec: dict[str, Any], spec: AppSpec) -> str:
         """Generate a list view.
 
         Args:
@@ -367,7 +366,7 @@ export default function {self._to_class_name(view_spec.get("name", "View"))}View
 '''
         return code
 
-    def _generate_dashboard_view(self, view_spec: Dict[str, Any], spec: AppSpec) -> str:
+    def _generate_dashboard_view(self, view_spec: dict[str, Any], spec: AppSpec) -> str:
         """Generate a dashboard view.
 
         Args:
@@ -411,7 +410,7 @@ export default function {self._to_class_name(view_spec.get("name", "View"))}View
 '''
         return code
 
-    def _generate_generic_view(self, view_spec: Dict[str, Any], spec: AppSpec) -> str:
+    def _generate_generic_view(self, view_spec: dict[str, Any], spec: AppSpec) -> str:
         """Generate a generic view.
 
         Args:
@@ -445,7 +444,7 @@ export default function {self._to_class_name(view_spec.get("name", "View"))}View
 '''
         return code
 
-    def _generate_manifest(self, spec: AppSpec, view_names: List[str]) -> Dict[str, Any]:
+    def _generate_manifest(self, spec: AppSpec, view_names: list[str]) -> dict[str, Any]:
         """Generate an app manifest.
 
         Args:

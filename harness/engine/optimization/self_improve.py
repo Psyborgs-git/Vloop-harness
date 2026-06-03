@@ -12,7 +12,6 @@ Given a user instruction (e.g., "build a sentiment analyzer"), the harness:
 from __future__ import annotations
 
 import asyncio
-import json
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -113,14 +112,14 @@ class SelfImprovementLoop:
         eval_results = [baseline_result]
         final_score = baseline_score
 
-        for iteration in range(1, cfg.max_iterations + 1):
+        for _iteration in range(1, cfg.max_iterations + 1):
             # Optimize
             metric = self.evaluator.get_metric(cfg.metric_name)
             try:
                 current_module = self.optimizer.compile(
                     current_module, trainset=trainset, metric=metric
                 )
-            except Exception as exc:
+            except Exception:
                 # Optimization failed — break
                 break
 

@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from enum import Enum
-from typing import Any, Callable
-
-import dspy
+from enum import StrEnum
+from typing import Any
 
 
-class NodeType(str, Enum):
+class NodeType(StrEnum):
     COMPONENT = "component"      # DSPy Module
     TOOL = "tool"                # Tool registry call
     CONDITION = "condition"      # Branching decision

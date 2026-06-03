@@ -61,13 +61,28 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_log::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
-        .invoke_handler(tauri::generate_handler![get_harness_config])
+        .invoke_handler(tauri::generate_handler![
+            get_harness_config,
+            modules::vault::get_vault_key,
+            modules::sandbox::run_in_sandbox
+        ])
         .setup(move |app| {
-            // Start services in background
+            let health_report = modules::health::check_system_health(&repo_root_clone, &data_dir_clone);
+
+            if !health_report.python_ok || !health_report.node_ok || !health_report.db_accessible {
+                let logs = "Boot failed during health check.";
+                let _ = modules::ui::fallback::show_fallback_ui(app.handle(), logs, &health_report.details);
+                return Ok(());
+            }
+
+            let backend_port = modules::health::get_available_port(9100);
+            let ai_port = modules::health::get_available_port(backend_port + 1);
+            let vite_port = modules::health::get_available_port(5173);
+
             let repo_root = repo_root_clone.clone();
             let data_dir = data_dir_clone.clone();
             let frontend_mode = frontend_mode_clone.clone();
-            let _app_handle = app.handle().clone();
+            let app_handle = app.handle().clone();
 
             std::thread::spawn(move || {
                 let rt = tokio::runtime::Runtime::new().unwrap();
@@ -76,30 +91,29 @@ pub fn run() {
                         repo_root,
                         data_dir,
                         "127.0.0.1".to_string(),
-                        9100,
-                        9101,
+                        backend_port,
+                        ai_port,
                         frontend_mode,
                     )
                     .await
                     {
                         eprintln!("App run failed: {}", e);
+                        let _ = modules::ui::fallback::show_fallback_ui(&app_handle, "App crashed during startup", &e.to_string());
                     }
                 });
             });
 
-            // Wait for backend to start
             std::thread::sleep(std::time::Duration::from_secs(2));
 
-            // Create and store service manager for cleanup and command access
             let service_manager = ServiceManager::new(
                 repo_root_clone,
                 data_dir_clone,
                 "127.0.0.1".to_string(),
-                9100,
+                backend_port,
                 "127.0.0.1".to_string(),
-                9102,
+                vite_port,
                 frontend_mode_clone,
-                "http://127.0.0.1:9101/v1".to_string(),
+                format!("http://127.0.0.1:{}/v1", ai_port),
             );
             app.manage(service_manager);
 

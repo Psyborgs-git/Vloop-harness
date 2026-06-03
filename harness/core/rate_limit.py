@@ -7,7 +7,6 @@ Implements token bucket and sliding window rate limiting algorithms.
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
@@ -77,7 +76,7 @@ class SlidingWindow:
 class RateLimiter:
     """Rate limiter using token bucket and sliding window."""
     
-    def __init__(self, config: Optional[RateLimitConfig] = None):
+    def __init__(self, config: RateLimitConfig | None = None):
         self.config = config or RateLimitConfig()
         
         # Per-client rate limiters
@@ -100,7 +99,7 @@ class RateLimiter:
             )
         )
     
-    def is_allowed(self, client_id: str) -> tuple[bool, Optional[str]]:
+    def is_allowed(self, client_id: str) -> tuple[bool, str | None]:
         """Check if a request from a client is allowed."""
         # Check minute limit (token bucket)
         minute_bucket = self._minute_buckets[client_id]
@@ -165,10 +164,10 @@ class RateLimiter:
 
 
 # Global rate limiter instance
-_rate_limiter: Optional[RateLimiter] = None
+_rate_limiter: RateLimiter | None = None
 
 
-def get_rate_limiter(config: Optional[RateLimitConfig] = None) -> RateLimiter:
+def get_rate_limiter(config: RateLimitConfig | None = None) -> RateLimiter:
     """Get the global rate limiter instance."""
     global _rate_limiter
     if _rate_limiter is None:

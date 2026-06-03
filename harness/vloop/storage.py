@@ -8,8 +8,7 @@ Creates and manages two directory trees:
 from __future__ import annotations
 
 import json
-import os
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -153,4 +152,4 @@ class VLoopStorage:
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()

@@ -6,14 +6,12 @@ to ensure they can be instantiated and execute basic operations correctly.
 
 from __future__ import annotations
 
-import asyncio
+import importlib.util
 import sys
 import tempfile
-import traceback
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List
-import importlib.util
+from typing import Any
 
 
 @dataclass
@@ -41,7 +39,7 @@ class SmokeTestSuite:
     """Results of running all smoke tests for a component."""
     
     component_name: str
-    tests: List[SmokeTestResult]
+    tests: list[SmokeTestResult]
     total_tests: int
     passed_tests: int
     failed_tests: int
@@ -73,7 +71,7 @@ class SmokeTestRunner:
         self,
         component_name: str,
         source_code: str,
-        test_definitions: List[Dict[str, Any]] | None = None,
+        test_definitions: list[dict[str, Any]] | None = None,
     ) -> SmokeTestSuite:
         """Run all smoke tests for a component.
         
@@ -116,7 +114,7 @@ class SmokeTestRunner:
             duration_ms=duration_ms,
         )
     
-    def _get_default_tests(self) -> List[Dict[str, Any]]:
+    def _get_default_tests(self) -> list[dict[str, Any]]:
         """Get default smoke test definitions."""
         return [
             {
@@ -140,7 +138,7 @@ class SmokeTestRunner:
         self,
         component_name: str,
         source_code: str,
-        test_def: Dict[str, Any],
+        test_def: dict[str, Any],
     ) -> SmokeTestResult:
         """Run a single smoke test.
         
@@ -266,7 +264,7 @@ class SmokeTestRunner:
                     return f"Class {class_names[0]} requires parameters: {params}"
                 
                 # Try instantiation
-                instance = cls()
+                cls()
                 return f"Successfully instantiated {class_names[0]}"
             finally:
                 sys.path.remove(tmpdir)

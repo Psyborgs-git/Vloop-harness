@@ -1,17 +1,17 @@
 """Pipeline framework — DAG-based execution with reusable templates."""
 
 from harness.engine.pipelines.base import (
+    Condition,
+    NodeType,
+    PipelineEdge,
     PipelineGraph,
     PipelineNode,
-    PipelineEdge,
-    NodeType,
-    Condition,
 )
-from harness.engine.pipelines.executor import PipelineExecutor, ExecutionContext
+from harness.engine.pipelines.executor import ExecutionContext, PipelineExecutor
 from harness.engine.pipelines.templates import (
-    RAGPipeline,
-    MapReducePipeline,
     AgentLoopPipeline,
+    MapReducePipeline,
+    RAGPipeline,
     ReflectionPipeline,
     SequentialPipeline,
 )

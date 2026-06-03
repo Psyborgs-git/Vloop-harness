@@ -3,12 +3,10 @@ Authentication and authorization API routes.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from harness.core.auth import (
-    AuthManager,
     Token,
-    TokenData,
     User,
     UserCreate,
     UserLogin,

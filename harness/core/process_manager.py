@@ -5,9 +5,8 @@ from __future__ import annotations
 import asyncio
 import importlib
 import importlib.util
-import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from harness.core.base_component import BaseComponent

@@ -10,11 +10,10 @@ This module provides functionality to:
 from __future__ import annotations
 
 import time
-from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Dict, List
+from datetime import UTC, datetime
 from threading import Lock
+from typing import Any
 
 
 @dataclass
@@ -26,9 +25,9 @@ class QueryTrace:
     timestamp: datetime
     success: bool
     error: str | None = None
-    params: Dict[str, Any] = field(default_factory=dict)
+    params: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "query": self.query[:1000],  # Truncate long queries
             "duration_ms": self.duration_ms,
@@ -65,7 +64,7 @@ class QueryStats:
         if not trace.success:
             self.error_count += 1
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "pattern": self.pattern,
             "count": self.count,
@@ -82,8 +81,8 @@ class QueryTracer:
 
     def __init__(self, slow_query_threshold_ms: float = 1000.0, max_traces: int = 1000) -> None:
         self._slow_query_threshold_ms = slow_query_threshold_ms
-        self._traces: List[QueryTrace] = []
-        self._stats: Dict[str, QueryStats] = {}
+        self._traces: list[QueryTrace] = []
+        self._stats: dict[str, QueryStats] = {}
         self._lock = Lock()
         self._max_traces = max_traces
 
@@ -93,13 +92,13 @@ class QueryTracer:
         duration_ms: float,
         success: bool = True,
         error: str | None = None,
-        params: Dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
     ) -> None:
         """Record a query execution."""
         trace = QueryTrace(
             query=query,
             duration_ms=duration_ms,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             success=success,
             error=error,
             params=params or {},
@@ -125,25 +124,25 @@ class QueryTracer:
         normalized = re.sub(r'\s+', ' ', normalized).strip()  # Normalize whitespace
         return normalized[:200]  # Truncate
 
-    def get_recent_traces(self, limit: int = 50) -> List[Dict[str, Any]]:
+    def get_recent_traces(self, limit: int = 50) -> list[dict[str, Any]]:
         """Get recent query traces."""
         with self._lock:
             traces = self._traces[-limit:]
             return [t.to_dict() for t in traces]
 
-    def get_slow_queries(self, limit: int = 50) -> List[Dict[str, Any]]:
+    def get_slow_queries(self, limit: int = 50) -> list[dict[str, Any]]:
         """Get slow queries (above threshold)."""
         with self._lock:
             slow = [t for t in self._traces if t.duration_ms > self._slow_query_threshold_ms]
             slow_sorted = sorted(slow, key=lambda t: t.duration_ms, reverse=True)
             return [t.to_dict() for t in slow_sorted[:limit]]
 
-    def get_query_stats(self) -> List[Dict[str, Any]]:
+    def get_query_stats(self) -> list[dict[str, Any]]:
         """Get aggregated query statistics."""
         with self._lock:
             return [stats.to_dict() for stats in self._stats.values()]
 
-    def get_stats_by_pattern(self, pattern: str) -> Dict[str, Any] | None:
+    def get_stats_by_pattern(self, pattern: str) -> dict[str, Any] | None:
         """Get statistics for a specific query pattern."""
         with self._lock:
             stats = self._stats.get(pattern)
@@ -171,14 +170,14 @@ def get_query_tracer() -> QueryTracer:
 class QueryTimer:
     """Context manager for timing queries."""
 
-    def __init__(self, query: str, params: Dict[str, Any] | None = None) -> None:
+    def __init__(self, query: str, params: dict[str, Any] | None = None) -> None:
         self._query = query
         self._params = params
         self._start_time: float = 0.0
         self._success = True
         self._error: str | None = None
 
-    def __enter__(self) -> "QueryTimer":
+    def __enter__(self) -> QueryTimer:
         self._start_time = time.time()
         return self
 
@@ -198,6 +197,6 @@ class QueryTimer:
         )
 
 
-def trace_query(query: str, params: Dict[str, Any] | None = None) -> QueryTimer:
+def trace_query(query: str, params: dict[str, Any] | None = None) -> QueryTimer:
     """Create a query timer context manager."""
     return QueryTimer(query, params)

@@ -18,12 +18,7 @@ from pydantic import BaseModel
 from harness.engine.pipelines.base import NodeType, PipelineGraph
 from harness.engine.pipelines.executor import ExecutionContext, PipelineExecutor
 from harness.engine.pipelines.templates import (
-    AgentLoopPipeline,
-    MapReducePipeline,
-    RAGPipeline,
-    ReflectionPipeline,
     SequentialPipeline,
-    run_pipeline,
 )
 
 router = APIRouter(prefix="/api/pipelines", tags=["pipelines"])

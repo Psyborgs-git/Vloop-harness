@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class ToolRegistry:
     """Owns all registered tool instances and dispatches ``execute`` calls."""
 
-    def __init__(self, main_process: "MainProcess") -> None:
+    def __init__(self, main_process: MainProcess) -> None:
         self._mp = main_process
         self._tools: dict[str, AbstractTool] = {}
 
@@ -40,9 +40,10 @@ class ToolRegistry:
     ) -> ToolResult:
         """Look up *tool_name* and delegate to its ``execute`` method."""
         import os
-        import httpx
         import time
-        from harness.core.secret_redaction import redact_any
+
+        import httpx
+
         from harness.core.metrics import record_tool_execution
 
         ai_url = os.environ.get("RUST_BASE_AI_URL", "")
@@ -154,6 +155,7 @@ class ToolRegistry:
     ) -> None:
         """Record a tool execution trace to the database."""
         import asyncio
+
         from harness.data.db import get_session_factory
         from harness.data.models import ToolTrace
 

@@ -6,7 +6,7 @@ handles all ORM interactions, keeping business logic out of route handlers.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import select, update
@@ -31,7 +31,7 @@ from harness.data.models import (
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class Repository:

@@ -14,9 +14,10 @@ Boot sequence
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, AsyncIterator
+from typing import TYPE_CHECKING
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,17 +25,17 @@ from fastapi.staticfiles import StaticFiles
 
 from harness.server.routes import components, proxy, ws
 from harness.server.routes.agent_routes import router as agent_router
+from harness.server.routes.alerting_routes import router as alerting_router
 from harness.server.routes.analytics_routes import router as analytics_router
 from harness.server.routes.app_routes import router as app_router
 from harness.server.routes.auth_routes import router as auth_router
 from harness.server.routes.chat_routes import router as chat_router
 from harness.server.routes.dspy_routes import router as dspy_router
 from harness.server.routes.eval_routes import router as eval_router
-from harness.server.routes.alerting_routes import router as alerting_router
 from harness.server.routes.metrics_routes import router as metrics_router
-from harness.server.routes.settings_routes import router as settings_router
 from harness.server.routes.optimization_routes import router as optimization_router
 from harness.server.routes.pipeline_routes import router as pipeline_router
+from harness.server.routes.settings_routes import router as settings_router
 from harness.server.routes.tool_routes import router as tool_router
 from harness.server.routes.vector_store_routes import router as vector_store_router
 from harness.server.routes.views_routes import router as views_router
@@ -44,7 +45,7 @@ if TYPE_CHECKING:
     from harness.settings import HarnessSettings
 
 
-def create_app(main_process: "MainProcess", settings: "HarnessSettings") -> FastAPI:
+def create_app(main_process: MainProcess, settings: HarnessSettings) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -75,8 +76,8 @@ def create_app(main_process: "MainProcess", settings: "HarnessSettings") -> Fast
         engine = DSPyEngine(engine_cfg)
 
         # ── 5. Provider manager — seed + configure engine ─────────────────────
-        from harness.engine.providers import ProviderManager
         from harness.data.db import get_session_factory
+        from harness.engine.providers import ProviderManager
 
         pm = ProviderManager(engine=engine, vault=vault)
         app.state.provider_manager = pm
@@ -114,8 +115,12 @@ def create_app(main_process: "MainProcess", settings: "HarnessSettings") -> Fast
         app.state.dynamic_config = engine.dynamic_config
 
         # ── 6c. Vector store (sqlite-vec with in-memory fallback) ───────────────
-        from harness.engine.vector_store.store import SqliteVecStore, InMemoryVecStore
-        from harness.engine.vector_store.embeddings import OllamaEmbeddings, OpenAIEmbeddings, LocalEmbeddings
+        from harness.engine.vector_store.embeddings import (
+            LocalEmbeddings,
+            OllamaEmbeddings,
+            OpenAIEmbeddings,
+        )
+        from harness.engine.vector_store.store import InMemoryVecStore, SqliteVecStore
 
         try:
             vec_store = SqliteVecStore(

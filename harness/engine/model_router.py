@@ -7,18 +7,17 @@ it walks a fallback chain.
 
 from __future__ import annotations
 
-import asyncio
 import time
-from dataclasses import dataclass, field
-from enum import Enum
+from dataclasses import dataclass
+from enum import StrEnum
 from typing import Any
 
 import httpx
 
-from harness.engine.model_registry import ModelCapability, ModelInfo, ModelRegistry
+from harness.engine.model_registry import ModelCapability, ModelRegistry
 
 
-class RoutingStrategy(str, Enum):
+class RoutingStrategy(StrEnum):
     EXACT = "exact"           # Use the requested model_id exactly
     CAPABILITY = "capability"  # Pick cheapest model with required capabilities
     PROVIDER = "provider"      # Pick largest context model for a provider

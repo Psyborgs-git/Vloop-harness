@@ -23,11 +23,11 @@ from typing import Any
 import dspy
 
 from harness.engine.config import EngineConfig
-from harness.engine.dynamic_config import DynamicConfig, GenerationConfig
+from harness.engine.dynamic_config import DynamicConfig
 from harness.engine.memory.conversation import ConversationMemory
 from harness.engine.memory.working import WorkingMemory
 from harness.engine.model_registry import ModelRegistry
-from harness.engine.model_router import ModelRouter, RoutingDecision
+from harness.engine.model_router import ModelRouter
 from harness.engine.modules.agent_planner import AgentPlanner
 from harness.engine.modules.chat import DashboardChat
 from harness.engine.modules.code_gen import CodeGenerator
@@ -349,7 +349,7 @@ class DSPyEngine:
         **kwargs: Any,
     ) -> dspy.Prediction:
         """Run a module with runtime parameter adaptation."""
-        gen_cfg = self.dynamic_config.resolve(
+        self.dynamic_config.resolve(
             model_id=self.config.dspy_lm_model,
             prompt_text=prompt_text,
             preferred_temperature=preferred_temperature,

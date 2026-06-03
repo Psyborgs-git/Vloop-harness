@@ -53,3 +53,6 @@ headless_chrome = { version = "1.0.21", default-features = false }
 
 # Logging
 log = "0.4"
+once_cell = "1.21.4"
+ssh2 = "0.9.5"
+port_scanner = "0.1.5"

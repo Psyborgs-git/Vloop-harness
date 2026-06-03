@@ -42,13 +42,13 @@ DEFAULT_OLLAMA_URL = "http://localhost:11434"
 class ProviderManager:
     """Owns provider lifecycle: DB persistence, key encryption, engine wiring."""
 
-    def __init__(self, engine: "DSPyEngine", vault: "SecretVault") -> None:
+    def __init__(self, engine: DSPyEngine, vault: SecretVault) -> None:
         self._engine = engine
         self._vault = vault
 
     # ── Bootstrap ─────────────────────────────────────────────────────────────
 
-    async def seed_defaults(self, repo: "Repository") -> None:
+    async def seed_defaults(self, repo: Repository) -> None:
         """Create a default Ollama provider if the DB has no providers yet."""
         providers = await repo.list_providers()
         if providers:
@@ -68,7 +68,7 @@ class ProviderManager:
         )
         await repo.save_provider(default)
 
-    async def load_default(self, repo: "Repository") -> bool:
+    async def load_default(self, repo: Repository) -> bool:
         """Configure the DSPy engine from the default provider in DB.
 
         Returns True if configuration succeeded, False otherwise.
@@ -84,7 +84,7 @@ class ProviderManager:
 
     # ── Runtime activation ────────────────────────────────────────────────────
 
-    async def activate(self, provider_id: str, repo: "Repository") -> None:
+    async def activate(self, provider_id: str, repo: Repository) -> None:
         """Set *provider_id* as default and reconfigure the engine."""
         provider = await repo.get_provider(provider_id)
         if not provider:
@@ -104,7 +104,7 @@ class ProviderManager:
         api_key: str = "",
         extra_config: dict[str, Any] | None = None,
         provider_id: str | None = None,
-    ) -> "ProviderConfigDB":
+    ) -> ProviderConfigDB:
         """Construct (but do not persist) a ProviderConfigDB with encrypted key."""
         from harness.data.models import ProviderConfigDB
 
@@ -120,7 +120,7 @@ class ProviderManager:
             is_default=False,
         )
 
-    def provider_to_dict(self, provider: "ProviderConfigDB") -> dict[str, Any]:
+    def provider_to_dict(self, provider: ProviderConfigDB) -> dict[str, Any]:
         """Serialize a provider for the REST API — never exposes the raw API key."""
         return {
             "id": provider.id,
@@ -136,7 +136,7 @@ class ProviderManager:
 
     # ── Internal ──────────────────────────────────────────────────────────────
 
-    def _configure_engine(self, provider: "ProviderConfigDB") -> None:
+    def _configure_engine(self, provider: ProviderConfigDB) -> None:
         api_key = (
             self._vault.decrypt(provider.encrypted_api_key)
             if provider.encrypted_api_key
@@ -160,6 +160,7 @@ class ProviderManager:
             )
 
         import os
+
         import httpx
         rust_base_url = os.getenv("RUST_BASE_AI_URL")
         if rust_base_url:

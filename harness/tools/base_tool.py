@@ -71,7 +71,7 @@ class AbstractTool(ABC):
     #: Risk classification — gates the confirmation protocol
     risk_level: Literal["safe", "caution", "destructive"] = "safe"
 
-    def __init__(self, main_process: "MainProcess") -> None:
+    def __init__(self, main_process: MainProcess) -> None:
         self._mp = main_process
 
     # ── Permission gate ───────────────────────────────────────────────────────

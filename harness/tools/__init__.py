@@ -6,9 +6,9 @@ from harness.tools.base_tool import AbstractTool, ToolResult
 from harness.tools.confirmation import ConfirmationStore
 from harness.tools.exceptions import (
     ConfirmationRequired,
+    PermanentlyBlocked,
     PermissionDenied,
     PolicyBlocked,
-    PermanentlyBlocked,
     TimeoutExceeded,
     ToolError,
     WorkspaceEscape,

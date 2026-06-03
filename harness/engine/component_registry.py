@@ -35,7 +35,7 @@ class DSPyComponentRegistry:
 
     # ── Compilation ───────────────────────────────────────────────────────────
 
-    def compile(self, component_def: "DSPyComponentDef") -> type[dspy.Module]:
+    def compile(self, component_def: DSPyComponentDef) -> type[dspy.Module]:
         """Exec the source code and cache the resulting Module subclass.
 
         Returns the compiled class; also updates the in-memory cache.

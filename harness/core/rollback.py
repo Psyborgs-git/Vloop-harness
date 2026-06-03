@@ -7,11 +7,11 @@ and restore them to previous states when needed.
 from __future__ import annotations
 
 import hashlib
+import json
 import shutil
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-import json
 
 
 class RollbackManager:
@@ -36,7 +36,7 @@ class RollbackManager:
             try:
                 with self._index_file.open("r") as f:
                     return json.load(f)
-            except (json.JSONDecodeError, IOError):
+            except (OSError, json.JSONDecodeError):
                 return {}
         return {}
     
@@ -78,7 +78,7 @@ class RollbackManager:
         if not file_path.exists():
             return None
         
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
+        timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S_%f")
         backup_path = self._backup_path(file_path, timestamp)
         
         # Copy the file to backup location
@@ -138,7 +138,7 @@ class RollbackManager:
         try:
             shutil.copy2(backup_path, file_path)
             return True
-        except (IOError, shutil.Error):
+        except (OSError, shutil.Error):
             return False
     
     def list_backups(self, file_path: Path) -> list[dict[str, Any]]:
@@ -163,7 +163,7 @@ class RollbackManager:
             Number of backups removed.
         """
         removed = 0
-        cutoff = datetime.now(timezone.utc).timestamp() - (max_age_days * 86400)
+        cutoff = datetime.now(UTC).timestamp() - (max_age_days * 86400)
         
         for file_path, backups in list(self._index.items()):
             # Remove backups older than max_age_days

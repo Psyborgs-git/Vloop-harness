@@ -6,7 +6,6 @@ import json
 import re
 from typing import Any
 
-
 _HEAD_RE = re.compile(r"(<head[^>]*>)", re.IGNORECASE)
 
 

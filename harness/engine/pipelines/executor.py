@@ -12,7 +12,6 @@ import dspy
 from harness.engine.pipelines.base import (
     Condition,
     NodeType,
-    PipelineEdge,
     PipelineGraph,
     PipelineNode,
 )

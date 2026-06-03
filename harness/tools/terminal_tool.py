@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, Any
 
 from harness.core.permissions import Permission
 from harness.tools.base_tool import AbstractTool, ToolResult
-from harness.tools.exceptions import TimeoutExceeded, WorkspaceEscape
+from harness.tools.exceptions import WorkspaceEscape
 
 if TYPE_CHECKING:
     from harness.core.main_process import MainProcess
@@ -43,7 +43,7 @@ class TerminalTool(AbstractTool):
     required_permission = Permission.SHELL_EXEC
     risk_level = "caution"
 
-    def __init__(self, main_process: "MainProcess") -> None:
+    def __init__(self, main_process: MainProcess) -> None:
         super().__init__(main_process)
 
     # ── Execute ───────────────────────────────────────────────────────────────
@@ -135,7 +135,7 @@ class TerminalTool(AbstractTool):
                 stdout_bytes, stderr_bytes = await asyncio.wait_for(
                     proc.communicate(), timeout=timeout
                 )
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # 10. Kill the process group on timeout
                 _kill_process(proc)
                 return ToolResult(

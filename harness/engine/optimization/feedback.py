@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -22,7 +22,7 @@ class FeedbackEntry:
     rating: int = 0  # -1 = thumbs down, 0 = neutral, 1 = thumbs up
     comment: str = ""
     tags: list[str] = field(default_factory=list)
-    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -121,7 +121,7 @@ class FeedbackCollector:
     def _load_all(self) -> list[FeedbackEntry]:
         entries: list[FeedbackEntry] = []
         for file_path in self.storage_dir.glob("*.jsonl"):
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line:

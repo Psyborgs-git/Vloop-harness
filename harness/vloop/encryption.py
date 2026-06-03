@@ -34,7 +34,7 @@ class SecretVault:
 
     def __init__(self, key_path: Path) -> None:
         self.key_path = key_path
-        self._fernet: "Fernet | None" = None
+        self._fernet: Fernet | None = None
         self._init_key()
 
     # ── Bootstrap ─────────────────────────────────────────────────────────────

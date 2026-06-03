@@ -25,7 +25,6 @@ Endpoints
 
 from __future__ import annotations
 
-import time
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request, status
@@ -131,6 +130,7 @@ async def list_tools(request: Request) -> list[dict[str, Any]]:
 async def get_policy(request: Request) -> dict[str, Any]:
     """Return the effective merged policy (global + project)."""
     import os
+
     import httpx
     ai_url = os.environ.get("RUST_BASE_AI_URL", "")
     if ai_url:
@@ -145,6 +145,7 @@ async def get_policy(request: Request) -> dict[str, Any]:
 async def update_policy(body: PolicyUpdateRequest, request: Request) -> dict[str, Any]:
     """Persist an updated project-local policy and reload the engine."""
     import os
+
     import httpx
     ai_url = os.environ.get("RUST_BASE_AI_URL", "")
     if ai_url:
@@ -369,6 +370,7 @@ async def execute_database(body: DatabaseRequest, request: Request) -> Any:
 async def confirm_action(token: str, request: Request) -> dict[str, Any]:
     """Execute a confirmed destructive action by token."""
     import os
+
     import httpx
     ai_url = os.environ.get("RUST_BASE_AI_URL", "")
     if ai_url:
@@ -412,6 +414,7 @@ async def confirm_action(token: str, request: Request) -> dict[str, Any]:
 async def cancel_confirmation(token: str, request: Request) -> None:
     """Cancel a pending confirmation without executing the action."""
     import os
+
     import httpx
     ai_url = os.environ.get("RUST_BASE_AI_URL", "")
     if ai_url:

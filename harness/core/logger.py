@@ -2,19 +2,17 @@
 
 from __future__ import annotations
 
+import contextvars
 import logging
-import sys
 import uuid
 from collections import deque
 from enum import IntEnum
 from pathlib import Path
 from typing import Any
-import contextvars
 
 import structlog
 from rich.console import Console
 from rich.logging import RichHandler
-
 
 # Context variable for correlation ID
 _correlation_id: contextvars.ContextVar[str] = contextvars.ContextVar("correlation_id", default="")

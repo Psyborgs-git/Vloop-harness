@@ -1,0 +1,96 @@
+[16:44:06] DEBUG    connect_tcp.started                             _trace.py:47
+                    host='raw.githubusercontent.com' port=443
+                    local_address=None timeout=5
+                    socket_options=None
+           DEBUG    connect_tcp.complete                            _trace.py:47
+                    return_value=<httpcore._backends.sync.SyncStrea
+                    m object at 0x7f8cdf61da10>
+           DEBUG    start_tls.started ssl_context=<ssl.SSLContext   _trace.py:47
+                    object at 0x7f8cdf13f4a0>
+                    server_hostname='raw.githubusercontent.com'
+                    timeout=5
+           DEBUG    start_tls.complete                              _trace.py:47
+                    return_value=<httpcore._backends.sync.SyncStrea
+                    m object at 0x7f8cdf1233d0>
+           DEBUG    send_request_headers.started request=<Request > _trace.py:47
+           DEBUG    send_request_headers.complete                   _trace.py:47
+           DEBUG    send_request_body.started request=<Request >    _trace.py:47
+           DEBUG    send_request_body.complete                      _trace.py:47
+           DEBUG    receive_response_headers.started                _trace.py:47
+                    request=<Request >
+           DEBUG    receive_response_headers.complete               _trace.py:47
+                    return_value=(b'HTTP/1.1', 200, b'OK',
+                    [(b'Connection', b'keep-alive'),
+                    (b'Content-Length', b'73048'),
+                    (b'Cache-Control', b'max-age=300'),
+                    (b'Content-Security-Policy', b"default-src
+                    'none'; style-src 'unsafe-inline'; sandbox"),
+                    (b'Content-Type', b'text/plain;
+                    charset=utf-8'), (b'ETag',
+                    b'W/"d3d751c0106d58b0ccd9432418e964b01bf4448b2b
+                    b3b78fc4d4b68fffb597d6"'),
+                    (b'Strict-Transport-Security',
+                    b'max-age=31536000'),
+                    (b'X-Content-Type-Options', b'nosniff'),
+                    (b'X-Frame-Options', b'deny'),
+                    (b'X-XSS-Protection', b'1; mode=block'),
+                    (b'X-GitHub-Request-Id',
+                    b'A712:D18F4:C0BFFF:EABE59:6A18F634'),
+                    (b'Content-Encoding', b'gzip'),
+                    (b'Accept-Ranges', b'bytes'), (b'Date', b'Wed,
+                    03 Jun 2026 16:44:06 GMT'), (b'Via', b'1.1
+                    varnish'), (b'X-Served-By',
+                    b'cache-chi-kigq8000128-CHI'), (b'X-Cache',
+                    b'HIT'), (b'X-Cache-Hits', b'20'), (b'X-Timer',
+                    b'S1780505047.506803,VS0,VE0'), (b'Vary',
+                    b'Authorization,Accept-Encoding'),
+                    (b'Access-Control-Allow-Origin', b'*'),
+                    (b'Cross-Origin-Resource-Policy',
+                    b'cross-origin'), (b'X-Fastly-Request-ID',
+                    b'5cb8f4eb7200941a6e7af08a1702dac05858b103'),
+                    (b'Expires', b'Wed, 03 Jun 2026 16:49:06 GMT'),
+                    (b'Source-Age', b'145')])
+           DEBUG    receive_response_body.started request=<Request  _trace.py:47
+                    >
+           DEBUG    receive_response_body.complete                  _trace.py:47
+           DEBUG    response_closed.started                         _trace.py:47
+           DEBUG    response_closed.complete                        _trace.py:47
+           DEBUG    close.started                                   _trace.py:47
+           DEBUG    close.complete                                  _trace.py:47
+[92m16:44:08 - LiteLLM:DEBUG[0m: litellm_logging.py:199 - [Non-Blocking] Unable to import GenericAPILogger - LiteLLM Enterprise Feature - No module named 'litellm_enterprise'
+[16:44:08] DEBUG    [Non-Blocking] Unable to import       litellm_logging.py:199
+                    GenericAPILogger - LiteLLM Enterprise
+                    Feature - No module named
+                    'litellm_enterprise'
+[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:943 - Using AiohttpTransport...
+[16:44:09] DEBUG    Using AiohttpTransport...                http_handler.py:943
+[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:1011 - Creating AiohttpTransport...
+           DEBUG    Creating AiohttpTransport...            http_handler.py:1011
+[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:1025 - NEW SESSION: Creating new ClientSession (no shared session provided)
+           DEBUG    NEW SESSION: Creating new ClientSession http_handler.py:1025
+                    (no shared session provided)
+[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:943 - Using AiohttpTransport...
+           DEBUG    Using AiohttpTransport...                http_handler.py:943
+[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:1011 - Creating AiohttpTransport...
+           DEBUG    Creating AiohttpTransport...            http_handler.py:1011
+[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:1025 - NEW SESSION: Creating new ClientSession (no shared session provided)
+           DEBUG    NEW SESSION: Creating new ClientSession http_handler.py:1025
+                    (no shared session provided)
+[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:943 - Using AiohttpTransport...
+           DEBUG    Using AiohttpTransport...                http_handler.py:943
+[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:1011 - Creating AiohttpTransport...
+           DEBUG    Creating AiohttpTransport...            http_handler.py:1011
+[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:1025 - NEW SESSION: Creating new ClientSession (no shared session provided)
+           DEBUG    NEW SESSION: Creating new ClientSession http_handler.py:1025
+                    (no shared session provided)
+[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:943 - Using AiohttpTransport...
+           DEBUG    Using AiohttpTransport...                http_handler.py:943
+[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:1011 - Creating AiohttpTransport...
+           DEBUG    Creating AiohttpTransport...            http_handler.py:1011
+[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:1025 - NEW SESSION: Creating new ClientSession (no shared session provided)
+           DEBUG    NEW SESSION: Creating new ClientSession http_handler.py:1025
+                    (no shared session provided)
+backend  healthy  pid=272896   log=.harness/logs/services/backend.log
+frontend healthy  pid=274260   log=.harness/logs/services/frontend.log
+Headless mode — visit http://localhost:9100/ui/root in your browser
+Press Ctrl+C to stop.

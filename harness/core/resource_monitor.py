@@ -10,14 +10,14 @@ This module provides functionality to:
 
 from __future__ import annotations
 
-import os
-import psutil
 import time
 from collections import deque
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Dict, List
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from threading import Lock
+from typing import Any
+
+import psutil
 
 
 @dataclass
@@ -34,7 +34,7 @@ class ResourceSnapshot:
     disk_free_gb: float
     process_count: int
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "timestamp": self.timestamp.isoformat(),
             "cpu_percent": self.cpu_percent,
@@ -65,7 +65,7 @@ class ResourceStats:
         self.memory_max = max(self.memory_max, snapshot.memory_percent)
         self.disk_max = max(self.disk_max, snapshot.disk_percent)
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "cpu_avg": self.cpu_avg,
             "cpu_max": self.cpu_max,
@@ -96,7 +96,7 @@ class ResourceMonitor:
             process_count = len(psutil.pids())
             
             snapshot = ResourceSnapshot(
-                timestamp=datetime.now(timezone.utc),
+                timestamp=datetime.now(UTC),
                 cpu_percent=cpu_percent,
                 memory_percent=memory.percent,
                 memory_used_mb=memory.used / (1024 * 1024),
@@ -115,7 +115,7 @@ class ResourceMonitor:
         except Exception:
             # Return a default snapshot if psutil fails
             return ResourceSnapshot(
-                timestamp=datetime.now(timezone.utc),
+                timestamp=datetime.now(UTC),
                 cpu_percent=0.0,
                 memory_percent=0.0,
                 memory_used_mb=0.0,
@@ -126,18 +126,18 @@ class ResourceMonitor:
                 process_count=0,
             )
     
-    def get_current(self) -> Dict[str, Any]:
+    def get_current(self) -> dict[str, Any]:
         """Get current resource usage."""
         snapshot = self.take_snapshot()
         return snapshot.to_dict()
     
-    def get_recent_snapshots(self, limit: int = 60) -> List[Dict[str, Any]]:
+    def get_recent_snapshots(self, limit: int = 60) -> list[dict[str, Any]]:
         """Get recent resource snapshots."""
         with self._lock:
             snapshots = list(self._snapshots)[-limit:]
             return [s.to_dict() for s in snapshots]
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get aggregated resource statistics."""
         with self._lock:
             if not self._snapshots:
@@ -191,7 +191,7 @@ def get_resource_monitor() -> ResourceMonitor:
 
 def record_resource_metrics() -> None:
     """Record current resource usage as metrics."""
-    from harness.core.metrics import set_gauge, observe_histogram
+    from harness.core.metrics import observe_histogram, set_gauge
     
     snapshot = get_resource_monitor().take_snapshot()
     

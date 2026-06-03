@@ -11,7 +11,7 @@ import subprocess
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, List
+from typing import Any
 
 
 @dataclass
@@ -19,8 +19,8 @@ class ViewValidationResult:
     """Result of a view validation."""
     
     is_valid: bool
-    errors: List[str]
-    warnings: List[str]
+    errors: list[str]
+    warnings: list[str]
     
     def to_dict(self) -> dict[str, Any]:
         return {

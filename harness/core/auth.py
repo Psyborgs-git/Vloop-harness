@@ -6,8 +6,7 @@ Supports multi-user authentication with JWT tokens and role-based access control
 
 import hashlib
 import secrets
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
 from pydantic import BaseModel
 
@@ -77,7 +76,7 @@ class AuthManager:
                 username="admin",
                 email="admin@localhost",
                 role="admin",
-                created_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
                 is_active=True,
             )
             password_hash = self._hash_password("admin123")  # Default password
@@ -109,7 +108,7 @@ class AuthManager:
             username=user_create.username,
             email=user_create.email,
             role=user_create.role,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
             is_active=True,
         )
         
@@ -118,7 +117,7 @@ class AuthManager:
         
         return user
     
-    def authenticate(self, login: UserLogin) -> Optional[User]:
+    def authenticate(self, login: UserLogin) -> User | None:
         """Authenticate a user and return the user if valid."""
         for user_id, user in self._users.items():
             if user.username == login.username and user.is_active:
@@ -129,7 +128,7 @@ class AuthManager:
     
     def create_token(self, user: User, expires_in_hours: int = 24) -> Token:
         """Create a JWT token for a user."""
-        exp = datetime.now(timezone.utc) + timedelta(hours=expires_in_hours)
+        exp = datetime.now(UTC) + timedelta(hours=expires_in_hours)
         
         # Simple token format (in production, use proper JWT library)
         token_data = TokenData(
@@ -155,14 +154,14 @@ class AuthManager:
         signature = hashlib.sha256(f"{data_str}:{self._secret_key}".encode()).hexdigest()
         return f"{data_str}:{signature}"
     
-    def verify_token(self, token: str) -> Optional[TokenData]:
+    def verify_token(self, token: str) -> TokenData | None:
         """Verify a token and return the token data if valid."""
         token_data = self._tokens.get(token)
         if not token_data:
             return None
         
         # Check expiration
-        if token_data.exp < datetime.now(timezone.utc):
+        if token_data.exp < datetime.now(UTC):
             del self._tokens[token]
             return None
         
@@ -173,7 +172,7 @@ class AuthManager:
         if token in self._tokens:
             del self._tokens[token]
     
-    def get_user(self, user_id: str) -> Optional[User]:
+    def get_user(self, user_id: str) -> User | None:
         """Get a user by ID."""
         return self._users.get(user_id)
     
@@ -181,7 +180,7 @@ class AuthManager:
         """List all users."""
         return list(self._users.values())
     
-    def update_user_role(self, user_id: str, role: str) -> Optional[User]:
+    def update_user_role(self, user_id: str, role: str) -> User | None:
         """Update a user's role."""
         user = self._users.get(user_id)
         if user:
@@ -189,7 +188,7 @@ class AuthManager:
             return user
         return None
     
-    def deactivate_user(self, user_id: str) -> Optional[User]:
+    def deactivate_user(self, user_id: str) -> User | None:
         """Deactivate a user."""
         user = self._users.get(user_id)
         if user:
@@ -206,7 +205,7 @@ class AuthManager:
 
 
 # Global auth manager instance
-_auth_manager: Optional[AuthManager] = None
+_auth_manager: AuthManager | None = None
 
 
 def get_auth_manager() -> AuthManager:

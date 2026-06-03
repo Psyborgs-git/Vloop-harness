@@ -112,7 +112,7 @@ class VLoopPipeline(dspy.Module):
         step_ids: list[str],
         step_types: list[str],
         tool_names: list[str | None],
-        tool_registry: "ToolRegistry | None",
+        tool_registry: ToolRegistry | None,
     ) -> None:
         self.modules = modules
         self.step_configs = step_configs
@@ -138,7 +138,7 @@ class VLoopPipeline(dspy.Module):
         result: dict[str, Any] = dict(kwargs)
         step_results: list[dict[str, Any]] = []
 
-        for module, config, step_id in zip(self.modules, self.step_configs, self.step_ids):
+        for module, config, step_id in zip(self.modules, self.step_configs, self.step_ids, strict=False):
             input_map: dict[str, Any] = config.get("input_map", {})
             inputs = _apply_input_map(input_map, result)
             # Pass through accumulated fields not already mapped
@@ -176,7 +176,7 @@ class VLoopPipeline(dspy.Module):
                 self.step_configs,
                 self.step_ids,
                 self.step_types,
-                self.tool_names,
+                self.tool_names, strict=False,
             )
         ):
             input_map: dict[str, Any] = config.get("input_map", {})
@@ -248,13 +248,13 @@ class PipelineBuilder:
 
     def __init__(
         self,
-        registry: "DSPyComponentRegistry",
-        tool_registry: "ToolRegistry | None" = None,
+        registry: DSPyComponentRegistry,
+        tool_registry: ToolRegistry | None = None,
     ) -> None:
         self.registry = registry
         self.tool_registry = tool_registry
 
-    def build(self, pipeline_def: "PipelineDef") -> VLoopPipeline:
+    def build(self, pipeline_def: PipelineDef) -> VLoopPipeline:
         """Compile and assemble all pipeline steps."""
         modules: list[dspy.Module | None] = []
         step_configs: list[dict[str, Any]] = []
@@ -295,7 +295,7 @@ class PipelineBuilder:
         )
 
     async def build_and_run(
-        self, pipeline_def: "PipelineDef", inputs: dict[str, Any]
+        self, pipeline_def: PipelineDef, inputs: dict[str, Any]
     ) -> dspy.Prediction:
         """Build the pipeline and execute it asynchronously."""
         pipeline = self.build(pipeline_def)
