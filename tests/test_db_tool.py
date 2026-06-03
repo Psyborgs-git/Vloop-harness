@@ -30,6 +30,18 @@ async def test_query_read_requires_dict_params(tmp_path: Path) -> None:
 
 
 @pytest.mark.asyncio
+async def test_query_read_blocks_create_table(tmp_path: Path) -> None:
+    tool = DatabaseTool(_make_mp(tmp_path))
+    result = await tool.execute(
+        None,
+        None,
+        {"operation": "query_read", "sql": "CREATE TABLE test (id int)", "params": {}},
+    )
+    assert not result.success
+    assert "Use query_write for mutations" in (result.error or "")
+
+
+@pytest.mark.asyncio
 async def test_query_write_parameter_tokens_require_params(tmp_path: Path) -> None:
     tool = DatabaseTool(_make_mp(tmp_path))
     result = await tool.execute(
@@ -39,6 +51,18 @@ async def test_query_write_parameter_tokens_require_params(tmp_path: Path) -> No
     )
     assert not result.success
     assert "named parameters" in (result.error or "")
+
+
+@pytest.mark.asyncio
+async def test_query_write_blocks_create_table(tmp_path: Path) -> None:
+    tool = DatabaseTool(_make_mp(tmp_path))
+    result = await tool.execute(
+        None,
+        None,
+        {"operation": "query_write", "sql": "CREATE TABLE users (id int)", "params": {}, "_confirmation_token": "ok"},
+    )
+    assert not result.success
+    assert "permanently blocked" in (result.error or "").lower()
 
 
 @pytest.mark.asyncio

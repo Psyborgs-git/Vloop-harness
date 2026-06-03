@@ -26,6 +26,9 @@ import time
 import asyncio
 from typing import TYPE_CHECKING, Any
 
+import sqlglot
+from sqlglot import exp
+
 from harness.core.permissions import Permission
 from harness.tools.base_tool import AbstractTool, ToolResult
 from harness.tools.exceptions import ConfirmationRequired
@@ -154,18 +157,35 @@ class DatabaseTool(AbstractTool):
         if not sql.strip():
             return ToolResult(success=False, error="'sql' parameter is required")
 
-        # Block permanently dangerous statements
-        if _PERMANENT_BLOCK_RE.search(sql):
-            return ToolResult(
-                success=False,
-                error="Query contains a permanently blocked statement (DROP/TRUNCATE/ALTER).",
-            )
+        try:
+            stmts = sqlglot.parse(sql)
+            if len(stmts) != 1:
+                return ToolResult(
+                    success=False, error="query_read only accepts exactly one statement."
+                )
+            ast = stmts[0]
+            if ast is None:
+                return ToolResult(success=False, error="Failed to parse SQL statement.")
 
-        if not _SELECT_ONLY_RE.match(sql):
-            return ToolResult(
-                success=False,
-                error="query_read only accepts SELECT statements. Use query_write for mutations.",
-            )
+            # Root node must be a SELECT
+            if not isinstance(ast, exp.Select):
+                return ToolResult(
+                    success=False,
+                    error="query_read only accepts SELECT statements. Use query_write for mutations.",
+                )
+
+            # Block any mutations or DDL, even within CTEs
+            mutating_nodes = list(ast.find_all(
+                (exp.Delete, exp.Update, exp.Insert, exp.Drop, exp.Alter, exp.TruncateTable, exp.Command, exp.Create)
+            ))
+            if mutating_nodes:
+                return ToolResult(
+                    success=False,
+                    error="query_read only accepts SELECT statements. Use query_write for mutations.",
+                )
+        except sqlglot.errors.ParseError as exc:
+            return ToolResult(success=False, error=f"SQL parsing error: {exc}")
+
         if not isinstance(bind_params, dict):
             return ToolResult(success=False, error="'params' must be an object/dict")
 
@@ -211,18 +231,34 @@ class DatabaseTool(AbstractTool):
         if not sql.strip():
             return ToolResult(success=False, error="'sql' parameter is required")
 
-        # Block permanently dangerous statements
-        if _PERMANENT_BLOCK_RE.search(sql):
-            return ToolResult(
-                success=False,
-                error="Query contains a permanently blocked statement (DROP/TRUNCATE/ALTER).",
-            )
+        try:
+            stmts = sqlglot.parse(sql)
+            if len(stmts) != 1:
+                return ToolResult(
+                    success=False, error="query_write only accepts exactly one statement."
+                )
+            ast = stmts[0]
+            if ast is None:
+                return ToolResult(success=False, error="Failed to parse SQL statement.")
 
-        if not _WRITE_RE.match(sql):
-            return ToolResult(
-                success=False,
-                error="query_write only accepts INSERT/UPDATE/DELETE statements.",
-            )
+            # Block permanently dangerous statements (including DDL like CREATE)
+            blocked_nodes = list(ast.find_all((exp.Drop, exp.Alter, exp.TruncateTable, exp.Command, exp.Create)))
+            if blocked_nodes:
+                return ToolResult(
+                    success=False,
+                    error="Query contains a permanently blocked statement (DROP/TRUNCATE/ALTER/CREATE).",
+                )
+
+            # Ensure there is at least one mutating operation
+            mutating_nodes = list(ast.find_all((exp.Insert, exp.Update, exp.Delete)))
+            if not mutating_nodes:
+                return ToolResult(
+                    success=False,
+                    error="query_write only accepts INSERT/UPDATE/DELETE statements.",
+                )
+        except sqlglot.errors.ParseError as exc:
+            return ToolResult(success=False, error=f"SQL parsing error: {exc}")
+
         if not isinstance(bind_params, dict):
             return ToolResult(success=False, error="'params' must be an object/dict")
         if _PARAM_TOKEN_RE.search(sql) and not bind_params:
