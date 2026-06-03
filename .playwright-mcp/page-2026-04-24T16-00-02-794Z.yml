@@ -1,0 +1,112 @@
+- generic [ref=e2]:
+  - list [ref=e4]:
+    - listitem [ref=e5]:
+      - link "LangChain" [ref=e6] [cursor=pointer]:
+        - /url: https://www.langchain.com/
+        - img "LangChain" [ref=e7]
+    - listitem [ref=e8]:
+      - link "Back to LangChain’s Job Listings" [ref=e9] [cursor=pointer]:
+        - /url: /langchain
+        - img [ref=e10]
+    - listitem
+  - generic [ref=e12]:
+    - heading "Customer Engineer (London)" [level=1] [ref=e14]
+    - generic [ref=e15]:
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - heading "Location" [level=2] [ref=e18]
+          - paragraph [ref=e19]: London
+        - generic [ref=e20]:
+          - heading "Employment Type" [level=2] [ref=e21]
+          - paragraph [ref=e22]: Full time
+        - generic [ref=e23]:
+          - heading "Location Type" [level=2] [ref=e24]
+          - paragraph [ref=e25]: On-site
+        - generic [ref=e26]:
+          - heading "Department" [level=2] [ref=e27]
+          - paragraph [ref=e28]: Customer Engineering
+      - generic [ref=e29]:
+        - tablist [ref=e30]:
+          - tab "Overview" [selected] [ref=e31] [cursor=pointer]
+          - tab "Application" [ref=e32] [cursor=pointer]
+        - tabpanel "Overview" [ref=e34]:
+          - generic [ref=e35]:
+            - heading "About Us" [level=1] [ref=e36]:
+              - strong [ref=e37]: About Us
+            - paragraph [ref=e38]
+            - paragraph [ref=e39]: At LangChain, our mission is to make intelligent agents ubiquitous. We build the foundation for agent engineering in the real world, helping developers move from prototypes to production-ready AI agents that teams can rely on. We began as widely adopted open-source tools and have grown to also offer a platform for building, evaluating, deploying, and operating agents at scale.
+            - paragraph [ref=e40]: With $125M raised at Series B from IVP, Sequoia, Benchmark, CapitalG, and Sapphire Ventures, we’re at a stage where we’re continuing to develop new products, growth is accelerating, and all team members have meaningful impact on what we build and how we work together. LangChain is a place where your contributions can shape how this technology shows up in the real world.
+            - paragraph [ref=e41]: Today, LangChain, LangGraph, LangSmith, and Fleet are used by teams shipping real AI products across startups and large enterprises. Millions of developers trust LangChain to power AI teams at companies like Replit, Clay, Coinbase, Workday, Lyft, Cloudflare, Harvey, Rippling, Vanta, and 35% of the Fortune 500.
+            - paragraph [ref=e42]
+            - paragraph [ref=e43]
+            - heading "About the Role" [level=2] [ref=e44]:
+              - strong [ref=e45]: About the Role
+            - paragraph [ref=e46]: We're looking for a Customer Engineer to join our Enterprise Enablement team. In this role, you will serve as a trusted technical advisor to our new customers, blending technical expertise with a passion for education and enablement. You will be instrumental in accelerating developer and enterprise success with the LangChain ecosystem.
+            - paragraph [ref=e47]: You'll join a collaborative team environment with a strong engineering culture, with direct impact on customer success and the opportunity to shape best practices while working with cutting-edge AI technology.
+            - heading [level=2]
+            - heading "What You'll Do" [level=2] [ref=e48]:
+              - strong [ref=e49]: What You'll Do
+            - list [ref=e50]:
+              - listitem [ref=e51]:
+                - paragraph [ref=e52]: Lead onboarding engagements for new enterprise customers, guiding them through initial setup and unblocking issues as they begin building on the LangSmith platform
+              - listitem [ref=e53]:
+                - paragraph [ref=e54]: Create and deliver live, interactive training workshops to help customer teams build foundational product knowledge and agent engineering best practices
+              - listitem [ref=e55]:
+                - paragraph [ref=e56]: Develop scalable enablement frameworks including technical tutorials, best-practice guides, and reference implementations
+              - listitem [ref=e57]:
+                - paragraph [ref=e58]: Act as the voice of the new user, synthesizing feedback and identifying friction points to inform the product roadmap in collaboration with Product and Engineering teams
+              - listitem [ref=e59]:
+                - paragraph [ref=e60]: Partner with Sales, Deployed Engineering, and Professional Services to define enablement strategies for prospective customers, demonstrating the value and ease of getting started with LangChain
+              - listitem [ref=e61]:
+                - paragraph [ref=e62]: Stay at the forefront of agent engineering in industry to identify evolving trends and quickly incorporate learnings into customer enablement materials
+            - heading "What We're Looking For" [level=2] [ref=e63]:
+              - strong [ref=e64]: What We're Looking For
+            - list [ref=e65]:
+              - listitem [ref=e66]:
+                - paragraph [ref=e67]: 5+ years of experience in a technical, customer-facing role such as Enablement, Customer Success Engineer, Developer Advocate, or similar
+              - listitem [ref=e68]:
+                - paragraph [ref=e69]: Proven software engineering experience with 2+ years focused on AI/ML applications or agents, including strong proficiency in Python and a deep, practical understanding of the modern AI/LLM stack
+              - listitem [ref=e70]:
+                - paragraph [ref=e71]: Passion for educating users on technical topics and deep empathy for the developer experience
+              - listitem [ref=e72]:
+                - paragraph [ref=e73]: Demonstrated ability to create and deliver high-quality technical training programs, including live workshops, written tutorials, documentation, and video guides
+              - listitem [ref=e74]:
+                - paragraph [ref=e75]: Exceptional presentation and communication skills, with the ability to explain complex technical concepts to diverse audiences, from individual developers to enterprise stakeholders
+              - listitem [ref=e76]:
+                - paragraph [ref=e77]: Capacity to operate independently in a fast-paced, ambiguous environment and manage multiple projects simultaneously
+              - listitem [ref=e78]:
+                - paragraph [ref=e79]: Ability and willingness to travel up to 20% of time for customer engagements
+            - paragraph [ref=e80]:
+              - strong [ref=e81]: "Preferred:"
+            - list [ref=e82]:
+              - listitem [ref=e83]:
+                - paragraph [ref=e84]: Hands-on experience building and deploying applications using LangChain, LangGraph, and LangSmith (or similar frameworks)
+              - listitem [ref=e85]:
+                - paragraph [ref=e86]: Proficiency with TypeScript/JavaScript in addition to Python
+                - paragraph [ref=e87]
+            - paragraph [ref=e88]:
+              - strong [ref=e89]: "Compensation:"
+            - list [ref=e90]:
+              - listitem [ref=e91]:
+                - paragraph [ref=e92]: Competitive salary based on location and experience
+            - paragraph [ref=e93]:
+              - strong [ref=e94]: "Compensation Philosophy:"
+            - paragraph [ref=e95]: We offer competitive compensation that includes base salary, variable compensation for relevant roles, meaningful equity, benefits, and perks. Actual compensation and offerings will vary based on role, level, and location. Team members in the EU, UK, and APAC receive locally competitive benefits aligned with regional norms and regulations.
+            - paragraph [ref=e96]
+            - heading "Benefits" [level=1] [ref=e97]
+            - paragraph [ref=e98]: Benefits include medical, dental, and vision coverage, flexible vacation, a 401(k) plan, meals on in-office days in the US and more.
+          - link "Apply for this Job" [ref=e99] [cursor=pointer]:
+            - /url: /langchain/a16d58f7-e210-495c-9e6f-82222267de3a/application
+            - button "Apply for this Job" [ref=e100]
+  - contentinfo [ref=e101]:
+    - link "Learn more about Ashby" [ref=e102] [cursor=pointer]:
+      - /url: https://www.ashbyhq.com
+      - generic [ref=e103]: Powered by
+      - img "Ashby" [ref=e104]
+    - paragraph [ref=e110]:
+      - link "Privacy Policy" [ref=e111] [cursor=pointer]:
+        - /url: https://www.ashbyhq.com/privacy
+      - link "Security" [ref=e112] [cursor=pointer]:
+        - /url: https://www.ashbyhq.com/security
+      - link "Vulnerability Disclosure" [ref=e113] [cursor=pointer]:
+        - /url: https://www.ashbyhq.com/disclosure

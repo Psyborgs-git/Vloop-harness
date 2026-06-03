@@ -80,7 +80,7 @@ export interface RunResult {
 }
 
 /** Panel shown in the right contextual drawer. */
-export type ContextPanelType = "dspy" | "pipelines" | "tools" | "view" | "agents" | "manifests" | "eval" | null;
+export type ContextPanelType = "dspy" | "pipelines" | "tools" | "view" | "agents" | "timeline" | "manifests" | "eval" | null;
 
 export interface ContextPanelState {
   type: ContextPanelType;
@@ -186,6 +186,24 @@ export interface WorkspaceWindow {
   focusedAt: number;
 }
 
+// ── Analytics and adaptive actions ─────────────────────────────────────────
+
+export type ClientTelemetryData = Record<string, unknown>;
+
+export interface ClientTelemetryEvent {
+  event_type: string;
+  data?: ClientTelemetryData;
+  component_id?: string | null;
+  occurred_at?: string;
+}
+
+export interface DashboardActionDefinition {
+  id: string;
+  label: string;
+  surface: "chat_composer" | "app_bar" | "empty_state";
+  baselineRank: number;
+}
+
 // ── App manifests ──────────────────────────────────────────────────────────
 
 export interface AppManifest {
@@ -219,4 +237,3 @@ export interface ToolTrace {
   success: boolean;
   created_at: string;
 }
-

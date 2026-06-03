@@ -79,11 +79,11 @@ class ServiceManager:
                 statuses.append(
                     ServiceStatus(
                         name="frontend",
-                        running=False,
+                        running=True,
                         healthy=True,
                         pid=None,
                         log_path=self._service_log("frontend"),
-                        detail="static mode (no frontend process)",
+                        detail="static mode (served by backend)",
                     )
                 )
                 continue
@@ -143,11 +143,11 @@ class ServiceManager:
         if self.frontend_mode == "static":
             return ServiceStatus(
                 name="frontend",
-                running=False,
+                running=True,
                 healthy=True,
                 pid=None,
                 log_path=self._service_log("frontend"),
-                detail="static mode (no frontend process)",
+                detail="static mode (served by backend)",
             )
 
         status = self._status_for("frontend")

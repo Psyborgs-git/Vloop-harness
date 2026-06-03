@@ -25,7 +25,25 @@ class ToolResult:
     exit_code: int | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self, redact_secrets: bool = True) -> dict[str, Any]:
+        """Convert to dictionary with optional secret redaction.
+
+        Args:
+            redact_secrets: If True, redact potential secrets from output and error.
+
+        Returns:
+            Dictionary representation of the result.
+        """
+        if redact_secrets:
+            from harness.core.secret_redaction import redact_any
+
+            return {
+                "success": self.success,
+                "output": redact_any(self.output),
+                "error": redact_any(self.error),
+                "exit_code": self.exit_code,
+                "metadata": redact_any(self.metadata),
+            }
         return {
             "success": self.success,
             "output": self.output,

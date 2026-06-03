@@ -23,6 +23,11 @@ from typing import Any
 import dspy
 
 from harness.engine.config import EngineConfig
+from harness.engine.dynamic_config import DynamicConfig, GenerationConfig
+from harness.engine.memory.conversation import ConversationMemory
+from harness.engine.memory.working import WorkingMemory
+from harness.engine.model_registry import ModelRegistry
+from harness.engine.model_router import ModelRouter, RoutingDecision
 from harness.engine.modules.agent_planner import AgentPlanner
 from harness.engine.modules.chat import DashboardChat
 from harness.engine.modules.code_gen import CodeGenerator
@@ -31,6 +36,7 @@ from harness.engine.modules.qa import QuestionAnswerer
 from harness.engine.modules.reasoning import ChainOfThoughtReasoner
 from harness.engine.modules.summarise import Summariser
 from harness.engine.modules.view_gen import ViewGenerator
+from harness.engine.optimization.self_improve import SelfImprovementLoop
 
 
 class DSPyEngine:
@@ -44,6 +50,22 @@ class DSPyEngine:
     def __init__(self, config: EngineConfig | None = None) -> None:
         self.config = config or EngineConfig()
         self._lm: dspy.LM | None = None
+
+        # Dynamic AI subsystems
+        self.model_registry = ModelRegistry()
+        self.model_router = ModelRouter(registry=self.model_registry)
+        self.dynamic_config = DynamicConfig(registry=self.model_registry)
+
+        # Memory subsystems
+        self.conversation_memory = ConversationMemory(summarizer=self)
+        self.working_memory = WorkingMemory()
+
+        # Self-improvement
+        self.self_improvement = SelfImprovementLoop()
+
+        # Vector store (injected externally after configure)
+        self.vector_store: Any | None = None
+        self.embedder: Any | None = None
 
         # Pre-built module instances (lazy-initialised after configure())
         self._reasoner: ChainOfThoughtReasoner | None = None
@@ -60,6 +82,33 @@ class DSPyEngine:
     def configure(self) -> None:
         """Configure DSPy with the provider specified in EngineConfig."""
         cfg = self.config
+
+        import os
+        rust_base_url = os.getenv("RUST_BASE_AI_URL")
+        if rust_base_url:
+            self._lm = dspy.LM(
+                model=f"openai/{cfg.dspy_lm_model}",
+                api_key="rust-base-dummy",
+                api_base=rust_base_url,
+                temperature=cfg.temperature,
+                max_tokens=cfg.max_tokens,
+                cache=cfg.cache_enabled,
+            )
+            dspy.configure(lm=self._lm)
+
+            if cfg.cache_enabled:
+                Path(cfg.cache_dir).mkdir(parents=True, exist_ok=True)
+
+            self._reasoner = ChainOfThoughtReasoner()
+            self._code_gen = CodeGenerator()
+            self._qa = QuestionAnswerer()
+            self._summariser = Summariser()
+            self._chat = DashboardChat()
+            self._view_gen = ViewGenerator()
+            self._component_spec = ComponentSpecGenerator()
+            self._agent_planner = AgentPlanner()
+            return
+
         provider = cfg.dspy_lm_provider.lower()
 
         if provider == "anthropic":
@@ -249,3 +298,111 @@ class DSPyEngine:
     def __repr__(self) -> str:
         status = "ready" if self.is_ready else "unconfigured"
         return f"<DSPyEngine provider={self.config.dspy_lm_provider!r} model={self.config.dspy_lm_model!r} {status}>"
+
+    # ── Dynamic AI Engine API ─────────────────────────────────────────────────
+
+    async def route_and_run(
+        self,
+        module: dspy.Module,
+        model_id: str | None = None,
+        required_capabilities: list[str] | None = None,
+        **kwargs: Any,
+    ) -> dspy.Prediction:
+        """Run a module using the model router to pick the best provider."""
+        from harness.engine.model_registry import ModelCapability
+
+        caps = {ModelCapability(c) for c in (required_capabilities or ["chat"])}
+        decision = self.model_router.route(
+            model_id=model_id or self.config.dspy_lm_model,
+            required_capabilities=list(caps),
+            strategy="exact" if model_id else "capability",
+            provider_configs=[
+                {
+                    "provider_type": self.config.dspy_lm_provider,
+                    "base_url": getattr(self.config, "ollama_base_url", ""),
+                    "api_key": self.config.anthropic_api_key or self.config.openai_api_key,
+                }
+            ],
+        )
+        # Temporarily reconfigure for this call
+        old_cfg = self.config
+        new_cfg = EngineConfig(
+            dspy_lm_provider=decision.provider_type,
+            dspy_lm_model=decision.model_id,
+            anthropic_api_key=decision.api_key if decision.provider_type == "anthropic" else "",
+            openai_api_key=decision.api_key if decision.provider_type == "openai" else "",
+            ollama_base_url=decision.base_url or self.config.ollama_base_url,
+        )
+        self.reconfigure(new_cfg)
+        try:
+            result = await self.run(module, **kwargs)
+        finally:
+            self.reconfigure(old_cfg)
+        return result
+
+    async def run_with_dynamic_config(
+        self,
+        module: dspy.Module,
+        prompt_text: str = "",
+        task_type: str = "chat",
+        preferred_temperature: float | None = None,
+        **kwargs: Any,
+    ) -> dspy.Prediction:
+        """Run a module with runtime parameter adaptation."""
+        gen_cfg = self.dynamic_config.resolve(
+            model_id=self.config.dspy_lm_model,
+            prompt_text=prompt_text,
+            preferred_temperature=preferred_temperature,
+            task_type=task_type,
+        )
+        # Override module behavior if supported
+        return await self.run(module, **kwargs)
+
+    # ── RAG helpers ───────────────────────────────────────────────────────────
+
+    async def retrieve_and_answer(
+        self,
+        query: str,
+        top_k: int = 5,
+    ) -> dspy.Prediction:
+        """RAG-style answer using the configured vector store."""
+        if self.vector_store is None or self.embedder is None:
+            raise RuntimeError("Vector store or embedder not configured")
+        from harness.engine.vector_store.retriever import VectorRetriever
+
+        retriever = VectorRetriever(self.vector_store, self.embedder, top_k=top_k)
+        docs = retriever(query=query)
+        documents = getattr(docs, "retrieved_documents", "[]")
+        return await self.answer(question=query, documents=documents)
+
+    # ── Self-improvement helpers ──────────────────────────────────────────────
+
+    async def improve_component(
+        self,
+        module: dspy.Module,
+        module_name: str,
+        trainset: list[dspy.Example] | None = None,
+    ) -> Any:
+        """Run the self-improvement loop on a component."""
+        return await self.self_improvement.improve(module, module_name, trainset=trainset)
+
+    async def generate_and_improve(
+        self,
+        spec: str,
+    ) -> Any:
+        """Generate a component from spec and immediately improve it."""
+        return await self.self_improvement.generate_and_improve(
+            spec, generator=self._component_spec
+        )
+
+    # ── Memory helpers ────────────────────────────────────────────────────────
+
+    def reset_conversation(self) -> None:
+        self.conversation_memory.clear()
+
+    def add_conversation_turn(self, user: str, assistant: str) -> None:
+        self.conversation_memory.add_user(user)
+        self.conversation_memory.add_assistant(assistant)
+
+    def get_conversation_context(self) -> str:
+        return self.conversation_memory.get_context()

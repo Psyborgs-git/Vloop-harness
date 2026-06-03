@@ -1,0 +1,315 @@
+- generic [ref=e2]:
+  - list [ref=e4]:
+    - listitem [ref=e5]:
+      - link "n8n" [ref=e6] [cursor=pointer]:
+        - /url: https://n8n.io/
+        - img "n8n" [ref=e7]
+    - link "Back to n8n’s Job Listings" [ref=e8] [cursor=pointer]:
+      - /url: https://n8n.io/careers/
+      - img [ref=e9]
+    - listitem
+  - generic [ref=e11]:
+    - heading "AI Engineering Manager | Remote | Europe" [level=1] [ref=e13]
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - heading "Location" [level=2] [ref=e17]
+          - paragraph [ref=e18]: Berlin Office; Albania; Austria; Belgium; Bosnia; Bulgaria; Croatia; Czech Republic; Denmark; Estonia; Finland; France; Germany; Greece; Hungary; Ireland; Italy; Kosovo; Latvia; Lithuania; London Office; Moldova; Montenegro; Netherlands; Norway; Poland; Portugal; Romania; Serbia; Slovakia; Slovenia; Spain; Sweden; United Kingdom
+        - generic [ref=e19]:
+          - heading "Employment Type" [level=2] [ref=e20]
+          - paragraph [ref=e21]: Full time
+        - generic [ref=e22]:
+          - heading "Location Type" [level=2] [ref=e23]
+          - paragraph [ref=e24]: Remote
+        - generic [ref=e25]:
+          - heading "Department" [level=2] [ref=e26]
+          - paragraph [ref=e27]: Engineering
+      - generic [ref=e28]:
+        - tablist [ref=e29]:
+          - tab "Overview" [selected] [ref=e30] [cursor=pointer]
+          - tab "Application" [ref=e31] [cursor=pointer]
+        - tabpanel "Overview" [ref=e33]:
+          - generic [ref=e34]:
+            - paragraph [ref=e35]:
+              - strong [ref=e36]: The AI orchestration of your wildest imagination.
+            - paragraph [ref=e37]: n8n is the open workflow orchestration platform built for the new era of AI. We give technical teams the freedom of code with the speed of no-code, so they can automate faster, smarter, and without limits. Backed by a fiercely inventive community and 500+ builder-approved integrations, we’re changing the way people bring systems together and scale ideas for impact.
+            - paragraph [ref=e38]
+            - paragraph [ref=e39]: "Since our founding in 2019, we’ve grown into a diverse team of over 220 - working across Europe and the US, connected by a shared builder spirit and with our centre of gravity in Berlin. Along the way, we’ve:"
+            - paragraph [ref=e40]
+            - list [ref=e41]:
+              - listitem [ref=e42]:
+                - paragraph [ref=e43]: Cultivated a community of more than 650,000 active developers and builders
+              - listitem [ref=e44]:
+                - paragraph [ref=e45]: Earned 145k+ GitHub stars, making us one of the world’s Top 40 most popular projects
+              - listitem [ref=e46]:
+                - paragraph [ref=e47]: Been ranked as one of Europe’s most promising privately held SaaS startups (4th in Sifted’s 2025 B2B SaaS Rising 100)
+              - listitem [ref=e48]:
+                - paragraph [ref=e49]: Raised $240m to date, from Sequoia’s first German seed to our recent $180m Series C - bringing us to a $2.5bn valuation
+            - paragraph [ref=e50]:
+              - text: That’s the company we’ve built. Now we’d love to see what
+              - emphasis [ref=e51]: you
+              - text: "can build. If you’re applying, try n8n out - whether you’re technical or not - and share a screenshot of your first workflow with us. The easiest place to start is here:"
+              - link "app.n8n.cloud/register" [ref=e52] [cursor=pointer]:
+                - /url: http://app.n8n.cloud/register
+              - text: .
+            - paragraph [ref=e53]
+            - paragraph [ref=e54]: We’re in a defining moment of an incredible journey. Come and build with us.
+            - paragraph [ref=e55]:
+              - strong [ref=e56]: AI Engineering Manager
+            - paragraph [ref=e57]:
+              - text: Your main goal will be to build and lead an engineering team that thrives in a fast-moving
+              - strong [ref=e58]: agentic, AI-native world
+              - text: "—developing engineers, creating clarity, and delivering meaningful outcomes with strong technical judgment. This is a first-line engineering leadership role for someone who is deeply technical, but whose real strength is building teams: empowering engineers on their growth path, aligning stakeholders, and helping people move with confidence as"
+              - strong [ref=e59]: AI agents, workflow automation, and user expectations evolve rapidly
+              - text: .
+            - paragraph [ref=e60]:
+              - text: You will lead teams working on
+              - strong [ref=e61]: AI agents and agentic workflows within n8n
+              - text: ", enabling users to orchestrate complex, multi-step automation across tools, data, and models. This includes shaping how"
+              - strong [ref=e62]: LLMs, tools, APIs, and workflows come together into reliable, composable systems
+              - text: that users can trust in production.
+            - paragraph [ref=e63]
+            - paragraph [ref=e64]:
+              - strong [ref=e65]: Build an empowered, high-performing AI agent & evaluation team
+              - text: • Lead, coach, and develop a team of engineers building
+              - strong [ref=e66]: agent-based systems, workflow orchestration capabilities, and AI-powered nodes
+              - text: .
+              - text: • Foster a culture of
+              - strong [ref=e67]: experimentation and rapid iteration
+              - text: ", where engineers continuously improve prompts, tool usage, and workflow logic based on real-world outcomes."
+              - text: • Help your team think in terms of
+              - strong [ref=e68]: systems, not features
+              - text: —designing reliable agentic workflows rather than one-off AI calls.
+              - text: • Support hiring and team shaping with a focus on
+              - strong [ref=e69]: AI engineering, distributed systems thinking, and product-minded builders
+              - text: .
+              - strong [ref=e70]: Create clarity in an agentic, fast-evolving landscape
+              - text: • Help your team navigate a space where
+              - strong [ref=e71]: agents, tools, memory, and orchestration patterns
+              - text: are still emerging and rapidly changing.
+              - text: • Translate evolving AI capabilities into clear product and engineering direction for
+              - strong [ref=e72]: n8n workflows, nodes, and automation primitives
+              - text: .
+              - text: • Guide decisions around
+              - strong [ref=e73]: agent architecture
+              - text: (e.g., single-agent vs multi-agent workflows, tool selection, memory strategies, human-in-the-loop design).
+              - text: • Cut through hype and ambiguity to focus on
+              - strong [ref=e74]: what delivers real, reliable value to users building automations
+              - text: .
+              - strong [ref=e75]: Drive execution of agentic workflows at scale
+              - text: • Partner with Product and Design to define and ship
+              - strong [ref=e76]: agent-powered workflow experiences
+              - text: that feel intuitive, composable, and powerful.
+              - text: • Ensure the team delivers
+              - strong [ref=e77]: end-to-end agent systems
+              - text: ", including orchestration logic, tool integrations, memory handling, and execution environments."
+              - text: • Establish best practices for
+              - strong [ref=e78]: workflow reliability
+              - text: ", including retries, fallbacks, guardrails, and observability of agent behaviour."
+              - text: • Balance speed and iteration with the need for
+              - strong [ref=e79]: determinism, debuggability, and user trust in automated systems
+              - text: .
+              - text: • Drive improvements in how users
+              - strong [ref=e80]: build, test, and debug AI-powered workflows inside n8n
+              - text: .
+              - strong [ref=e81]: Lead with technical credibility in agent systems
+              - text: • Bring strong technical depth in
+              - strong [ref=e82]: LLM integrations, tool use, and workflow orchestration
+              - text: ", enabling you to mentor and challenge your team."
+              - text: • Support architectural decisions around
+              - strong [ref=e83]: agent frameworks, execution engines, state management, and integration layers
+              - text: .
+              - text: • Help the team design systems that handle
+              - strong [ref=e84]: long-running workflows, external APIs, and dynamic decision-making by agents
+              - text: .
+              - text: • Step into technical details when needed (e.g., prompt design, tool schemas, workflow execution issues) to unblock the team.
+              - text: • Promote best practices around
+              - strong [ref=e85]: safety, guardrails, and predictable behaviour in agent-driven systems
+              - text: .
+              - strong [ref=e86]: REQUIREMENTS
+              - strong [ref=e87]: Must-haves
+            - list [ref=e88]:
+              - listitem [ref=e89]:
+                - paragraph [ref=e90]:
+                  - text: "First-line engineering management experience: You’ve led teams delivering meaningful product outcomes, ideally including"
+                  - strong [ref=e91]: automation platforms, workflow systems, or AI-powered features
+                  - text: .
+              - listitem [ref=e92]:
+                - paragraph [ref=e93]:
+                  - text: Significant experience working with
+                  - strong [ref=e94]: Evaluations
+                  - text: "& driving results via evals."
+              - listitem [ref=e95]:
+                - paragraph [ref=e96]:
+                  - text: "Strong people leadership: You coach engineers effectively and build teams that thrive in"
+                  - strong [ref=e97]: ambiguous, fast-evolving technical spaces
+                  - text: .
+              - listitem [ref=e98]:
+                - paragraph [ref=e99]:
+                  - text: "Comfort with ambiguity and speed: You bring clarity in a world where"
+                  - strong [ref=e100]: agent patterns, tooling, and best practices are still emerging
+                  - text: .
+                  - text: "• Strong software engineering background: You can confidently engage in discussions around"
+                  - strong [ref=e101]: distributed systems, APIs, and system design
+                  - text: .
+                  - text: "• Hands-on when needed: You can dive into"
+                  - strong [ref=e102]: workflow logic, integrations, or AI system behaviour
+                  - text: to support your team.
+                  - text: "• Cross-functional alignment: Experience working closely with Product and Design to deliver"
+                  - strong [ref=e103]: end-user-facing builder experiences
+                  - text: .
+                  - text: "• High-growth SaaS experience: You understand how to scale teams and systems in a fast-moving environment."
+                  - text: "• AI/agent exposure: Experience working with"
+                  - strong [ref=e104]: LLMs, agents, or automation systems
+                  - text: ", with an understanding of their strengths, limitations, and failure modes."
+                  - strong [ref=e105]: Nice-to-haves
+                  - text: "• n8n or workflow tooling familiarity: Experience with"
+                  - strong [ref=e106]: n8n or similar automation platforms
+                  - text: .
+                  - text: "• Integration-heavy systems: Background in building or scaling"
+                  - strong [ref=e107]: API-driven platforms or extensible systems
+                  - text: .
+                  - text: "• Deep agent experience: Hands-on work with"
+                  - strong [ref=e108]: agent frameworks, tool use, memory systems, or multi-step reasoning workflows
+                  - text: .
+                  - text: "• Observability & debugging: Experience building tools for"
+                  - strong [ref=e109]: inspecting, debugging, and improving complex workflows or AI systems
+                  - text: .
+                  - text: "• Responsible AI: Awareness of"
+                  - strong [ref=e110]: guardrails, failure handling, and safe automation practices
+                  - text: in user-facing AI systems.
+            - paragraph [ref=e111]
+            - paragraph [ref=e112]:
+              - strong [ref=e113]: Why join us?
+            - paragraph [ref=e114]: "At n8n, you’ll join at a moment where strong engineering leadership can have outsized impact. We’re building in a space that is moving quickly, and we see that as an opportunity: to help teams stay ambitious, grounded, and effective while shaping what great engineering leadership looks like in an AI-native company. You’ll play a key role in building teams that empower others, act with integrity, move with speed and efficiency, and think bigger than incremental improvement. In a remote-first company growing fast, your work will directly influence how we scale our engineering organization and build the future of automation."
+            - paragraph [ref=e115]:
+              - emphasis [ref=e116]: n8n is an equal opportunity employer and does not discriminate on the basis of race, religion, colour, national origin, gender, sexual orientation, gender identity, age, marital status, veteran status, or disability status.
+            - paragraph [ref=e117]:
+              - emphasis [ref=e118]: We can sponsor visas to Germany; for any other country, you need to have existing right to work.
+            - paragraph [ref=e119]:
+              - emphasis [ref=e120]:
+                - strong [ref=e121]: Our company language is English.
+            - paragraph [ref=e122]:
+              - emphasis [ref=e123]: You care about diversity and inclusion? We do too! Check out our
+              - link "Diversity, Inclusion and Belonging initiatives at n8n" [ref=e124] [cursor=pointer]:
+                - /url: https://www.notion.so/Diversity-inclusion-and-belonging-n8n-c1bec2fff536422d868b1a438d990e35?pvs=21
+                - emphasis [ref=e125]: Diversity, Inclusion and Belonging initiatives at n8n
+              - emphasis [ref=e126]: (
+              - link "https://www.notion.so/n8n/Diversity-inclusion-and-belonging-n8n-c1bec2fff536422d868b1a438d990e35" [ref=e127] [cursor=pointer]:
+                - /url: https://www.notion.so/n8n/Diversity-inclusion-and-belonging-n8n-c1bec2fff536422d868b1a438d990e35
+                - emphasis [ref=e128]: https://www.notion.so/n8n/Diversity-inclusion-and-belonging-n8n-c1bec2fff536422d868b1a438d990e35
+              - emphasis [ref=e129]: ).
+            - heading [level=2]
+            - paragraph [ref=e130]:
+              - emphasis [ref=e131]:
+                - strong [ref=e132]: "Location disclaimer:"
+                - text: If you see multiple job postings for the same role, it is most likely because we're hiring remotely for this role and posting in different locations to make sure every potential candidate can see the role. Please apply to the location you're the most likely to work from in the future.
+            - paragraph [ref=e133]
+            - heading "Benefits" [level=2] [ref=e134]:
+              - strong [ref=e135]: Benefits
+            - list [ref=e136]:
+              - listitem [ref=e137]:
+                - paragraph [ref=e138]:
+                  - strong [ref=e139]: Competitive compensation
+                  - text: 💸 – We offer fair and attractive pay.
+              - listitem [ref=e140]:
+                - paragraph [ref=e141]:
+                  - strong [ref=e142]: Ownership
+                  - text: 💪 – Our core value is to “empower others,” and we mean it—you’ll get a slice of n8n with equity.
+              - listitem [ref=e143]:
+                - paragraph [ref=e144]:
+                  - strong [ref=e145]: Work/life balance
+                  - text: "🏖️ – We work hard but ensure you have time to recharge:"
+                - list [ref=e146]:
+                  - listitem [ref=e147]:
+                    - paragraph [ref=e148]:
+                      - strong [ref=e149]: "Europe:"
+                      - text: 30 days of vacation, plus public holidays wherever you are.
+                  - listitem [ref=e150]:
+                    - paragraph [ref=e151]:
+                      - strong [ref=e152]: "US:"
+                      - text: 20 vacation days, 8 sick days, plus public holidays wherever you are.
+              - listitem [ref=e153]:
+                - paragraph [ref=e154]:
+                  - strong [ref=e155]: Health & wellness
+                  - text: 🩺 –
+                - list [ref=e156]:
+                  - listitem [ref=e157]:
+                    - paragraph [ref=e158]:
+                      - strong [ref=e159]: "Europe:"
+                      - text: We provide benefits according to local country norms.*
+                  - listitem [ref=e160]:
+                    - paragraph [ref=e161]:
+                      - strong [ref=e162]: US
+                      - text: ": Multiple low-premium, low-deductible medical plans with coverage for individuals and families—plus a no-cost premium HDHP option with a pre-seeded HSA—along with dental and vision coverage."
+              - listitem [ref=e163]:
+                - paragraph [ref=e164]:
+                  - strong [ref=e165]: Future planning
+                  - text: 💰 –
+                - list [ref=e166]:
+                  - listitem [ref=e167]:
+                    - paragraph [ref=e168]:
+                      - strong [ref=e169]: "Europe:"
+                      - text: We provide pension contributions according to local country norms.*
+                  - listitem [ref=e170]:
+                    - paragraph [ref=e171]:
+                      - strong [ref=e172]: "US:"
+                      - text: 401(k) retirement plan with a 4% employer match.
+              - listitem [ref=e173]:
+                - paragraph [ref=e174]:
+                  - strong [ref=e175]: Financial security
+                  - text: 🛡️ –
+                - list [ref=e176]:
+                  - listitem [ref=e177]:
+                    - paragraph [ref=e178]:
+                      - strong [ref=e179]: "Europe:"
+                      - text: We provide benefits according to local country norms.*
+                  - listitem [ref=e180]:
+                    - paragraph [ref=e181]:
+                      - strong [ref=e182]: "US:"
+                      - text: Company-paid short-term and long-term disability insurance, plus life insurance to support you and your loved ones.
+              - listitem [ref=e183]:
+                - paragraph [ref=e184]:
+                  - strong [ref=e185]: Career growth
+                  - text: 📈 – We hire rising stars who grow with us! You’ll get €1K (or equivalent) per year to spend on courses, books, events, or coaching to level up your skills.
+              - listitem [ref=e186]:
+                - paragraph [ref=e187]:
+                  - strong [ref=e188]: A passionate team
+                  - text: 🤩 – We love our product, and we prove it with regular hackathons where we see who can build the coolest thing with it!
+              - listitem [ref=e189]:
+                - paragraph [ref=e190]:
+                  - strong [ref=e191]: Remote-first
+                  - text: 🌏 – Our team works remotely across Europe, with regular off-sites for team bonding. Some roles, like sales in the US, are hybrid—please check the job description.
+              - listitem [ref=e192]:
+                - paragraph [ref=e193]:
+                  - strong [ref=e194]: Giving back
+                  - text: 🤝 – We're big fans of open source, and you'll get $100 per month to support projects you care about.
+              - listitem [ref=e195]:
+                - paragraph [ref=e196]:
+                  - strong [ref=e197]: AI enablement 🤖 –
+                  - text: We believe in working smarter—everyone gets an unlimited AI budget to explore and use the best tools to boost productivity and creativity.
+              - listitem [ref=e198]:
+                - paragraph [ref=e199]:
+                  - strong [ref=e200]: Transparency
+                  - text: 🙏 – We all know what everyone’s working on, how the company is doing—the whole shebang.
+              - listitem [ref=e201]:
+                - paragraph [ref=e202]:
+                  - strong [ref=e203]: An ambitious but kind culture
+                  - text: 😍 – People love working here—our eNPS for 2024 is 94!
+            - paragraph [ref=e204]:
+              - emphasis [ref=e205]: "* Country-specific details are provided in your contract."
+          - link "Apply for this Job" [ref=e206] [cursor=pointer]:
+            - /url: /n8n/f814f5ce-b615-413d-bbe0-b5786b3872e9/application
+            - button "Apply for this Job" [ref=e207]
+  - contentinfo [ref=e208]:
+    - link "Learn more about Ashby" [ref=e209] [cursor=pointer]:
+      - /url: https://www.ashbyhq.com
+      - generic [ref=e210]: Powered by
+      - img "Ashby" [ref=e211]
+    - paragraph [ref=e217]:
+      - link "Privacy Policy" [ref=e218] [cursor=pointer]:
+        - /url: https://www.ashbyhq.com/privacy
+      - link "Security" [ref=e219] [cursor=pointer]:
+        - /url: https://www.ashbyhq.com/security
+      - link "Vulnerability Disclosure" [ref=e220] [cursor=pointer]:
+        - /url: https://www.ashbyhq.com/disclosure

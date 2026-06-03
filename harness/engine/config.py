@@ -14,8 +14,9 @@ class EngineConfig(BaseSettings):
     )
 
     # ── Provider selection ────────────────────────────────────────────────────
-    dspy_lm_provider: str = Field("anthropic", alias="DSPY_LM_PROVIDER")
-    dspy_lm_model: str = Field("claude-sonnet-4-6", alias="DSPY_LM_MODEL")
+    # Ollama is the default so the harness works out-of-the-box without API keys.
+    dspy_lm_provider: str = Field("ollama", alias="DSPY_LM_PROVIDER")
+    dspy_lm_model: str = Field("llama3.2", alias="DSPY_LM_MODEL")
 
     # ── Anthropic ─────────────────────────────────────────────────────────────
     anthropic_api_key: str = Field("", alias="ANTHROPIC_API_KEY")
@@ -32,4 +33,4 @@ class EngineConfig(BaseSettings):
 
     # ── Caching ───────────────────────────────────────────────────────────────
     cache_enabled: bool = True
-    cache_dir: str = ".harness/dspy_cache"
+    cache_dir: str = Field(".harness/dspy_cache", alias="CACHE_DIR")

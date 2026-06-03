@@ -81,6 +81,11 @@ class DatabaseRequest(ToolContext):
     params: dict[str, Any] = {}
 
 
+class RollbackRequest(BaseModel):
+    path: str
+    backup_index: int = -1
+
+
 # ── Helper ────────────────────────────────────────────────────────────────────
 
 
@@ -90,15 +95,26 @@ def _mp(request: Request) -> Any:
 
 def _confirmation_response(exc: Any) -> JSONResponse:
     """Translate a ConfirmationRequired exception into an HTTP 202."""
+    content = {
+        "requires_confirmation": True,
+        "token": exc.token,
+        "description": exc.description,
+        "risk_level": exc.risk_level,
+        "expires_in_seconds": 60,
+    }
+
+    # Include diff preview if available in the exception
+    if hasattr(exc, 'action_params') and exc.action_params:
+        diff_preview = exc.action_params.get("_diff_preview")
+        diff_summary = exc.action_params.get("_diff_summary")
+        if diff_preview:
+            content["diff_preview"] = diff_preview
+        if diff_summary:
+            content["diff_summary"] = diff_summary
+
     return JSONResponse(
         status_code=status.HTTP_202_ACCEPTED,
-        content={
-            "requires_confirmation": True,
-            "token": exc.token,
-            "description": exc.description,
-            "risk_level": exc.risk_level,
-            "expires_in_seconds": 60,
-        },
+        content=content,
     )
 
 
@@ -114,12 +130,29 @@ async def list_tools(request: Request) -> list[dict[str, Any]]:
 @router.get("/policy")
 async def get_policy(request: Request) -> dict[str, Any]:
     """Return the effective merged policy (global + project)."""
+    import os
+    import httpx
+    ai_url = os.environ.get("RUST_BASE_AI_URL", "")
+    if ai_url:
+        rust_url = ai_url.rsplit("/v1", 1)[0]
+        async with httpx.AsyncClient() as client:
+            res = await client.get(f"{rust_url}/harness/tools/policy")
+            return res.json()
     return _mp(request).tools.policy.effective.to_dict()
 
 
 @router.put("/policy")
 async def update_policy(body: PolicyUpdateRequest, request: Request) -> dict[str, Any]:
     """Persist an updated project-local policy and reload the engine."""
+    import os
+    import httpx
+    ai_url = os.environ.get("RUST_BASE_AI_URL", "")
+    if ai_url:
+        rust_url = ai_url.rsplit("/v1", 1)[0]
+        async with httpx.AsyncClient() as client:
+            res = await client.put(f"{rust_url}/harness/tools/policy", json=body.model_dump())
+            return res.json()
+
     from harness.tools.policy import DirectoryPolicy, PolicyConfig
 
     new_cfg = PolicyConfig(
@@ -159,7 +192,7 @@ async def execute_terminal(body: TerminalRequest, request: Request) -> dict[str,
             session_id=body.session_id,
             params=params,
         )
-        return result.to_dict()
+        return result.to_dict(redact_secrets=True)
     except ConfirmationRequired as exc:
         return _confirmation_response(exc)
     except Exception as exc:
@@ -183,7 +216,7 @@ async def _fs_call(
             session_id=params.pop("session_id", None),
             params={"operation": operation, **params},
         )
-        return result.to_dict()
+        return result.to_dict(redact_secrets=True)
     except ConfirmationRequired as exc:
         return _confirmation_response(exc)
     except Exception as exc:
@@ -294,7 +327,7 @@ async def execute_browser(body: BrowserRequest, request: Request) -> Any:
             session_id=body.session_id,
             params=params,
         )
-        return result.to_dict()
+        return result.to_dict(redact_secrets=True)
     except ConfirmationRequired as exc:
         return _confirmation_response(exc)
     except Exception as exc:
@@ -322,7 +355,7 @@ async def execute_database(body: DatabaseRequest, request: Request) -> Any:
             session_id=body.session_id,
             params=params,
         )
-        return result.to_dict()
+        return result.to_dict(redact_secrets=True)
     except ConfirmationRequired as exc:
         return _confirmation_response(exc)
     except Exception as exc:
@@ -335,6 +368,18 @@ async def execute_database(body: DatabaseRequest, request: Request) -> Any:
 @router.post("/confirm/{token}")
 async def confirm_action(token: str, request: Request) -> dict[str, Any]:
     """Execute a confirmed destructive action by token."""
+    import os
+    import httpx
+    ai_url = os.environ.get("RUST_BASE_AI_URL", "")
+    if ai_url:
+        rust_url = ai_url.rsplit("/v1", 1)[0]
+        async with httpx.AsyncClient() as client:
+            res = await client.post(f"{rust_url}/harness/tools/confirmations/{token}")
+            if res.status_code == 200:
+                return res.json()
+            else:
+                raise HTTPException(status_code=res.status_code, detail=res.text)
+
     store = _mp(request).tools.confirmations
     pending = store.get(token)
     if pending is None:
@@ -366,5 +411,58 @@ async def confirm_action(token: str, request: Request) -> dict[str, Any]:
 @router.delete("/confirm/{token}", status_code=204)
 async def cancel_confirmation(token: str, request: Request) -> None:
     """Cancel a pending confirmation without executing the action."""
+    import os
+    import httpx
+    ai_url = os.environ.get("RUST_BASE_AI_URL", "")
+    if ai_url:
+        rust_url = ai_url.rsplit("/v1", 1)[0]
+        async with httpx.AsyncClient() as client:
+            await client.delete(f"{rust_url}/harness/tools/confirmations/{token}")
+            return
+
     store = _mp(request).tools.confirmations
     store.cancel(token)
+
+
+# ── Rollback ───────────────────────────────────────────────────────────────────
+
+
+@router.post("/rollback/list")
+async def list_rollbacks(body: RollbackRequest, request: Request) -> list[dict[str, Any]]:
+    """List available backups for a file."""
+    from harness.core.rollback import RollbackManager
+
+    rollback = RollbackManager()
+    file_path = Path(body.path)
+    return rollback.list_backups(file_path)
+
+
+@router.post("/rollback/execute")
+async def execute_rollback(body: RollbackRequest, request: Request) -> dict[str, Any]:
+    """Rollback a file to a previous backup."""
+    from harness.core.rollback import RollbackManager
+
+    rollback = RollbackManager()
+    file_path = Path(body.path)
+    success = rollback.rollback_file(file_path, backup_index=body.backup_index)
+
+    if success:
+        return {"success": True, "message": f"Rolled back {body.path} to backup {body.backup_index}"}
+    else:
+        raise HTTPException(status_code=400, detail="Rollback failed. Check that the file has backups.")
+
+
+@router.post("/rollback/cleanup")
+async def cleanup_rollbacks(request: Request) -> dict[str, Any]:
+    """Clean up old backups to save disk space."""
+    from harness.core.rollback import RollbackManager
+
+    rollback = RollbackManager()
+    removed = rollback.cleanup_old_backups()
+    total_size = rollback.get_backup_size()
+
+    return {
+        "removed_count": removed,
+        "total_size_bytes": total_size,
+        "total_size_mb": round(total_size / (1024 * 1024), 2),
+    }

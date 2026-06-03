@@ -18,6 +18,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from harness.data.db import Base, get_session
+from harness.server.routes.analytics_routes import router as analytics_router
 from harness.server.routes.chat_routes import router as chat_router
 from harness.server.routes.views_routes import router as views_router
 
@@ -55,6 +56,7 @@ async def test_app(tmp_path: Path) -> AsyncIterator[FastAPI]:
     app = FastAPI()
     app.include_router(chat_router)
     app.include_router(views_router)
+    app.include_router(analytics_router)
 
     # Override the DB dependency so routes use our in-memory DB
     async def _override_get_session() -> AsyncIterator[AsyncSession]:

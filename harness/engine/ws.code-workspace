@@ -1,0 +1,19 @@
+{
+	"folders": [
+        {
+            "path": "../../../BabyLens"
+        },
+        {
+            "path": "../../../LedgerMind"
+        },
+        {
+            "path": "../../../micro-saas-factory"
+        },
+        {
+            "path": "../.."
+        },
+        {
+            "path": "../../../Py-mono"
+        }
+    ]
+}

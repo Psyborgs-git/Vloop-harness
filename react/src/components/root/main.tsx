@@ -4,9 +4,9 @@ import { HarnessProvider } from "@harness/HarnessProvider";
 import App from "./App";
 
 createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <HarnessProvider>
-      <App />
-    </HarnessProvider>
-  </React.StrictMode>
+    <React.StrictMode>
+        <HarnessProvider>
+            <App />
+        </HarnessProvider>
+    </React.StrictMode>
 );

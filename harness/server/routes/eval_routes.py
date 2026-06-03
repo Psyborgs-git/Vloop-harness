@@ -377,3 +377,80 @@ async def evaluate_component(
         "failed": failed,
         "results": results,
     }
+
+
+# ── View versioning endpoints ──────────────────────────────────────────────────
+
+
+class ViewSnapshotRequest(BaseModel):
+    file_path: str
+    source: str
+    prompt: str | None = None
+    agent_run_id: str | None = None
+    change_summary: str = ""
+
+
+@router.get("/views/{view_id}/versions")
+async def list_view_versions(
+    view_id: str,
+    db: AsyncSession = Depends(get_session),
+) -> list[dict[str, Any]]:
+    """List all versions of a view."""
+    repo = Repository(db)
+    versions = await repo.list_view_versions(view_id)
+    return [{
+        "id": v.id,
+        "view_id": v.view_id,
+        "version_number": v.version_number,
+        "file_path": v.file_path,
+        "change_summary": v.change_summary,
+        "created_at": v.created_at.isoformat(),
+    } for v in versions]
+
+
+@router.post("/views/{view_id}/snapshot")
+async def snapshot_view(
+    view_id: str,
+    body: ViewSnapshotRequest,
+    db: AsyncSession = Depends(get_session),
+) -> dict[str, Any]:
+    """Create a snapshot of a view as a new version."""
+    repo = Repository(db)
+    version = await repo.create_view_version(
+        view_id=view_id,
+        file_path=body.file_path,
+        source=body.source,
+        prompt=body.prompt,
+        agent_run_id=body.agent_run_id,
+        change_summary=body.change_summary,
+    )
+    return {
+        "id": version.id,
+        "view_id": version.view_id,
+        "version_number": version.version_number,
+        "file_path": version.file_path,
+        "change_summary": version.change_summary,
+        "created_at": version.created_at.isoformat(),
+    }
+
+
+@router.post("/views/{view_id}/rollback")
+async def rollback_view(
+    view_id: str,
+    body: RollbackRequest,
+    db: AsyncSession = Depends(get_session),
+) -> dict[str, Any]:
+    """Rollback a view to a previous version."""
+    repo = Repository(db)
+    version = await repo.get_view_version(body.version_id)
+    if not version or version.view_id != view_id:
+        raise HTTPException(status_code=404, detail="View version not found")
+
+    # In a real implementation, this would write the source back to the file
+    # For now, just return the version info
+    return {
+        "view_id": view_id,
+        "rolled_back_to": version.version_number,
+        "source": version.source,
+        "file_path": version.file_path,
+    }

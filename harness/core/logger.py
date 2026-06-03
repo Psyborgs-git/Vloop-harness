@@ -4,14 +4,20 @@ from __future__ import annotations
 
 import logging
 import sys
+import uuid
 from collections import deque
 from enum import IntEnum
 from pathlib import Path
 from typing import Any
+import contextvars
 
 import structlog
 from rich.console import Console
 from rich.logging import RichHandler
+
+
+# Context variable for correlation ID
+_correlation_id: contextvars.ContextVar[str] = contextvars.ContextVar("correlation_id", default="")
 
 
 class LogLevel(IntEnum):
@@ -34,9 +40,17 @@ def _configure_stdlib() -> None:
 
 
 def _build_structlog() -> None:
+    def add_correlation_id(logger, method_name, event_dict):
+        """Add correlation ID to log entries."""
+        correlation_id = _correlation_id.get()
+        if correlation_id:
+            event_dict["correlation_id"] = correlation_id
+        return event_dict
+
     structlog.configure(
         processors=[
             structlog.contextvars.merge_contextvars,
+            add_correlation_id,
             structlog.stdlib.add_log_level,
             structlog.stdlib.add_logger_name,
             structlog.processors.TimeStamper(fmt="iso"),
@@ -61,10 +75,16 @@ class ComponentLogStream:
         self._log = structlog.get_logger(component_id)
 
     def _record(self, level: LogLevel, message: str, **kw: Any) -> None:
-        entry = {"level": level.name, "message": message, "component": self.component_id, **kw}
+        from harness.core.secret_redaction import redact_any
+
+        # Redact secrets from message and kwargs
+        safe_message = redact_any(message)
+        safe_kw = redact_any(kw)
+
+        entry = {"level": level.name, "message": safe_message, "component": self.component_id, **safe_kw}
         self._buffer.append(entry)
         fn = getattr(self._log, level.name.lower(), self._log.info)
-        fn(message, **kw)
+        fn(safe_message, **safe_kw)
 
     def debug(self, msg: str, **kw: Any) -> None:
         self._record(LogLevel.DEBUG, msg, **kw)
@@ -126,3 +146,35 @@ class HarnessLogger:
 
     def error(self, msg: str, **kw: Any) -> None:
         self._root.error(msg, **kw)
+
+
+# ── Correlation ID helpers ─────────────────────────────────────────────────────
+
+
+def set_correlation_id(correlation_id: str | None = None) -> str:
+    """Set the correlation ID for the current context.
+
+    Args:
+        correlation_id: Optional correlation ID. If None, generates a new UUID.
+
+    Returns:
+        The correlation ID that was set.
+    """
+    if correlation_id is None:
+        correlation_id = str(uuid.uuid4())
+    _correlation_id.set(correlation_id)
+    return correlation_id
+
+
+def get_correlation_id() -> str:
+    """Get the current correlation ID.
+
+    Returns:
+        The current correlation ID, or empty string if not set.
+    """
+    return _correlation_id.get()
+
+
+def clear_correlation_id() -> None:
+    """Clear the correlation ID from the current context."""
+    _correlation_id.set("")

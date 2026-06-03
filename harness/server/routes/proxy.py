@@ -122,7 +122,7 @@ async def serve_root_ui(request: Request, path: str = "") -> Response:
 
         return _inject_html_from_dist(
             request=request,
-            entry_file="root.html",
+            entry_file="index.html",
             component_id="root",
             initial_state={},
             permissions=[],

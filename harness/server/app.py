@@ -24,12 +24,19 @@ from fastapi.staticfiles import StaticFiles
 
 from harness.server.routes import components, proxy, ws
 from harness.server.routes.agent_routes import router as agent_router
+from harness.server.routes.analytics_routes import router as analytics_router
 from harness.server.routes.app_routes import router as app_router
+from harness.server.routes.auth_routes import router as auth_router
 from harness.server.routes.chat_routes import router as chat_router
 from harness.server.routes.dspy_routes import router as dspy_router
 from harness.server.routes.eval_routes import router as eval_router
+from harness.server.routes.alerting_routes import router as alerting_router
+from harness.server.routes.metrics_routes import router as metrics_router
 from harness.server.routes.settings_routes import router as settings_router
+from harness.server.routes.optimization_routes import router as optimization_router
+from harness.server.routes.pipeline_routes import router as pipeline_router
 from harness.server.routes.tool_routes import router as tool_router
+from harness.server.routes.vector_store_routes import router as vector_store_router
 from harness.server.routes.views_routes import router as views_router
 
 if TYPE_CHECKING:
@@ -88,7 +95,7 @@ def create_app(main_process: "MainProcess", settings: "HarnessSettings") -> Fast
             # Engine un-configured but registered so routes can check .is_ready
             main_process._ai_engine = engine
 
-        # ── 6. Component registry + pipeline builder ──────────────────────────
+        # ── 6a. Component registry + pipeline builder ─────────────────────────
         from harness.engine.component_registry import DSPyComponentRegistry
         from harness.engine.pipeline_builder import PipelineBuilder
 
@@ -96,6 +103,45 @@ def create_app(main_process: "MainProcess", settings: "HarnessSettings") -> Fast
         builder = PipelineBuilder(registry)
         app.state.component_registry = registry
         app.state.pipeline_builder = builder
+
+        # ── 6b. Model registry + dynamic discovery ──────────────────────────────
+        try:
+            await engine.model_registry.discover_ollama()
+        except Exception:
+            pass
+        app.state.model_registry = engine.model_registry
+        app.state.model_router = engine.model_router
+        app.state.dynamic_config = engine.dynamic_config
+
+        # ── 6c. Vector store (sqlite-vec with in-memory fallback) ───────────────
+        from harness.engine.vector_store.store import SqliteVecStore, InMemoryVecStore
+        from harness.engine.vector_store.embeddings import OllamaEmbeddings, OpenAIEmbeddings, LocalEmbeddings
+
+        try:
+            vec_store = SqliteVecStore(
+                db_path=storage.project_dir / "vectors.db",
+                dimensions=768,
+            )
+        except Exception:
+            vec_store = InMemoryVecStore(dimensions=768)
+
+        # Pick embedder based on available providers
+        embedder = None
+        if engine.config.openai_api_key:
+            embedder = OpenAIEmbeddings(api_key=engine.config.openai_api_key)
+        else:
+            try:
+                embedder = OllamaEmbeddings()
+            except Exception:
+                try:
+                    embedder = LocalEmbeddings()
+                except Exception:
+                    pass
+
+        engine.vector_store = vec_store
+        engine.embedder = embedder
+        app.state.vector_store = vec_store
+        app.state.embedder = embedder
 
         # Pre-load all active component definitions from DB into the registry
         async with session_factory() as db_session:
@@ -159,6 +205,13 @@ def create_app(main_process: "MainProcess", settings: "HarnessSettings") -> Fast
     app.include_router(agent_router)
     app.include_router(app_router)
     app.include_router(eval_router)
+    app.include_router(alerting_router)
+    app.include_router(metrics_router)
+    app.include_router(analytics_router)
+    app.include_router(auth_router)
+    app.include_router(pipeline_router)
+    app.include_router(optimization_router)
+    app.include_router(vector_store_router)
     app.include_router(proxy.router)  # catch-all last
 
     @app.get("/")

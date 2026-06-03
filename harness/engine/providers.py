@@ -159,4 +159,24 @@ class ProviderManager:
                 ollama_base_url=provider.base_url,
             )
 
+        import os
+        import httpx
+        rust_base_url = os.getenv("RUST_BASE_AI_URL")
+        if rust_base_url:
+            try:
+                # Tell the Rust completions engine to update its active provider
+                config_url = rust_base_url.replace("/v1", "/harness/configure_provider")
+                httpx.post(
+                    config_url,
+                    json={
+                        "provider_type": provider.provider_type,
+                        "model": provider.model,
+                        "api_key": api_key,
+                        "base_url": provider.base_url or "",
+                    },
+                    timeout=2.0
+                )
+            except Exception:
+                pass
+
         self._engine.reconfigure(cfg)

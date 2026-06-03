@@ -1,0 +1,629 @@
+- generic [ref=e2]:
+  - list [ref=e4]:
+    - listitem [ref=e5]:
+      - link "n8n" [ref=e6] [cursor=pointer]:
+        - /url: https://n8n.io/
+        - img "n8n" [ref=e7]
+    - link "Back to n8n’s Job Listings" [ref=e8] [cursor=pointer]:
+      - /url: https://n8n.io/careers/
+      - img [ref=e9]
+    - listitem
+  - generic [ref=e11]:
+    - heading "AI Engineering Manager | Remote | Europe" [level=1] [ref=e13]
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - heading "Location" [level=2] [ref=e17]
+          - paragraph [ref=e18]: Berlin Office; Albania; Austria; Belgium; Bosnia; Bulgaria; Croatia; Czech Republic; Denmark; Estonia; Finland; France; Germany; Greece; Hungary; Ireland; Italy; Kosovo; Latvia; Lithuania; London Office; Moldova; Montenegro; Netherlands; Norway; Poland; Portugal; Romania; Serbia; Slovakia; Slovenia; Spain; Sweden; United Kingdom
+        - generic [ref=e19]:
+          - heading "Employment Type" [level=2] [ref=e20]
+          - paragraph [ref=e21]: Full time
+        - generic [ref=e22]:
+          - heading "Location Type" [level=2] [ref=e23]
+          - paragraph [ref=e24]: Remote
+        - generic [ref=e25]:
+          - heading "Department" [level=2] [ref=e26]
+          - paragraph [ref=e27]: Engineering
+      - generic [ref=e28]:
+        - tablist [ref=e29]:
+          - tab "Overview" [ref=e30] [cursor=pointer]
+          - tab "Application" [active] [selected] [ref=e31] [cursor=pointer]
+        - tabpanel "Application" [ref=e221]:
+          - generic [ref=e222]:
+            - button "Choose File" [ref=e223]
+            - generic [ref=e225]:
+              - generic [ref=e226]:
+                - img [ref=e228]
+                - heading "Autofill from resume" [level=3] [ref=e230]
+              - paragraph [ref=e231]: Upload your resume here to autofill key application fields.
+              - button "Upload file" [ref=e233] [cursor=pointer]
+          - generic [ref=e235]:
+            - generic [ref=e236] [cursor=pointer]:
+              - img [ref=e237]
+              - generic [ref=e239]: This job has application limits
+              - img [ref=e240]
+            - generic [ref=e243]:
+              - paragraph [ref=e244]: "Please Note: we have set up limits for applications for this role."
+              - list [ref=e245]:
+                - listitem [ref=e246]:
+                  - paragraph [ref=e247]: "Candidates may not apply to more than 1 role within a 15 days window: pick the job posting that suits your skills the most!"
+                - listitem [ref=e248]:
+                  - paragraph [ref=e249]: Candidates may not re-apply to the same role within 90 days if not presented with an offer
+          - generic [ref=e250]:
+            - generic [ref=e251]:
+              - heading "Personal details" [level=2] [ref=e253]
+              - generic [ref=e254]:
+                - generic [ref=e255]: First and Last name*
+                - textbox "First and Last name*" [ref=e257] [cursor=pointer]:
+                  - /placeholder: Type here...
+              - generic [ref=e258]:
+                - generic [ref=e259]: Email*
+                - textbox "Email*" [ref=e261] [cursor=pointer]:
+                  - /placeholder: hello@example.com...
+              - generic [ref=e262]:
+                - generic [ref=e263]: Resume*
+                - button "Resume*" [ref=e264]
+                - generic [ref=e265]:
+                  - button "Upload File" [ref=e266] [cursor=pointer]:
+                    - img [ref=e267]
+                    - generic [ref=e269]: Upload File
+                  - paragraph [ref=e270]: or drag and drop here
+              - generic [ref=e271]:
+                - generic [ref=e272]: Link to your Github
+                - textbox "Link to your Github" [ref=e274] [cursor=pointer]:
+                  - /placeholder: Type here...
+            - generic [ref=e275]:
+              - heading "Work contract" [level=2] [ref=e277]
+              - group [ref=e279]:
+                - generic [ref=e280]: Tick all options relevant for the role that apply to you regarding the main location of your work contract:*
+                - paragraph [ref=e282]: Check if the job posting has any geographical requirements.
+                - generic [ref=e283]:
+                  - generic [ref=e284] [cursor=pointer]:
+                    - img [ref=e285]
+                    - checkbox "I can be based in the UK and do not need visa support" [ref=e287]
+                  - generic [ref=e288]: I can be based in the UK and do not need visa support
+                - generic [ref=e289]:
+                  - generic [ref=e290] [cursor=pointer]:
+                    - img [ref=e291]
+                    - checkbox "I want to be based in the UK but will need visa support" [ref=e293]
+                  - generic [ref=e294]: I want to be based in the UK but will need visa support
+                - generic [ref=e295]:
+                  - generic [ref=e296] [cursor=pointer]:
+                    - img [ref=e297]
+                    - checkbox "I can be based in Germany and do not need visa support" [ref=e299]
+                  - generic [ref=e300]: I can be based in Germany and do not need visa support
+                - generic [ref=e301]:
+                  - generic [ref=e302] [cursor=pointer]:
+                    - img [ref=e303]
+                    - checkbox "I want to be based in Germany but will need visa support" [ref=e305]
+                  - generic [ref=e306]: I want to be based in Germany but will need visa support
+                - generic [ref=e307]:
+                  - generic [ref=e308] [cursor=pointer]:
+                    - img [ref=e309]
+                    - checkbox "I can be based in a European country other than Germany or the UK where I do not need visa support" [ref=e311]
+                  - generic [ref=e312]: I can be based in a European country other than Germany or the UK where I do not need visa support
+                - generic [ref=e313]:
+                  - generic [ref=e314] [cursor=pointer]:
+                    - img [ref=e315]
+                    - checkbox "I want to be based in a European country other than Germany or the UK where I will need visa support (non EU citizen)" [ref=e317]
+                  - generic [ref=e318]: I want to be based in a European country other than Germany or the UK where I will need visa support (non EU citizen)
+                - generic [ref=e319]:
+                  - generic [ref=e320] [cursor=pointer]:
+                    - img [ref=e321]
+                    - checkbox "I will be based in the US and do not need visa support" [ref=e323]
+                  - generic [ref=e324]: I will be based in the US and do not need visa support
+                - generic [ref=e325]:
+                  - generic [ref=e326] [cursor=pointer]:
+                    - img [ref=e327]
+                    - checkbox "I will be based in the US and need visa support" [ref=e329]
+                  - generic [ref=e330]: I will be based in the US and need visa support
+              - generic [ref=e331]:
+                - generic [ref=e332]: What would be your preferred main location for your contract?*
+                - paragraph [ref=e334]: We can sponsor visas for Germany for most roles. For any other country, you need to have existing rights to work. Unless specified otherwise (US role), we only hire in Europe.
+                - generic [ref=e335]:
+                  - combobox "Start typing..." [ref=e336] [cursor=pointer]
+                  - button [ref=e337] [cursor=pointer]:
+                    - img [ref=e338]
+              - generic [ref=e340]:
+                - generic [ref=e341]: What is your expected yearly salary for the role?
+                - paragraph [ref=e343]: We're assuming this answer to be the gross yearly base salary for a full time permanent contract. If you're expecting a BtoB / freelance contract, or that your role includes a variable please detail.
+                - textbox "What is your expected yearly salary for the role?" [ref=e345] [cursor=pointer]:
+                  - /placeholder: Type here...
+            - generic [ref=e346]:
+              - heading "Motivation" [level=2] [ref=e348]
+              - generic [ref=e349]:
+                - generic [ref=e350]: What about n8n or the role caught your attention and made you apply?*
+                - textbox "What about n8n or the role caught your attention and made you apply?*" [ref=e351] [cursor=pointer]:
+                  - /placeholder: Type here...
+              - group [ref=e353]:
+                - generic [ref=e354]: What knowledge/experience do you have with n8n or other automation platforms (make, Zapier, Retool, Tines...)*
+                - paragraph [ref=e356]:
+                  - emphasis [ref=e357]: Tick all that apply
+                - generic [ref=e358]:
+                  - generic [ref=e359] [cursor=pointer]:
+                    - img [ref=e360]
+                    - checkbox "I'm discovering automation tools" [ref=e362]
+                  - generic [ref=e363]: I'm discovering automation tools
+                - generic [ref=e364]:
+                  - generic [ref=e365] [cursor=pointer]:
+                    - img [ref=e366]
+                    - checkbox "I've used other automation tools in current or previous roles" [ref=e368]
+                  - generic [ref=e369]: I've used other automation tools in current or previous roles
+                - generic [ref=e370]:
+                  - generic [ref=e371] [cursor=pointer]:
+                    - img [ref=e372]
+                    - checkbox "I’m a new user of n8n" [ref=e374]
+                  - generic [ref=e375]: I’m a new user of n8n
+                - generic [ref=e376]:
+                  - generic [ref=e377] [cursor=pointer]:
+                    - img [ref=e378]
+                    - checkbox "I’ve built n8n automations for my professional projects" [ref=e380]
+                  - generic [ref=e381]: I’ve built n8n automations for my professional projects
+                - generic [ref=e382]:
+                  - generic [ref=e383] [cursor=pointer]:
+                    - img [ref=e384]
+                    - checkbox "I use n8n for automations in my personal projects" [ref=e386]
+                  - generic [ref=e387]: I use n8n for automations in my personal projects
+                - generic [ref=e388]:
+                  - generic [ref=e389] [cursor=pointer]:
+                    - img [ref=e390]
+                    - checkbox "I have built a community node in n8n" [ref=e392]
+                  - generic [ref=e393]: I have built a community node in n8n
+                - generic [ref=e394]:
+                  - generic [ref=e395] [cursor=pointer]:
+                    - img [ref=e396]
+                    - checkbox "I have used a verified community node in n8n" [ref=e398]
+                  - generic [ref=e399]: I have used a verified community node in n8n
+                - generic [ref=e400]:
+                  - generic [ref=e401] [cursor=pointer]:
+                    - img [ref=e402]
+                    - checkbox "I have built an n8n workflow with human in the loop step" [ref=e404]
+                  - generic [ref=e405]: I have built an n8n workflow with human in the loop step
+                - generic [ref=e406]:
+                  - generic [ref=e407] [cursor=pointer]:
+                    - img [ref=e408]
+                    - checkbox "I have created agentic workflows with n8n" [ref=e410]
+                  - generic [ref=e411]: I have created agentic workflows with n8n
+              - generic [ref=e412]:
+                - generic [ref=e413]: If you've used n8n, drop us a screenshot of your favorite workflow
+                - button "If you've used n8n, drop us a screenshot of your favorite workflow" [ref=e414]
+                - generic [ref=e415]:
+                  - button "Upload File" [ref=e416] [cursor=pointer]:
+                    - img [ref=e417]
+                    - generic [ref=e419]: Upload File
+                  - paragraph [ref=e420]: or drag and drop here
+            - generic [ref=e421]:
+              - heading "Your background" [level=2] [ref=e423]
+              - generic [ref=e424]:
+                - generic [ref=e425]: Have you ever worked as an internal employee at a SaaS startup / scale-up?*
+                - generic [ref=e426]:
+                  - button "Yes" [ref=e427] [cursor=pointer]
+                  - button "No" [ref=e428] [cursor=pointer]
+              - generic [ref=e429]:
+                - generic [ref=e430]: Which of your past companies operated most like a start-up/scale-up?*
+                - paragraph [ref=e432]:
+                  - emphasis [ref=e433]: "Please share the name of the company and a brief explanation (ex: product, stage, growth, ways of working)"
+                - textbox "Which of your past companies operated most like a start-up/scale-up?*" [ref=e434] [cursor=pointer]:
+                  - /placeholder: Type here...
+              - group [ref=e436]:
+                - generic [ref=e437]: What sizes of companies have you mostly worked in during your time as an Engineering Manager?*
+                - paragraph [ref=e439]:
+                  - emphasis [ref=e440]: Select the option that best reflects where you've spent the majority of your time in engineering leadership roles.
+                - generic [ref=e441]:
+                  - radio "Mostly small or early-stage companies (under 50 people)" [ref=e444] [cursor=pointer]
+                  - generic [ref=e445]: Mostly small or early-stage companies (under 50 people)
+                - generic [ref=e446]:
+                  - radio "Mostly small to mid-sized companies (50–200 people)" [ref=e449] [cursor=pointer]
+                  - generic [ref=e450]: Mostly small to mid-sized companies (50–200 people)
+                - generic [ref=e451]:
+                  - radio "Mid-sized or growth-stage companies (200–1,000 people)" [ref=e454] [cursor=pointer]
+                  - generic [ref=e455]: Mid-sized or growth-stage companies (200–1,000 people)
+                - generic [ref=e456]:
+                  - radio "Established companies (1,000+ people)" [ref=e459] [cursor=pointer]
+                  - generic [ref=e460]: Established companies (1,000+ people)
+                - generic [ref=e461]:
+                  - radio "Large-scale companies (5,000+ people)" [ref=e464] [cursor=pointer]
+                  - generic [ref=e465]: Large-scale companies (5,000+ people)
+                - generic [ref=e466]:
+                  - radio "I haven’t worked as an Engineering Manager yet" [ref=e469] [cursor=pointer]
+                  - generic [ref=e470]: I haven’t worked as an Engineering Manager yet
+              - group [ref=e472]:
+                - generic [ref=e473]: How frequently do you work with JavaScript or TypeScript in your current or recent roles? *
+                - generic [ref=e474]:
+                  - radio "Daily - it's my main language" [ref=e477] [cursor=pointer]
+                  - generic [ref=e478]: Daily - it's my main language
+                - generic [ref=e479]:
+                  - radio "A few times per week - part of my responsibilities" [ref=e482] [cursor=pointer]
+                  - generic [ref=e483]: A few times per week - part of my responsibilities
+                - generic [ref=e484]:
+                  - radio "Occasionally - I use it when needed" [ref=e487] [cursor=pointer]
+                  - generic [ref=e488]: Occasionally - I use it when needed
+                - generic [ref=e489]:
+                  - radio "I currently mostly use other languages" [ref=e492] [cursor=pointer]
+                  - generic [ref=e493]: I currently mostly use other languages
+              - group [ref=e495]:
+                - generic [ref=e496]: How frequently do you work with Node.js in your current or recent roles?*
+                - generic [ref=e497]:
+                  - radio "I use it daily as the primary backend in my main role" [ref=e500] [cursor=pointer]
+                  - generic [ref=e501]: I use it daily as the primary backend in my main role
+                - generic [ref=e502]:
+                  - radio "I use it regularly for side projects or occasional tasks at work" [ref=e505] [cursor=pointer]
+                  - generic [ref=e506]: I use it regularly for side projects or occasional tasks at work
+                - generic [ref=e507]:
+                  - radio "I’ve used it before, but not on my recent projects" [ref=e510] [cursor=pointer]
+                  - generic [ref=e511]: I’ve used it before, but not on my recent projects
+                - generic [ref=e512]:
+                  - radio "I haven't used Node.js in production" [ref=e515] [cursor=pointer]
+                  - generic [ref=e516]: I haven't used Node.js in production
+              - group [ref=e518]:
+                - generic [ref=e519]: How would you rate your expertise in Vue.js/React?*
+                - generic [ref=e520]:
+                  - radio "I haven’t used Vue.js in production, but I have professional experience with React" [ref=e523] [cursor=pointer]
+                  - generic [ref=e524]: I haven’t used Vue.js in production, but I have professional experience with React
+                - generic [ref=e525]:
+                  - radio "I’ve used Vue.js in production, but it’s not my primary frontend framework" [ref=e528] [cursor=pointer]
+                  - generic [ref=e529]: I’ve used Vue.js in production, but it’s not my primary frontend framework
+                - generic [ref=e530]:
+                  - radio "I haven’t used Vue.js in production, but I have professional experience with Angular" [ref=e533] [cursor=pointer]
+                  - generic [ref=e534]: I haven’t used Vue.js in production, but I have professional experience with Angular
+                - generic [ref=e535]:
+                  - radio "I use Vue.js daily in my main role and have built/maintained production features with it" [ref=e538] [cursor=pointer]
+                  - generic [ref=e539]: I use Vue.js daily in my main role and have built/maintained production features with it
+                - generic [ref=e540]:
+                  - radio "I’ve used Vue.js for learning or small personal projects" [ref=e543] [cursor=pointer]
+                  - generic [ref=e544]: I’ve used Vue.js for learning or small personal projects
+                - generic [ref=e545]:
+                  - radio "My main focus in recent years has been backend development" [ref=e548] [cursor=pointer]
+                  - generic [ref=e549]: My main focus in recent years has been backend development
+              - group [ref=e551]:
+                - generic [ref=e552]: What kinds of teams have you directly managed?*
+                - paragraph [ref=e554]:
+                  - emphasis [ref=e555]: Select the option with which you have the most experience
+                - generic [ref=e556]:
+                  - radio "Teams building user-facing product features" [ref=e559] [cursor=pointer]
+                  - generic [ref=e560]: Teams building user-facing product features
+                - generic [ref=e561]:
+                  - radio "Backend or infrastructure teams focused on performance, scaling, or APIs" [ref=e564] [cursor=pointer]
+                  - generic [ref=e565]: Backend or infrastructure teams focused on performance, scaling, or APIs
+                - generic [ref=e566]:
+                  - radio "Platform or developer experience teams" [ref=e569] [cursor=pointer]
+                  - generic [ref=e570]: Platform or developer experience teams
+                - generic [ref=e571]:
+                  - radio "DevOps, SRE, or incident response teams" [ref=e574] [cursor=pointer]
+                  - generic [ref=e575]: DevOps, SRE, or incident response teams
+                - generic [ref=e576]:
+                  - radio "ML, AI, or data-focused teams" [ref=e579] [cursor=pointer]
+                  - generic [ref=e580]: ML, AI, or data-focused teams
+                - generic [ref=e581]:
+                  - radio "Other types of engineering teams" [ref=e584] [cursor=pointer]
+                  - generic [ref=e585]: Other types of engineering teams
+                - generic [ref=e586]:
+                  - radio "I’ve worked closely with engineering teams, but haven’t directly managed them" [ref=e589] [cursor=pointer]
+                  - generic [ref=e590]: I’ve worked closely with engineering teams, but haven’t directly managed them
+              - group [ref=e592]:
+                - generic [ref=e593]: Which responsibilities are currently part of your role?*
+                - generic [ref=e594]:
+                  - generic [ref=e595] [cursor=pointer]:
+                    - img [ref=e596]
+                    - checkbox "Hiring, onboarding, and growing the team" [ref=e598]
+                  - generic [ref=e599]: Hiring, onboarding, and growing the team
+                - generic [ref=e600]:
+                  - generic [ref=e601] [cursor=pointer]:
+                    - img [ref=e602]
+                    - checkbox "Running 1:1s and supporting engineers’ career development" [ref=e604]
+                  - generic [ref=e605]: Running 1:1s and supporting engineers’ career development
+                - generic [ref=e606]:
+                  - generic [ref=e607] [cursor=pointer]:
+                    - img [ref=e608]
+                    - checkbox "Supporting or leading performance reviews and compensation cycles" [ref=e610]
+                  - generic [ref=e611]: Supporting or leading performance reviews and compensation cycles
+                - generic [ref=e612]:
+                  - generic [ref=e613] [cursor=pointer]:
+                    - img [ref=e614]
+                    - checkbox "Mentoring engineers on technical or architectural decisions" [ref=e616]
+                  - generic [ref=e617]: Mentoring engineers on technical or architectural decisions
+                - generic [ref=e618]:
+                  - generic [ref=e619] [cursor=pointer]:
+                    - img [ref=e620]
+                    - checkbox "Running planning, prioritization, or execution processes" [ref=e622]
+                  - generic [ref=e623]: Running planning, prioritization, or execution processes
+                - generic [ref=e624]:
+                  - generic [ref=e625] [cursor=pointer]:
+                    - img [ref=e626]
+                    - checkbox "Partnering with Product/Design to align on scope and goals" [ref=e628]
+                  - generic [ref=e629]: Partnering with Product/Design to align on scope and goals
+                - generic [ref=e630]:
+                  - generic [ref=e631] [cursor=pointer]:
+                    - img [ref=e632]
+                    - checkbox "Contributing hands-on to the codebase when needed" [ref=e634]
+                  - generic [ref=e635]: Contributing hands-on to the codebase when needed
+                - generic [ref=e636]:
+                  - generic [ref=e637] [cursor=pointer]:
+                    - img [ref=e638]
+                    - checkbox "I support team delivery but don’t have direct reports" [ref=e640]
+                  - generic [ref=e641]: I support team delivery but don’t have direct reports
+                - generic [ref=e642]:
+                  - generic [ref=e643] [cursor=pointer]:
+                    - img [ref=e644]
+                    - checkbox "I manage engineers but my role is more project or program-focused" [ref=e646]
+                  - generic [ref=e647]: I manage engineers but my role is more project or program-focused
+                - generic [ref=e648]:
+                  - generic [ref=e649] [cursor=pointer]:
+                    - img [ref=e650]
+                    - checkbox "I don’t currently work in an engineering leadership role" [ref=e652]
+                  - generic [ref=e653]: I don’t currently work in an engineering leadership role
+              - group [ref=e655]:
+                - generic [ref=e656]: In your current role, how much hands-on coding or code review do you usually do?*
+                - generic [ref=e657]:
+                  - generic [ref=e658] [cursor=pointer]:
+                    - img [ref=e659]
+                    - checkbox "I regularly contribute production code as part of my team’s work" [ref=e661]
+                  - generic [ref=e662]: I regularly contribute production code as part of my team’s work
+                - generic [ref=e663]:
+                  - generic [ref=e664] [cursor=pointer]:
+                    - img [ref=e665]
+                    - checkbox "I occasionally write code to prototype or unblock, but it's not part of delivery" [ref=e667]
+                  - generic [ref=e668]: I occasionally write code to prototype or unblock, but it's not part of delivery
+                - generic [ref=e669]:
+                  - generic [ref=e670] [cursor=pointer]:
+                    - img [ref=e671]
+                    - checkbox "I review code and give technical feedback, but rarely write any myself" [ref=e673]
+                  - generic [ref=e674]: I review code and give technical feedback, but rarely write any myself
+                - generic [ref=e675]:
+                  - generic [ref=e676] [cursor=pointer]:
+                    - img [ref=e677]
+                    - checkbox "I’m close to the technical work, but not involved in code or reviews" [ref=e679]
+                  - generic [ref=e680]: I’m close to the technical work, but not involved in code or reviews
+                - generic [ref=e681]:
+                  - generic [ref=e682] [cursor=pointer]:
+                    - img [ref=e683]
+                    - checkbox "I don’t currently engage with code and don’t have a software engineering background" [ref=e685]
+                  - generic [ref=e686]: I don’t currently engage with code and don’t have a software engineering background
+            - generic [ref=e687]:
+              - heading "Additional information" [level=2] [ref=e689]
+              - generic [ref=e690]:
+                - generic [ref=e691]: Tell us about a time your team went through a significant shift — for example, a change in direction, team structure, or priorities. What was happening, what part did you play, and how did you help the team adapt?
+                - paragraph [ref=e693]:
+                  - emphasis [ref=e694]: If you haven’t worked on high-scale systems yet, feel free to write “N/A"
+                - textbox "Tell us about a time your team went through a significant shift — for example, a change in direction, team structure, or priorities. What was happening, what part did you play, and how did you help the team adapt?" [ref=e695] [cursor=pointer]:
+                  - /placeholder: Type here...
+              - generic [ref=e696]:
+                - generic [ref=e697]: What do you need from us at n8n in order to thrive as an EM?
+                - textbox "What do you need from us at n8n in order to thrive as an EM?" [ref=e698] [cursor=pointer]:
+                  - /placeholder: Type here...
+              - group [ref=e700]:
+                - generic [ref=e701]: Do you know which team you'd like to join?
+                - paragraph [ref=e703]:
+                  - emphasis [ref=e704]: We usually determine the
+                  - link "team" [ref=e705] [cursor=pointer]:
+                    - /url: https://www.notion.so/n8n/Discover-Engineering-n8n-1b65b6e0c94f80688f43d9bbc76023c3?source=copy_link#717e2e614da64d0d9b6683e334c8f83a
+                    - emphasis [ref=e706]: team
+                  - emphasis [ref=e707]: that best fits with your skills by the middle/end of the interview process. If you already have a specific team you'd like to join based on your current strenghts, you can let us know here.
+                - generic [ref=e708]:
+                  - radio "Adore" [ref=e711] [cursor=pointer]
+                  - generic [ref=e712]: Adore
+                - generic [ref=e713]:
+                  - radio "AI" [ref=e716] [cursor=pointer]
+                  - generic [ref=e717]: AI
+                - generic [ref=e718]:
+                  - radio "Nodes" [ref=e721] [cursor=pointer]
+                  - generic [ref=e722]: Nodes
+                - generic [ref=e723]:
+                  - radio "LiGo" [ref=e726] [cursor=pointer]
+                  - generic [ref=e727]: LiGo
+                - generic [ref=e728]:
+                  - radio "IAM" [ref=e731] [cursor=pointer]
+                  - generic [ref=e732]: IAM
+                - generic [ref=e733]:
+                  - radio "Cloud Platform" [ref=e736] [cursor=pointer]
+                  - generic [ref=e737]: Cloud Platform
+                - generic [ref=e738]:
+                  - radio "Cloud Experience" [ref=e741] [cursor=pointer]
+                  - generic [ref=e742]: Cloud Experience
+                - generic [ref=e743]:
+                  - radio "Core Platform" [ref=e746] [cursor=pointer]
+                  - generic [ref=e747]: Core Platform
+          - generic [ref=e748]:
+            - generic [ref=e750]:
+              - generic [ref=e751]:
+                - heading "Diversity Survey" [level=2] [ref=e752]
+                - paragraph [ref=e754]:
+                  - emphasis [ref=e755]: This optional survey helps us evaluate our diversity and inclusion efforts. Participation is voluntary and refusal to submit the survey will not affect your job application. The answers to these questions are not seen on an individualized basis and your submission will only be used to assess our diversity and inclusion efforts.
+              - group [ref=e757]:
+                - generic [ref=e758]: What is your current age?
+                - generic [ref=e759]:
+                  - radio "Under 30" [ref=e762] [cursor=pointer]
+                  - generic [ref=e763]: Under 30
+                - generic [ref=e764]:
+                  - radio "30-39" [ref=e767] [cursor=pointer]
+                  - generic [ref=e768]: 30-39
+                - generic [ref=e769]:
+                  - radio "40-49" [ref=e772] [cursor=pointer]
+                  - generic [ref=e773]: 40-49
+                - generic [ref=e774]:
+                  - radio "50-59" [ref=e777] [cursor=pointer]
+                  - generic [ref=e778]: 50-59
+                - generic [ref=e779]:
+                  - radio "60 or older" [ref=e782] [cursor=pointer]
+                  - generic [ref=e783]: 60 or older
+                - generic [ref=e784]:
+                  - radio "I prefer not to answer" [ref=e787] [cursor=pointer]
+                  - generic [ref=e788]: I prefer not to answer
+              - group [ref=e790]:
+                - generic [ref=e791]: What is your gender identity?
+                - generic [ref=e792]:
+                  - radio "Man" [ref=e795] [cursor=pointer]
+                  - generic [ref=e796]: Man
+                - generic [ref=e797]:
+                  - radio "Woman" [ref=e800] [cursor=pointer]
+                  - generic [ref=e801]: Woman
+                - generic [ref=e802]:
+                  - radio "Non-Binary" [ref=e805] [cursor=pointer]
+                  - generic [ref=e806]: Non-Binary
+                - generic [ref=e807]:
+                  - radio "Another Gender Identity" [ref=e810] [cursor=pointer]
+                  - generic [ref=e811]: Another Gender Identity
+                - generic [ref=e812]:
+                  - radio "I prefer not to answer" [ref=e815] [cursor=pointer]
+                  - generic [ref=e816]: I prefer not to answer
+              - group [ref=e818]:
+                - generic [ref=e819]: Do you identify as transgender?
+                - generic [ref=e820]:
+                  - radio "Yes" [ref=e823] [cursor=pointer]
+                  - generic [ref=e824]: "Yes"
+                - generic [ref=e825]:
+                  - radio "No" [ref=e828] [cursor=pointer]
+                  - generic [ref=e829]: "No"
+                - generic [ref=e830]:
+                  - radio "I prefer not to answer" [ref=e833] [cursor=pointer]
+                  - generic [ref=e834]: I prefer not to answer
+              - group [ref=e836]:
+                - generic [ref=e837]: How do you identify your sexual orientation? Please select all that apply.
+                - generic [ref=e838]:
+                  - generic [ref=e839] [cursor=pointer]:
+                    - img [ref=e840]
+                    - checkbox "Bisexual" [ref=e842]
+                  - generic [ref=e843]: Bisexual
+                - generic [ref=e844]:
+                  - generic [ref=e845] [cursor=pointer]:
+                    - img [ref=e846]
+                    - checkbox "Lesbian" [ref=e848]
+                  - generic [ref=e849]: Lesbian
+                - generic [ref=e850]:
+                  - generic [ref=e851] [cursor=pointer]:
+                    - img [ref=e852]
+                    - checkbox "Gay" [ref=e854]
+                  - generic [ref=e855]: Gay
+                - generic [ref=e856]:
+                  - generic [ref=e857] [cursor=pointer]:
+                    - img [ref=e858]
+                    - checkbox "Queer" [ref=e860]
+                  - generic [ref=e861]: Queer
+                - generic [ref=e862]:
+                  - generic [ref=e863] [cursor=pointer]:
+                    - img [ref=e864]
+                    - checkbox "Heterosexual / straight" [ref=e866]
+                  - generic [ref=e867]: Heterosexual / straight
+                - generic [ref=e868]:
+                  - generic [ref=e869] [cursor=pointer]:
+                    - img [ref=e870]
+                    - checkbox "Other" [ref=e872]
+                  - generic [ref=e873]: Other
+                - generic [ref=e874]:
+                  - generic [ref=e875] [cursor=pointer]:
+                    - img [ref=e876]
+                    - checkbox "I prefer not to answer" [ref=e878]
+                  - generic [ref=e879]: I prefer not to answer
+              - group [ref=e881]:
+                - generic [ref=e882]: Which ethnicity(ies) do you identify with? Please select all that apply.
+                - generic [ref=e883]:
+                  - generic [ref=e884] [cursor=pointer]:
+                    - img [ref=e885]
+                    - checkbox "Asian or Asian American" [ref=e887]
+                  - generic [ref=e888]: Asian or Asian American
+                - generic [ref=e889]:
+                  - generic [ref=e890] [cursor=pointer]:
+                    - img [ref=e891]
+                    - checkbox "Black or African American" [ref=e893]
+                  - generic [ref=e894]: Black or African American
+                - generic [ref=e895]:
+                  - generic [ref=e896] [cursor=pointer]:
+                    - img [ref=e897]
+                    - checkbox "Hispanic or Latine" [ref=e899]
+                  - generic [ref=e900]: Hispanic or Latine
+                - generic [ref=e901]:
+                  - generic [ref=e902] [cursor=pointer]:
+                    - img [ref=e903]
+                    - checkbox "Indigenous or Native American" [ref=e905]
+                  - generic [ref=e906]: Indigenous or Native American
+                - generic [ref=e907]:
+                  - generic [ref=e908] [cursor=pointer]:
+                    - img [ref=e909]
+                    - checkbox "Native Hawaiian or Other Pacific Islander" [ref=e911]
+                  - generic [ref=e912]: Native Hawaiian or Other Pacific Islander
+                - generic [ref=e913]:
+                  - generic [ref=e914] [cursor=pointer]:
+                    - img [ref=e915]
+                    - checkbox "White" [ref=e917]
+                  - generic [ref=e918]: White
+                - generic [ref=e919]:
+                  - generic [ref=e920] [cursor=pointer]:
+                    - img [ref=e921]
+                    - checkbox "Other" [ref=e923]
+                  - generic [ref=e924]: Other
+                - generic [ref=e925]:
+                  - generic [ref=e926] [cursor=pointer]:
+                    - img [ref=e927]
+                    - checkbox "I prefer not to answer" [ref=e929]
+                  - generic [ref=e930]: I prefer not to answer
+              - group [ref=e932]:
+                - generic [ref=e933]: Which of the following communities do you belong to? Please select all that apply.
+                - generic [ref=e934]:
+                  - generic [ref=e935] [cursor=pointer]:
+                    - img [ref=e936]
+                    - checkbox "Person with disability" [ref=e938]
+                  - generic [ref=e939]: Person with disability
+                - generic [ref=e940]:
+                  - generic [ref=e941] [cursor=pointer]:
+                    - img [ref=e942]
+                    - checkbox "Neurodiverse" [ref=e944]
+                  - generic [ref=e945]: Neurodiverse
+                - generic [ref=e946]:
+                  - generic [ref=e947] [cursor=pointer]:
+                    - img [ref=e948]
+                    - checkbox "Veteran" [ref=e950]
+                  - generic [ref=e951]: Veteran
+                - generic [ref=e952]:
+                  - generic [ref=e953] [cursor=pointer]:
+                    - img [ref=e954]
+                    - checkbox "Parent" [ref=e956]
+                  - generic [ref=e957]: Parent
+                - generic [ref=e958]:
+                  - generic [ref=e959] [cursor=pointer]:
+                    - img [ref=e960]
+                    - checkbox "Refugee or immigrant" [ref=e962]
+                  - generic [ref=e963]: Refugee or immigrant
+                - generic [ref=e964]:
+                  - generic [ref=e965] [cursor=pointer]:
+                    - img [ref=e966]
+                    - checkbox "None of the above" [ref=e968]
+                  - generic [ref=e969]: None of the above
+                - generic [ref=e970]:
+                  - generic [ref=e971] [cursor=pointer]:
+                    - img [ref=e972]
+                    - checkbox "I prefer not to answer" [ref=e974]
+                  - generic [ref=e975]: I prefer not to answer
+            - group [ref=e979]:
+              - generic [ref=e980]:
+                - paragraph [ref=e981]: Do you agree to allow n8n to contact you about job opportunities for up to 2 years?
+                - paragraph [ref=e982]:
+                  - link "Recruiting Privacy Policy" [ref=e983] [cursor=pointer]:
+                    - /url: https://n8n.io/legal/recruiting-privacy-policy/
+              - generic [ref=e984]:
+                - generic [ref=e985] [cursor=pointer]:
+                  - img [ref=e986]
+                  - checkbox "I agree" [ref=e988]
+                - generic [ref=e989]: I agree
+          - generic [ref=e990]:
+            - generic:
+              - link "Recruiting Privacy Policy":
+                - /url: https://n8n.io/legal/recruiting-privacy-policy/
+          - button "Submit Application" [ref=e991] [cursor=pointer]:
+            - text: Submit Application
+            - img [ref=e992]
+          - paragraph [ref=e994]:
+            - text: n8n may use Artificial Intelligence with this application.
+            - link "Learn more." [ref=e995] [cursor=pointer]:
+              - /url: /n8n/automation-notice
+  - contentinfo [ref=e208]:
+    - link "Learn more about Ashby" [ref=e209] [cursor=pointer]:
+      - /url: https://www.ashbyhq.com
+      - generic [ref=e210]: Powered by
+      - img "Ashby" [ref=e211]
+    - paragraph [ref=e217]:
+      - link "Privacy Policy" [ref=e218] [cursor=pointer]:
+        - /url: https://www.ashbyhq.com/privacy
+      - link "Security" [ref=e219] [cursor=pointer]:
+        - /url: https://www.ashbyhq.com/security
+      - link "Vulnerability Disclosure" [ref=e220] [cursor=pointer]:
+        - /url: https://www.ashbyhq.com/disclosure

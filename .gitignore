@@ -60,3 +60,7 @@ dist-binary/
 
 # Windows
 Thumbs.db
+
+# Rust
+target/
+harness-core/target/

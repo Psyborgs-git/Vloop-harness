@@ -472,6 +472,54 @@ class Repository:
     async def get_component_version(self, version_id: str) -> ComponentVersion | None:
         return await self.session.get(ComponentVersion, version_id)
 
+    # ── View versions ───────────────────────────────────────────────────────────
+
+    async def create_view_version(
+        self,
+        view_id: str,
+        file_path: str,
+        source: str,
+        prompt: str | None = None,
+        agent_run_id: str | None = None,
+        change_summary: str = "",
+    ) -> ViewVersion:
+        """Create a new version of a view."""
+        from sqlalchemy import select
+
+        # Get the next version number
+        result = await self.session.execute(
+            select(ViewVersion)
+            .where(ViewVersion.view_id == view_id)
+            .order_by(ViewVersion.version_number.desc())
+        )
+        last_version = result.scalars().first()
+        next_version = (last_version.version_number + 1) if last_version else 1
+
+        version = ViewVersion(
+            view_id=view_id,
+            version_number=next_version,
+            file_path=file_path,
+            source=source,
+            prompt=prompt,
+            agent_run_id=agent_run_id,
+            change_summary=change_summary,
+        )
+        self.session.add(version)
+        await self.session.commit()
+        await self.session.refresh(version)
+        return version
+
+    async def list_view_versions(self, view_id: str) -> list[ViewVersion]:
+        result = await self.session.execute(
+            select(ViewVersion)
+            .where(ViewVersion.view_id == view_id)
+            .order_by(ViewVersion.version_number.desc())
+        )
+        return list(result.scalars().all())
+
+    async def get_view_version(self, version_id: str) -> ViewVersion | None:
+        return await self.session.get(ViewVersion, version_id)
+
     # ── Eval datasets ─────────────────────────────────────────────────────────
 
     async def create_eval_dataset(

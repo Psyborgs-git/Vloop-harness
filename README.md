@@ -1,5 +1,5 @@
 # Vloop Harness
-Vloop Harness is a local-first AI engineering workbench that combines a Python orchestration backend with a React control-plane UI for building, running, and evaluating DSPy-based agents and pipelines.
+Vloop Harness is a local-first AI engineering workbench that combines a Rust-based orchestrator, a Python backend, and a React control-plane UI for building, running, and evaluating DSPy-based agents and pipelines.
 
 ## Overview
 Vloop Harness provides a FastAPI backend, a dynamic tool runtime (terminal, filesystem, browser, database), and a React dashboard for chat, component authoring, pipeline execution, view generation, and agent run orchestration. It is designed for engineers iterating on AI components with auditable state and policy-constrained tool access. The backend persists metadata in SQLite by default (with optional PostgreSQL), including chat transcripts, provider configs, component definitions, pipeline specs, app manifests, tool traces, and agent run logs. Architecturally, the system separates runtime concerns into core process orchestration, API routes, AI engine modules, and persistence layers, while keeping UI concerns in a separate Vite/React project.
@@ -39,9 +39,12 @@ flowchart LR
 
 ## Prerequisites
 ```bash
+rustc --version       # must be installed
+cargo --version       # must be installed
 python --version      # must be 3.11+
 node --version        # must be >=18.18.0
 npm --version
+uv --version          # uv package manager required
 ```
 
 ## Getting Started
@@ -49,28 +52,31 @@ npm --version
 git clone <repo-url>
 cd Vloop-harness
 
-# 1) Python environment + backend dependencies
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
+# 1) Build the Rust core
+cargo build --manifest-path harness-core/Cargo.toml --release
 
-# 2) Frontend dependencies
+# 2) Python environment + backend dependencies
+uv venv
+source .venv/bin/activate
+uv pip install -e .
+
+# 3) Frontend dependencies
 cd react
 npm install
 cd ..
 
-# 3) Environment setup
+# 4) Environment setup
 cp .env.example .env
 # Edit .env and set API keys if using hosted providers.
 
-# 4) Start backend + frontend services
-python -m harness.main services start all
+# 5) Start backend + frontend services using Rust orchestrator
+./harness-core/target/release/vloop-harness services start all
 
-# 5) Open app
+# 6) Open app
 # Visit http://localhost:8000/ui/root
 
-# 6) Stop services when done
-python -m harness.main services stop all
+# 7) Stop services when done
+./harness-core/target/release/vloop-harness services stop all
 ```
 
 ## Project Structure
@@ -119,13 +125,14 @@ python -m harness.main services stop all
 \* Required only for corresponding provider.
 
 ## Available Scripts
+### Rust (`harness-core` / CLI)
+- `./harness-core/target/release/vloop-harness run`: start orchestrator; optional `--no-window` and `--frontend-mode dev|static`.
+- `./harness-core/target/release/vloop-harness services start [backend|frontend|all]`: start managed subprocess services.
+- `./harness-core/target/release/vloop-harness services stop [backend|frontend|all]`: stop services.
+- `./harness-core/target/release/vloop-harness services status`: report PID + health for services.
+
 ### Python (`pyproject.toml` / CLI)
-- `harness run`: start orchestrator; optional `--no-window` and `--frontend-mode dev|static`.
-- `harness services start [backend|frontend|all]`: start managed subprocess services.
-- `harness services stop [backend|frontend|all]`: stop services.
-- `harness services restart [backend|frontend|all]`: restart services.
-- `harness services status`: report PID + health for services.
-- `harness internal backend-worker`: internal-only backend launch command.
+- `python -m harness.main internal backend-worker`: internal-only backend launch command.
 
 ### Frontend (`react/package.json`)
 - `npm run dev`: start Vite dev server.

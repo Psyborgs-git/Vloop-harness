@@ -48,8 +48,17 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 import * as api from "./api";
+import { useAnalytics } from "./analytics";
 import GenerateViewDialog from "./GenerateViewDialog";
-import type { ChatMessage, ChatSession, ContextPanelState, DSPyComponent, GeneratedView, ToolCatalogEntry } from "./types";
+import type {
+  ChatMessage,
+  ChatSession,
+  ContextPanelState,
+  DashboardActionDefinition,
+  DSPyComponent,
+  GeneratedView,
+  ToolCatalogEntry,
+} from "./types";
 
 interface Props {
   focusSessionId?: string | null;
@@ -58,9 +67,18 @@ interface Props {
   onOpenWorkspace?: (url: string, title: string) => void;
 }
 
+const COMPOSER_ACTIONS: DashboardActionDefinition[] = [
+  { id: "chat.tools.open", label: "Tools", surface: "chat_composer", baselineRank: 1 },
+  { id: "chat.components.open", label: "Components", surface: "chat_composer", baselineRank: 2 },
+  { id: "chat.view.new", label: "New View", surface: "chat_composer", baselineRank: 3 },
+  { id: "panel.pipelines.open", label: "Pipelines", surface: "chat_composer", baselineRank: 4 },
+  { id: "panel.agents.open", label: "Agent runs", surface: "chat_composer", baselineRank: 5 },
+];
+
 export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel, onOpenWorkspace }: Props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const analytics = useAnalytics();
 
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -104,12 +122,20 @@ export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel, onOp
   }, [focusSessionId, sessions]);
 
   useEffect(() => {
+    analytics.setScreen(activeId ? "dashboard.chat.session" : "dashboard.chat.empty", {
+      session_id: activeId,
+      message_count: messages.length,
+    });
+  }, [activeId, analytics, messages.length]);
+
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   // ── Session management ────────────────────────────────────────────────────
 
   async function newSession() {
+    analytics.trackAction("chat.session.create", { data: { source: activeId ? "sidebar" : "empty_state" } });
     const s = await api.createSession();
     setSessions((prev) => [s, ...prev]);
     setActiveId(s.id);
@@ -117,6 +143,7 @@ export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel, onOp
   }
 
   async function loadMessages(sessionId: string) {
+    analytics.trackAction("chat.session.open", { data: { session_id: sessionId } });
     setActiveId(sessionId);
     const msgs = await api.listMessages(sessionId);
     setMessages(msgs);
@@ -124,6 +151,7 @@ export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel, onOp
 
   async function removeSession(id: string, e: React.MouseEvent) {
     e.stopPropagation();
+    analytics.trackAction("chat.session.delete", { data: { session_id: id } });
     await api.deleteSession(id);
     setSessions((prev) => prev.filter((s) => s.id !== id));
     if (activeId === id) {
@@ -139,6 +167,9 @@ export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel, onOp
     const userContent = input.trim();
     setInput("");
     setSending(true);
+    analytics.trackAction("chat.message.send", {
+      data: { session_id: activeId, content_length: userContent.length },
+    });
 
     const tempUserMsg: ChatMessage = {
       id: `tmp-${Date.now()}`,
@@ -173,6 +204,7 @@ export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel, onOp
   // ── Tools menu ────────────────────────────────────────────────────────────
 
   async function openToolsMenu(e: React.MouseEvent<HTMLElement>) {
+    analytics.trackAction("chat.tools.open", { data: { session_id: activeId } });
     setToolsAnchor(e.currentTarget);
     if (toolListLoadedRef.current || toolListLoadingRef.current) return;
     toolListLoadingRef.current = true;
@@ -186,6 +218,7 @@ export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel, onOp
   }
 
   function selectTool(name: string) {
+    analytics.trackAction("chat.tools.select", { data: { tool_name: name, session_id: activeId } });
     setInput((prev) => `${prev}@tool:${name} `.trimStart());
     setToolsAnchor(null);
     onOpenPanel?.("tools");
@@ -194,6 +227,7 @@ export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel, onOp
   // ── Components menu ───────────────────────────────────────────────────────
 
   async function openCompsMenu(e: React.MouseEvent<HTMLElement>) {
+    analytics.trackAction("chat.components.open", { data: { session_id: activeId } });
     setCompsAnchor(e.currentTarget);
     if (compListLoadedRef.current || compListLoadingRef.current) return;
     compListLoadingRef.current = true;
@@ -207,6 +241,7 @@ export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel, onOp
   }
 
   function selectComponent(id: string, name: string) {
+    analytics.trackAction("chat.components.select", { data: { component_id: id, component_name: name, session_id: activeId } });
     setInput((prev) => `${prev}@component:${name} `.trimStart());
     setCompsAnchor(null);
     onOpenPanel?.("dspy", id);
@@ -215,6 +250,9 @@ export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel, onOp
   // ── View generated ────────────────────────────────────────────────────────
 
   function handleViewGenerated(view: GeneratedView) {
+    analytics.trackAction("chat.view.generated", {
+      data: { view_id: view.id, component_name: view.component_name, session_id: activeId },
+    });
     // Reload messages in case the session was active during view generation
     if (activeId) {
       api.listMessages(activeId).then(setMessages);
@@ -225,10 +263,13 @@ export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel, onOp
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  const actionButtons = (
-    <>
-      {/* Tools menu */}
-      <Tooltip title="Insert tool mention">
+  const rankedActions = analytics.rankActions(COMPOSER_ACTIONS, {
+    screen: activeId ? "dashboard.chat.session" : "dashboard.chat.empty",
+  });
+
+  const actionRenderers: Record<string, React.ReactNode> = {
+    "chat.tools.open": (
+      <Tooltip key="chat.tools.open" title="Insert tool mention">
         <Button
           size="small"
           startIcon={<TerminalIcon fontSize="small" />}
@@ -240,6 +281,71 @@ export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel, onOp
           Tools
         </Button>
       </Tooltip>
+    ),
+    "chat.components.open": (
+      <Tooltip key="chat.components.open" title="Insert component context">
+        <Button
+          size="small"
+          startIcon={<CodeIcon fontSize="small" />}
+          onClick={openCompsMenu}
+          sx={{ textTransform: "none", fontSize: "0.75rem", px: 1 }}
+          variant="outlined"
+          color="inherit"
+        >
+          Components
+        </Button>
+      </Tooltip>
+    ),
+    "chat.view.new": (
+      <Tooltip key="chat.view.new" title="Generate a React view stub with AI">
+        <Button
+          size="small"
+          startIcon={<WebIcon fontSize="small" />}
+          onClick={() => {
+            analytics.trackAction("chat.view.new", { data: { session_id: activeId } });
+            setViewDialogOpen(true);
+          }}
+          sx={{ textTransform: "none", fontSize: "0.75rem", px: 1 }}
+          variant="outlined"
+          color="primary"
+        >
+          New View
+        </Button>
+      </Tooltip>
+    ),
+    "panel.pipelines.open": (
+      <Tooltip key="panel.pipelines.open" title="View pipelines">
+        <IconButton
+          size="small"
+          onClick={() => {
+            analytics.trackAction("panel.pipelines.open", { data: { surface: "chat_composer" } });
+            onOpenPanel?.("pipelines");
+          }}
+          sx={{ color: "text.secondary" }}
+        >
+          <AccountTreeIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    ),
+    "panel.agents.open": (
+      <Tooltip key="panel.agents.open" title="Agent runs">
+        <IconButton
+          size="small"
+          onClick={() => {
+            analytics.trackAction("panel.agents.open", { data: { surface: "chat_composer" } });
+            onOpenPanel?.("agents");
+          }}
+          sx={{ color: "text.secondary" }}
+        >
+          <SmartToyIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    ),
+  };
+
+  const actionButtons = (
+    <>
+      {rankedActions.map((action) => actionRenderers[action.id])}
       <Menu
         anchorEl={toolsAnchor}
         open={Boolean(toolsAnchor)}
@@ -259,24 +365,16 @@ export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel, onOp
           ))
         )}
         <Divider />
-        <MenuItem onClick={() => { setToolsAnchor(null); onOpenPanel?.("tools"); }}>
+        <MenuItem
+          onClick={() => {
+            analytics.trackAction("panel.tools.open", { data: { surface: "tools_menu" } });
+            setToolsAnchor(null);
+            onOpenPanel?.("tools");
+          }}
+        >
           <Typography variant="caption" color="primary">Open Tools panel →</Typography>
         </MenuItem>
       </Menu>
-
-      {/* Components menu */}
-      <Tooltip title="Insert component context">
-        <Button
-          size="small"
-          startIcon={<CodeIcon fontSize="small" />}
-          onClick={openCompsMenu}
-          sx={{ textTransform: "none", fontSize: "0.75rem", px: 1 }}
-          variant="outlined"
-          color="inherit"
-        >
-          Components
-        </Button>
-      </Tooltip>
       <Menu
         anchorEl={compsAnchor}
         open={Boolean(compsAnchor)}
@@ -296,38 +394,16 @@ export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel, onOp
           ))
         )}
         <Divider />
-        <MenuItem onClick={() => { setCompsAnchor(null); onOpenPanel?.("dspy"); }}>
+        <MenuItem
+          onClick={() => {
+            analytics.trackAction("panel.dspy.open", { data: { surface: "components_menu" } });
+            setCompsAnchor(null);
+            onOpenPanel?.("dspy");
+          }}
+        >
           <Typography variant="caption" color="primary">Open Components panel →</Typography>
         </MenuItem>
       </Menu>
-
-      {/* New View button */}
-      <Tooltip title="Generate a React view stub with AI">
-        <Button
-          size="small"
-          startIcon={<WebIcon fontSize="small" />}
-          onClick={() => setViewDialogOpen(true)}
-          sx={{ textTransform: "none", fontSize: "0.75rem", px: 1 }}
-          variant="outlined"
-          color="primary"
-        >
-          New View
-        </Button>
-      </Tooltip>
-
-      {/* Open Pipelines panel shortcut */}
-      <Tooltip title="View pipelines">
-        <IconButton size="small" onClick={() => onOpenPanel?.("pipelines")} sx={{ color: "text.secondary" }}>
-          <AccountTreeIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-
-      {/* Open Agent Runs panel shortcut */}
-      <Tooltip title="Agent runs">
-        <IconButton size="small" onClick={() => onOpenPanel?.("agents")} sx={{ color: "text.secondary" }}>
-          <SmartToyIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
     </>
   );
 
@@ -449,7 +525,10 @@ export default function ChatPanel({ focusSessionId, onFocused, onOpenPanel, onOp
                   <Box sx={{ display: "flex", gap: 1, mb: actionsExpanded ? 1 : 0 }}>
                     <IconButton
                       size="small"
-                      onClick={() => setActionsExpanded((v) => !v)}
+                      onClick={() => {
+                        analytics.trackAction("chat.actions.expand_toggle", { data: { next_expanded: !actionsExpanded } });
+                        setActionsExpanded((v) => !v);
+                      }}
                       sx={{ color: "text.secondary" }}
                     >
                       {actionsExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}

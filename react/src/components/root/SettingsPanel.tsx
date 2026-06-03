@@ -59,7 +59,7 @@ const DEFAULT_URLS: Record<ProviderType, string> = {
   ollama: "http://localhost:11434",
   anthropic: "",
   openai: "",
-  custom: "http://localhost:8080",
+  custom: "http://localhost:9101",
 };
 
 interface ProviderFormState {

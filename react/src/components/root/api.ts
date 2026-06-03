@@ -7,6 +7,7 @@
 
 import type {
   ChatMessage,
+  ClientTelemetryEvent,
   ChatSession,
   DSPyComponent,
   GeneratedView,
@@ -16,7 +17,7 @@ import type {
 } from "./types";
 
 function base(): string {
-  const url = (window as any).__HARNESS__?.API_URL ?? "http://localhost:8000";
+  const url = (window as any).__HARNESS__?.API_URL ?? "http://localhost:9100";
   return url.replace(/\/api\/.*/, "");
 }
 
@@ -161,6 +162,14 @@ export const updateSettings = (settings: Record<string, unknown>) =>
   request<Record<string, unknown>>("/api/settings", {
     method: "PUT",
     body: JSON.stringify({ settings }),
+  });
+
+// ── Analytics ──────────────────────────────────────────────────────────────
+
+export const recordTelemetryEvents = (events: ClientTelemetryEvent[]) =>
+  request<{ status: "ok"; accepted: number }>("/api/analytics/events", {
+    method: "POST",
+    body: JSON.stringify({ events }),
   });
 
 // ── Tools ──────────────────────────────────────────────────────────────────
@@ -475,3 +484,89 @@ export const executeDatabase = (params: {
     method: "POST",
     body: JSON.stringify(params),
   });
+
+// ── Browser tool ──────────────────────────────────────────────────────────
+
+export const executeBrowserTool = (params: {
+  operation: string;
+  url?: string;
+  selector?: string;
+  value?: string;
+  expression?: string;
+  full_page?: boolean;
+}) =>
+  request<ToolResult | ConfirmationRequest>("/api/tools/browser", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+
+// ── Rollback ───────────────────────────────────────────────────────────────
+
+export const listRollbacks = (params: { path: string; backup_index?: number }) =>
+  request<any[]>("/api/tools/rollback/list", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+
+export const executeRollback = (params: { path: string; backup_index?: number }) =>
+  request<{ success: boolean; message: string }>("/api/tools/rollback/execute", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+
+export const cleanupRollbacks = () =>
+  request<{ removed_count: number; total_size_bytes: number; total_size_mb: number }>(
+    "/api/tools/rollback/cleanup",
+    { method: "POST" }
+  );
+
+// ── Component marketplace ───────────────────────────────────────────────────
+
+export interface MarketplaceComponent {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  tags: string[];
+  version: string;
+  author: string;
+  created_at: string;
+}
+
+export const listMarketplaceComponents = () =>
+  request<MarketplaceComponent[]>("/api/dspy/components");
+
+export const activateComponent = (componentId: string) =>
+  request<{ component_id: string; status: string }>(`/api/dspy/components/${componentId}/activate`, {
+    method: "POST",
+  });
+
+export const cloneComponent = (componentId: string, newName: string) =>
+  request<{ component_id: string; cloned_from: string }>(`/api/dspy/components/${componentId}/clone`, {
+    method: "POST",
+    body: JSON.stringify({ name: newName }),
+  });
+
+// ── Metrics ─────────────────────────────────────────────────────────────────
+
+export interface MetricsData {
+  counters: Array<{ name: string; value: number; tags: Record<string, string> }>;
+  gauges: Array<{ name: string; value: number; tags: Record<string, string> }>;
+  histograms: Array<{ name: string; summary: Record<string, number>; tags: Record<string, string> }>;
+}
+
+export interface MetricsSummary {
+  total_counters: number;
+  total_gauges: number;
+  total_histograms: number;
+  key_metrics: Record<string, number | Record<string, number>>;
+}
+
+export const getMetrics = () =>
+  request<MetricsData>("/api/metrics");
+
+export const getMetricsSummary = () =>
+  request<MetricsSummary>("/api/metrics/summary");
+
+export const resetMetrics = () =>
+  request<{ status: string }>("/api/metrics/reset", { method: "POST" });

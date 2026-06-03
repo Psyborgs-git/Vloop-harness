@@ -363,6 +363,31 @@ class ComponentVersion(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
 
+class ViewVersion(Base):
+    """A point-in-time snapshot of a React view for versioning and rollback.
+
+    ``view_id``        — ID of the source GeneratedView (no FK so deleted views can still be versioned).
+    ``version_number`` — monotonically increasing per view_id.
+    ``file_path``      — relative path to the view file in the React project.
+    ``source``         — complete TypeScript/React source code.
+    ``prompt``         — AI prompt used to generate this view (if applicable).
+    ``agent_run_id``   — optional agent run that created this version.
+    ``change_summary`` — human-readable description of what changed in this version.
+    """
+
+    __tablename__ = "view_versions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_new_uuid)
+    view_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    version_number: Mapped[int] = mapped_column(default=1)
+    file_path: Mapped[str] = mapped_column(String(512))
+    source: Mapped[str] = mapped_column(Text)
+    prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
+    agent_run_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    change_summary: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
 # ── Eval datasets ──────────────────────────────────────────────────────────────
 
 

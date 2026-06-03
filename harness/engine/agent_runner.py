@@ -211,7 +211,7 @@ class AgentOrchestrator:
         repo: Any,
         autonomy_mode: str,
     ) -> None:
-        """Execute each planned step in order."""
+        """Execute each planned step in order with autonomy mode enforcement."""
         results: dict[str, Any] = {}
 
         for idx, step in enumerate(steps):
@@ -221,9 +221,21 @@ class AgentOrchestrator:
             params: dict[str, Any] = step.get("params", {})
             tool_name: str | None = step.get("tool_name")
 
-            # For modes that require approval for every step, pause here
+            # Enforce autonomy modes
+            if autonomy_mode == "observe":
+                # Observe-only: record step but don't execute
+                await repo.add_run_step(
+                    run_id=run_id,
+                    step_type=step_type,
+                    tool_name=tool_name,
+                    input_data={"step": step, "index": idx},
+                    output_data={"status": "observed", "description": description},
+                    status="skipped",
+                )
+                continue
+
             if autonomy_mode == "suggest":
-                # Record all planned steps without executing them
+                # Suggest-only: record all planned steps without executing
                 await repo.add_run_step(
                     run_id=run_id,
                     step_type=step_type,
@@ -234,8 +246,12 @@ class AgentOrchestrator:
                 )
                 continue
 
-            # For destructive steps, require explicit confirmation unless autonomous
-            if requires_confirmation and autonomy_mode != "autonomous":
+            # Check if step requires confirmation based on autonomy mode
+            needs_confirmation = self._step_needs_confirmation(
+                step, autonomy_mode, requires_confirmation
+            )
+
+            if needs_confirmation:
                 token = f"agent_{run_id}_{idx}"
                 await repo.add_run_step(
                     run_id=run_id,
@@ -280,6 +296,56 @@ class AgentOrchestrator:
             status="completed",
             result={"steps_executed": len(steps), "outputs": results},
         )
+
+    def _step_needs_confirmation(
+        self,
+        step: dict[str, Any],
+        autonomy_mode: str,
+        requires_confirmation: bool,
+    ) -> bool:
+        """Determine if a step requires confirmation based on autonomy mode.
+
+        Args:
+            step: The step definition.
+            autonomy_mode: Current autonomy mode.
+            requires_confirmation: Whether the step is marked as requiring confirmation.
+
+        Returns:
+            True if confirmation is needed, False otherwise.
+        """
+        # Autonomous mode: no confirmations needed
+        if autonomy_mode == "autonomous":
+            return False
+
+        # Step explicitly requires confirmation
+        if requires_confirmation:
+            return True
+
+        # Write-approval mode: confirm file writes and destructive operations
+        if autonomy_mode == "write_approval":
+            step_type = step.get("step_type", "")
+            tool_name = step.get("tool_name", "")
+
+            # File writes, deletes, moves require confirmation
+            if step_type == "file_write":
+                return True
+            if step_type == "tool_call" and tool_name in ("filesystem", "terminal"):
+                operation = step.get("params", {}).get("operation", "")
+                if operation in ("write", "delete", "move"):
+                    return True
+
+        # Test-approval mode: confirm test execution and deployment
+        if autonomy_mode == "test_approval":
+            step_type = step.get("step_type", "")
+            if step_type == "tool_call":
+                tool_name = step.get("tool_name", "")
+                if tool_name == "terminal":
+                    operation = step.get("params", {}).get("operation", "")
+                    # Test commands typically involve pytest, npm test, etc.
+                    if "test" in operation.lower():
+                        return True
+
+        return False
 
     async def _execute_step(
         self,

@@ -54,6 +54,10 @@ class ComponentUpdateRequest(BaseModel):
     is_active: bool | None = None
 
 
+class CloneComponentRequest(BaseModel):
+    name: str
+
+
 class RunInputsRequest(BaseModel):
     inputs: dict[str, Any] = {}
 
@@ -185,6 +189,60 @@ async def delete_component(
         raise HTTPException(status_code=404, detail="Component not found")
     _registry(request).unload(component_id)
     await repo.delete_component(component_id)
+
+
+@router.post("/components/{component_id}/activate")
+async def activate_component(
+    component_id: str,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+) -> dict[str, Any]:
+    """Activate a component by setting is_active=True and compiling it."""
+    repo = Repository(db)
+    comp = await repo.get_component(component_id)
+    if not comp:
+        raise HTTPException(status_code=404, detail="Component not found")
+
+    comp.is_active = True
+    registry = _registry(request)
+
+    try:
+        registry.compile(comp)
+    except ComponentCompileError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    saved = await repo.save_component(comp)
+    return {
+        "component_id": saved.id,
+        "status": "active",
+    }
+
+
+@router.post("/components/{component_id}/clone")
+async def clone_component(
+    component_id: str,
+    body: CloneComponentRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+) -> dict[str, Any]:
+    """Clone a component with a new name."""
+    repo = Repository(db)
+    comp = await repo.get_component(component_id)
+    if not comp:
+        raise HTTPException(status_code=404, detail="Component not found")
+
+    # Create a new component with the same code but different name
+    new_comp = await repo.create_dspy_component(
+        name=body.name,
+        description=f"Cloned from {comp.name}",
+        code=comp.code,
+        module_type=comp.module_type,
+    )
+
+    return {
+        "component_id": new_comp.id,
+        "cloned_from": component_id,
+    }
 
 
 @router.post("/components/{component_id}/run")

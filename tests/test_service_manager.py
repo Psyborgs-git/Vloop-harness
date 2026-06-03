@@ -28,7 +28,7 @@ def test_status_static_frontend(tmp_path) -> None:
     frontend = next(item for item in statuses if item.name == "frontend")
 
     assert frontend.healthy is True
-    assert frontend.running is False
+    assert frontend.running is True
     assert "static mode" in frontend.detail
 
 

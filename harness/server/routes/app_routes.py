@@ -57,6 +57,16 @@ class PromoteRequest(BaseModel):
     status: str  # draft | validated | active | archived
 
 
+class GenerateAppRequest(BaseModel):
+    name: str
+    description: str
+    backend_type: str = "pipeline"
+    backend_logic: str = ""
+    frontend_views: list[dict[str, Any]] = []
+    state_schema: dict[str, Any] = {}
+    permissions: list[str] = []
+
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 _VALID_STATUSES = {"draft", "validated", "active", "archived"}
@@ -218,3 +228,75 @@ async def list_traces(
         limit=limit,
     )
     return [_trace_to_dict(t) for t in traces]
+
+
+# ── App Generation ─────────────────────────────────────────────────────────────
+
+
+@router.post("/generate")
+async def generate_app(
+    body: GenerateAppRequest,
+    db: AsyncSession = Depends(get_session),
+) -> dict[str, Any]:
+    """Generate a full-stack app from a specification.
+
+    This endpoint generates both backend (Python/DSPy) and frontend (React) code
+    from a single application specification.
+    """
+    from harness.engine.app_generator import AppGenerator, AppSpec
+
+    # Create app spec from request
+    spec = AppSpec(
+        name=body.name,
+        description=body.description,
+        backend_type=body.backend_type,
+        backend_logic=body.backend_logic,
+        frontend_views=body.frontend_views,
+        state_schema=body.state_schema,
+        permissions=body.permissions,
+    )
+
+    # Generate the app
+    generator = AppGenerator()
+    generated = generator.generate_from_spec(spec)
+
+    # Save the generated backend as a component/pipeline
+    repo = Repository(db)
+
+    if body.backend_type == "component":
+        # Save as DSPy component
+        component = await repo.create_dspy_component(
+            name=body.name,
+            description=body.description,
+            code=generated.backend_code,
+            module_type="custom",
+        )
+        backend_id = component.id
+    elif body.backend_type == "pipeline":
+        # Save as pipeline
+        pipeline = await repo.create_pipeline(
+            name=body.name,
+            description=body.description,
+            definition={"code": generated.backend_code},
+        )
+        backend_id = pipeline.id
+    else:
+        backend_id = None
+
+    # Create app manifest
+    manifest = await repo.create_app_manifest(
+        name=body.name,
+        description=body.description,
+        backend_type=body.backend_type,
+        backend_id=backend_id,
+        react_views=list(generated.frontend_code.keys()),
+        permissions=body.permissions,
+        state_schema=body.state_schema,
+    )
+
+    return {
+        "backend_code": generated.backend_code,
+        "frontend_code": generated.frontend_code,
+        "app_manifest": _manifest_to_dict(manifest),
+        "backend_id": backend_id,
+    }

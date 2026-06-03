@@ -40,6 +40,8 @@ class FilesystemTool(AbstractTool):
 
     def __init__(self, main_process: "MainProcess") -> None:
         super().__init__(main_process)
+        from harness.core.rollback import RollbackManager
+        self._rollback = RollbackManager()
 
     # ── Dispatch ──────────────────────────────────────────────────────────────
 
@@ -230,6 +232,15 @@ class FilesystemTool(AbstractTool):
 
         overwriting = abs_path.exists() and abs_path.is_file()
         if overwriting:
+            # Generate diff preview for overwrites
+            from harness.core.diff_utils import generate_file_diff, diff_summary
+
+            diff = generate_file_diff(abs_path, content)
+            summary = diff_summary(diff)
+
+            # Create backup before overwrite
+            backup_info = self._rollback.backup_file(abs_path)
+
             # Require confirmation for overwrite
             conf_store = self._mp.tools.confirmations
             confirmation_token = params.get("_confirmation_token")
@@ -241,10 +252,10 @@ class FilesystemTool(AbstractTool):
                     return ToolResult(success=False, error=f"Invalid confirmation token: {exc}")
             else:
                 pending = conf_store.create(
-                    description=f"Overwrite existing file: {rel_path}",
+                    description=f"Overwrite existing file: {rel_path} ({summary['total_changes']} lines changed)",
                     risk_level="caution",
                     action_name="write",
-                    action_params=params,
+                    action_params={**params, "_diff_preview": diff, "_diff_summary": summary, "_backup_info": backup_info},
                 )
                 raise ConfirmationRequired(
                     token=pending.token,

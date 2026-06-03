@@ -72,7 +72,7 @@ def _print_service_status(statuses: list[ServiceStatus]) -> None:
 @app.command()
 def run(
     host: str = typer.Option("localhost", envvar="HARNESS_HOST"),
-    port: int = typer.Option(8000, envvar="HARNESS_PORT"),
+    port: int = typer.Option(9100, envvar="HARNESS_PORT"),
     no_window: bool = typer.Option(
         False, help="Skip opening the native window (headless mode)"
     ),
@@ -174,7 +174,7 @@ def services_status() -> None:
 @internal_app.command("backend-worker")
 def backend_worker(
     host: str = typer.Option("localhost"),
-    port: int = typer.Option(8000),
+    port: int = typer.Option(9100),
 ) -> None:
     """Internal command used by ServiceManager to launch uvicorn as a subprocess."""
     settings = HarnessSettings(harness_host=host, harness_port=port)

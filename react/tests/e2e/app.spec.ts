@@ -74,8 +74,10 @@ async function setup(
     components?: object[];
     providers?: object[];
     views?: object[];
+    skipTutorial?: boolean;
   } = {}
 ) {
+  const { skipTutorial = true } = opts;
   await page.addInitScript(() => {
     (window as any).__HARNESS__ = {
       COMPONENT_ID: "root",
@@ -85,6 +87,12 @@ async function setup(
       PERMISSIONS: [],
     };
   });
+
+  await page.addInitScript(({ skipTutorial: shouldSkip }) => {
+    if (shouldSkip) {
+      window.localStorage.setItem("vloop_tabbar_tutorial_seen_v1", "true");
+    }
+  }, { skipTutorial });
 
   const {
     sessions = [],
@@ -698,6 +706,18 @@ test.describe("10. Mobile composer — collapsible actions", () => {
 // ── 11. Command palette (Cmd+K) ──────────────────────────────────────────────
 
 test.describe("11. Command palette", () => {
+  test("top bar search button opens command palette", async ({ page }) => {
+    await setupPage(page);
+    await page
+      .locator("button")
+      .filter({ has: page.locator("svg[data-testid='SearchIcon']") })
+      .first()
+      .click();
+    await expect(
+      page.locator("[class*='MuiDialog-root']").first()
+    ).toBeVisible({ timeout: 5000 });
+  });
+
   test("Cmd+K opens command palette dialog", async ({ page }) => {
     await setupPage(page);
     await page.keyboard.press("Meta+k");
@@ -719,9 +739,23 @@ test.describe("11. Command palette", () => {
   });
 });
 
-// ── 12. View generation flow ─────────────────────────────────────────────────
+// ── 12. First-run tab bar tutorial ───────────────────────────────────────────
 
-test.describe("12. View generation flow", () => {
+test.describe("12. First-run tab bar tutorial", () => {
+  test("shows localized gesture hints and can be dismissed", async ({ page }) => {
+    await setupPage(page, { skipTutorial: false });
+    await expect(page.getByText(/Tab bar quick tour/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/Open and close search/i)).toBeVisible();
+    await page.locator("button").filter({ hasText: /^Next$/ }).click();
+    await expect(page.getByText(/Open actions/i)).toBeVisible();
+    await page.getByLabel("Skip").click();
+    await expect(page.getByText(/Tab bar quick tour/i)).not.toBeVisible({ timeout: 5000 });
+  });
+});
+
+// ── 13. View generation flow ─────────────────────────────────────────────────
+
+test.describe("13. View generation flow", () => {
   test("submitting GenerateViewDialog closes it on success", async ({ page }) => {
     await setupPage(page, { sessions: [SESSION_1] });
     await newViewBtn(page).click();

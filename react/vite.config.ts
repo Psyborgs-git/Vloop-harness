@@ -30,21 +30,21 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        root: resolve(__dirname, "src/components/root/main.tsx"),
         ...discoverEntries(),
+        index: resolve(__dirname, "index.html"),
       },
     },
     outDir: "dist",
     emptyOutDir: true,
   },
   server: {
-    port: 5173,
+    port: 9102,
     strictPort: true,
     cors: true,
     hmr: {
       protocol: "ws",
       host: "localhost",
-      port: 5173,
+      port: 9102,
     },
   },
 });
