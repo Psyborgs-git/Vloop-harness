@@ -151,12 +151,20 @@ def create_app(main_process: MainProcess, settings: HarnessSettings) -> FastAPI:
         # Pre-load all active component definitions from DB into the registry
         async with session_factory() as db_session:
             repo2 = Repository(db_session)
-            for comp_def in await repo2.list_components():
+            comps = await repo2.list_components()
+
+        import asyncio
+
+        def compile_components(comps_to_compile):
+            for comp_def in comps_to_compile:
                 if comp_def.is_active:
                     try:
                         registry.compile(comp_def)
                     except Exception:
                         pass  # Compile errors are surfaced per-request
+
+        # Offload CPU-bound compilation to a background thread to unblock the event loop
+        await asyncio.to_thread(compile_components, comps)
 
         # ── 7. Main process (legacy) ──────────────────────────────────────────
         await main_process.boot()
