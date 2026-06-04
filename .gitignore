@@ -64,3 +64,4 @@ Thumbs.db
 # Rust
 target/
 harness-core/target/
+*.log

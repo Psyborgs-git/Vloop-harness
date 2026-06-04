@@ -21,9 +21,11 @@ Supported operations (via ``params["operation"]``)
 
 from __future__ import annotations
 
-import re
 import time
 from typing import TYPE_CHECKING, Any
+
+import sqlglot
+import sqlglot.expressions as exp
 
 from harness.core.permissions import Permission
 from harness.tools.base_tool import AbstractTool, ToolResult
@@ -34,18 +36,6 @@ if TYPE_CHECKING:
 
 _MAX_ROWS = 500
 _QUERY_TIMEOUT_S = 10
-
-# Statements that are always blocked
-_PERMANENT_BLOCK_RE = re.compile(
-    r"\b(DROP\s+TABLE|DROP\s+DATABASE|TRUNCATE|ALTER\s+TABLE)\b",
-    re.IGNORECASE,
-)
-
-# Only SELECT is allowed for query_read
-_SELECT_ONLY_RE = re.compile(r"^\s*SELECT\b", re.IGNORECASE)
-
-# INSERT / UPDATE / DELETE allowed for query_write
-_WRITE_RE = re.compile(r"^\s*(INSERT|UPDATE|DELETE)\b", re.IGNORECASE)
 
 
 class DatabaseTool(AbstractTool):
@@ -96,6 +86,83 @@ class DatabaseTool(AbstractTool):
         result.metadata["duration_ms"] = int((time.time() - t0) * 1000)
         result.metadata["operation"] = operation
         return result
+
+    # ── Helpers ───────────────────────────────────────────────────────────────
+
+    async def _get_dialect(self) -> str:
+        """Return the sqlglot dialect ('sqlite' or 'postgres') based on the active engine."""
+        engine = await self._get_engine()
+        dialect_name = getattr(getattr(engine, "dialect", None), "name", "sqlite")
+        return "postgres" if dialect_name == "postgresql" else "sqlite"
+
+    def _validate_sql_ast(
+        self, sql: str, dialect: str, allowed_types: tuple[type[exp.Expression], ...]
+    ) -> ToolResult | None:
+        """Parse and validate SQL using sqlglot AST. Returns an error ToolResult if invalid, else None."""
+        try:
+            parsed = sqlglot.parse(sql, dialect=dialect)
+        except sqlglot.errors.ParseError as e:
+            return ToolResult(
+                success=False,
+                error=f"SQL syntax error: {e}",
+            )
+
+        # Ensure there is exactly one statement to prevent chained injections (e.g. SELECT 1; DROP TABLE users;)
+        # Filter out empty statements (None) which happen with trailing semicolons
+        statements = [stmt for stmt in parsed if stmt is not None]
+        if not statements:
+            return ToolResult(success=False, error="No valid SQL statement found.")
+        if len(statements) > 1:
+            return ToolResult(
+                success=False,
+                error="Multiple statements are not allowed.",
+            )
+
+        stmt = statements[0]
+
+        # Permanently block specific DDL statements
+        # We explicitly block Drop, Alter, and Command (often Truncate)
+        for walk_result in stmt.walk():
+            # Support sqlglot versions where walk() yields (node, parent, key) or just node
+            node = walk_result[0] if isinstance(walk_result, tuple) else walk_result
+            if isinstance(node, (exp.Drop, exp.Alter, exp.Command)):
+                # Double check for Truncate just in case it parses differently
+                if isinstance(node, exp.Command) and str(node).upper().startswith("TRUNCATE"):
+                    return ToolResult(
+                        success=False,
+                        error="Query contains a permanently blocked statement (DROP/TRUNCATE/ALTER).",
+                    )
+                elif isinstance(node, (exp.Drop, exp.Alter)):
+                    return ToolResult(
+                        success=False,
+                        error="Query contains a permanently blocked statement (DROP/TRUNCATE/ALTER).",
+                    )
+            # Truncate might be parsed as exp.Command or have its own class in newer sqlglot
+            if type(node).__name__ == "Truncate":
+                return ToolResult(
+                    success=False,
+                    error="Query contains a permanently blocked statement (DROP/TRUNCATE/ALTER).",
+                )
+
+        # Check allowed types for the top-level statement
+        if not isinstance(stmt, allowed_types):
+            allowed_names = "/".join([t.__name__.upper() for t in allowed_types])
+            return ToolResult(
+                success=False,
+                error=f"Operation only accepts {allowed_names} statements. Got {type(stmt).__name__.upper()}.",
+            )
+
+        # If it's a Select (read operation), ensure no sneaky mutations exist within (e.g., CTEs doing inserts)
+        if isinstance(stmt, (exp.Select, exp.SetOperation)):
+            for walk_result in stmt.walk():
+                node = walk_result[0] if isinstance(walk_result, tuple) else walk_result
+                if isinstance(node, (exp.Insert, exp.Update, exp.Delete)):
+                    return ToolResult(
+                        success=False,
+                        error="Mutation statements (INSERT/UPDATE/DELETE) are not allowed in query_read.",
+                    )
+
+        return None
 
     # ── Operation implementations ─────────────────────────────────────────────
 
@@ -152,18 +219,13 @@ class DatabaseTool(AbstractTool):
         if not sql.strip():
             return ToolResult(success=False, error="'sql' parameter is required")
 
-        # Block permanently dangerous statements
-        if _PERMANENT_BLOCK_RE.search(sql):
-            return ToolResult(
-                success=False,
-                error="Query contains a permanently blocked statement (DROP/TRUNCATE/ALTER).",
-            )
-
-        if not _SELECT_ONLY_RE.match(sql):
-            return ToolResult(
-                success=False,
-                error="query_read only accepts SELECT statements. Use query_write for mutations.",
-            )
+        # AST Validation: allow only Select, block chained/nested mutations
+        dialect = await self._get_dialect()
+        validation_error = self._validate_sql_ast(sql, dialect, (exp.Select, exp.SetOperation))
+        if validation_error:
+            if "Operation only accepts SELECT" in validation_error.error:
+                validation_error.error = "query_read only accepts SELECT statements. Use query_write for mutations."
+            return validation_error
 
         factory = get_session_factory()
         async with factory() as session:
@@ -204,18 +266,15 @@ class DatabaseTool(AbstractTool):
         if not sql.strip():
             return ToolResult(success=False, error="'sql' parameter is required")
 
-        # Block permanently dangerous statements
-        if _PERMANENT_BLOCK_RE.search(sql):
-            return ToolResult(
-                success=False,
-                error="Query contains a permanently blocked statement (DROP/TRUNCATE/ALTER).",
-            )
-
-        if not _WRITE_RE.match(sql):
-            return ToolResult(
-                success=False,
-                error="query_write only accepts INSERT/UPDATE/DELETE statements.",
-            )
+        # AST Validation: allow Insert, Update, Delete
+        dialect = await self._get_dialect()
+        validation_error = self._validate_sql_ast(
+            sql, dialect, (exp.Insert, exp.Update, exp.Delete)
+        )
+        if validation_error:
+            if "Operation only accepts INSERT/UPDATE/DELETE" in validation_error.error:
+                validation_error.error = "query_write only accepts INSERT/UPDATE/DELETE statements."
+            return validation_error
 
         # Require confirmation unless token already provided
         if not confirmation_token:
