@@ -189,7 +189,7 @@ def create_app(main_process: MainProcess, settings: HarnessSettings) -> FastAPI:
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=settings.cors_allowed_origins,
         allow_methods=["*"],
         allow_headers=["*"],
     )
