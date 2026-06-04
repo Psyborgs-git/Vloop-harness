@@ -10,12 +10,10 @@ import pytest
 
 BASE_URL = "http://localhost:9100"
 
-
 @pytest.fixture
 async def client():
     async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as c:
         yield c
-
 
 class TestHealthAndExistingRoutes:
     @pytest.mark.asyncio
@@ -47,7 +45,6 @@ class TestHealthAndExistingRoutes:
     async def test_settings(self, client: httpx.AsyncClient) -> None:
         resp = await client.get("/api/settings")
         assert resp.status_code == 200
-
 
 class TestPipelineRoutes:
     @pytest.mark.asyncio
@@ -88,7 +85,6 @@ class TestPipelineRoutes:
         assert "graph" in data
         assert data["validation_errors"] == []
 
-
 class TestOptimizationRoutes:
     @pytest.mark.asyncio
     async def test_feedback_summary_empty(self, client: httpx.AsyncClient) -> None:
@@ -100,7 +96,6 @@ class TestOptimizationRoutes:
     @pytest.mark.asyncio
     async def test_submit_feedback(self, client: httpx.AsyncClient) -> None:
         import uuid
-
         comp_id = f"comp_e2e_{uuid.uuid4().hex[:8]}"
         resp = await client.post(
             "/api/optimization/feedback",
@@ -125,7 +120,6 @@ class TestOptimizationRoutes:
         summary = resp.json()
         assert summary["count"] == 1
         assert summary["avg_rating"] == 1.0
-
 
 class TestVectorStoreRoutes:
     @pytest.mark.asyncio
