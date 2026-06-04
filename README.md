@@ -1,41 +1,74 @@
 # Vloop Harness
-Vloop Harness is a local-first AI engineering workbench that combines a Rust-based orchestrator, a Python backend, and a React control-plane UI for building, running, and evaluating DSPy-based agents and pipelines.
 
-## Overview
-Vloop Harness provides a FastAPI backend, a dynamic tool runtime (terminal, filesystem, browser, database), and a React dashboard for chat, component authoring, pipeline execution, view generation, and agent run orchestration. It is designed for engineers iterating on AI components with auditable state and policy-constrained tool access. The backend persists metadata in SQLite by default (with optional PostgreSQL), including chat transcripts, provider configs, component definitions, pipeline specs, app manifests, tool traces, and agent run logs. Architecturally, the system separates runtime concerns into core process orchestration, API routes, AI engine modules, and persistence layers, while keeping UI concerns in a separate Vite/React project.
+Vloop Harness is a local-first AI engineering workbench designed with a strict three-layer architecture. It acts as an AI-driven operating system sandbox, combining a native Rust kernel, a Python cognitive engine, and a React userland for building, running, and evaluating DSPy-based agents and pipelines.
 
 ## Architecture
+
+Vloop Harness is built on three distinct layers with strict IPC communication rules:
+
+1. **Layer 0: Orchestrator Kernel (Rust/Tauri)**
+   - The "Nervous System".
+   - Handles secure boot, process lifecycle, health checks, ports, filesystem permissions, API vaults, and execution sandboxes.
+   - Fully implements the execution transport layer natively (e.g., Docker via `bollard`, SSH via `ssh2`).
+2. **Layer 1: Cognitive Engine (FastAPI/Python)**
+   - The "Brain".
+   - Powered by DSPy and LiteLLM.
+   - The Base Agent generates configurations, handles auto-evaluation loops, and dynamically relays Human-in-the-Loop (HITL) requests.
+   - Enforces a policy engine (via `policy.json`) and validates AST-based SQL queries using `sqlglot`.
+3. **Layer 2: Dynamic Userland (React)**
+   - The "Body".
+   - A dynamic web layer rendering AI-generated code inside iframes and handling user interactions.
+
+### Communication Flow
+
+**Strict IPC Rule:** The Rust backend (Layer 0) **never** communicates directly with the React frontend (Layer 2).
+- Rust ↔ Python: IPC/WebSockets.
+- Python ↔ React: HTTP/WebSockets.
+
 ```mermaid
-flowchart LR
-  UI[React Dashboard\nVite on :5173 in dev] -->|HTTP/WS| API[FastAPI Server]
-  API --> MP[MainProcess\nComponent + Tool Orchestration]
-  API --> ENG[DSPy Engine\nProviderManager\nPipelineBuilder]
-  API --> REPO[Repository Layer]
-  REPO --> DB[(SQLite/PostgreSQL)]
-  MP --> TOOLS[Tool Registry\nTerminal/Filesystem/Browser/DB]
-  API --> VSTORE[VLoop Storage\n.vloop files + logs]
-  ENG --> LLM[Anthropic/OpenAI/Ollama]
+flowchart TD
+  subgraph Layer2 [Layer 2: Dynamic Userland]
+    UI[React Dashboard\nVite]
+  end
+
+  subgraph Layer1 [Layer 1: Cognitive Engine]
+    API[FastAPI / Python Backend]
+    ENG[DSPy / Base Agent]
+    DB[(SQLite/PostgreSQL)]
+  end
+
+  subgraph Layer0 [Layer 0: Orchestrator Kernel]
+    TAURI[Rust / Tauri App]
+    VAULT[Secure Vault]
+    SANDBOX[Execution Sandbox\nDocker/SSH]
+  end
+
+  subgraph External [External Services]
+    LLM[LLM Providers\nAnthropic/OpenAI/Ollama]
+  end
+
+  UI <-->|HTTP/WS| API
+  API <-->|IPC/WS| TAURI
+
+  API <--> ENG
+  API <--> DB
+
+  TAURI <--> VAULT
+  TAURI <--> SANDBOX
+
+  ENG <-->|SDK| LLM
 ```
 
+## Security & Sandboxing
+- **Tool Gating:** A centralized `policy.json` dictates tool action boundaries (e.g., allowed origins, filesystem limits).
+- **SQL Validation:** The Python backend parses all SQL operations via `sqlglot` to permit strictly allowed operations (`Select`, `Insert`, `Update`, `Delete`) and permanently block DDL (`Drop`, `Alter`, etc.).
+- **Vault Management:** Sensitive keys and credentials are stored inside a Rust-managed Secure Vault and exposed to Python runtime strictly via IPC.
+
 ## Tech Stack
-| Layer | Technology | Version | Purpose |
-|---|---|---|---|
-| Backend runtime | Python | >=3.11 | Core runtime for API, orchestration, tools |
-| Backend framework | FastAPI | >=0.115.0 | HTTP + WebSocket API |
-| ASGI server | Uvicorn | >=0.32.0 | FastAPI serving |
-| CLI | Typer | >=0.15.0 | `harness` command and service control |
-| AI orchestration | DSPy | >=2.5.0 | LLM module/pipeline execution |
-| LLM providers | anthropic/openai SDKs | >=0.40.0 / >=1.57.0 | Hosted model access |
-| Data access | SQLAlchemy asyncio | >=2.0.0 | ORM + async DB sessions |
-| Default DB | SQLite + aiosqlite | >=0.20.0 | Local metadata persistence |
-| Optional DB | PostgreSQL + asyncpg | >=0.30.0 | External production-style DB |
-| Frontend runtime | Node.js + npm | >=18.18.0 | React/Vite toolchain |
-| Frontend framework | React | ^18.3.1 | Root dashboard UI |
-| Frontend build tool | Vite | ^6.0.3 | Dev server + bundling |
-| UI component library | MUI | ^5.16.x | Dashboard components |
-| E2E testing | Playwright | ^1.56.1 | Browser-level tests |
-| Python testing | pytest/pytest-asyncio | >=8.3.0 / >=0.24.0 | Unit/integration tests |
-| Linting/type checks | Ruff + mypy + TypeScript | >=0.8.0 / >=1.13.0 / ^5.6.3 | Static quality checks |
+- **Layer 0:** Rust (Tauri, axum, tokio, bollard, ssh2)
+- **Layer 1:** Python 3.11+, FastAPI, Uvicorn, DSPy, SQLAlchemy 2.0+ (async), `sqlglot`
+- **Layer 2:** Node.js >=18, React, Vite, MUI
+- **Data Persistence:** SQLite (default) / PostgreSQL (optional)
 
 ## Prerequisites
 ```bash
@@ -52,13 +85,15 @@ uv --version          # uv package manager required
 git clone <repo-url>
 cd Vloop-harness
 
-# 1) Build the Rust core
-cargo build --manifest-path harness-core/Cargo.toml --release
+# 1) Build the Rust core (Tauri App)
+cd src-tauri
+cargo build --release
+cd ..
 
 # 2) Python environment + backend dependencies
 uv venv
 source .venv/bin/activate
-uv pip install -e .
+uv pip install -e .[dev]
 
 # 3) Frontend dependencies
 cd react
@@ -67,99 +102,30 @@ cd ..
 
 # 4) Environment setup
 cp .env.example .env
-# Edit .env and set API keys if using hosted providers.
+# Edit .env and set API keys and configuration
 
-# 5) Start backend + frontend services using Rust orchestrator
-./harness-core/target/release/vloop-harness services start all
-
-# 6) Open app
-# Visit http://localhost:8000/ui/root
-
-# 7) Stop services when done
-./harness-core/target/release/vloop-harness services stop all
+# 5) Run the application
+# Use the tauri development CLI or run the built binary
+cd src-tauri
+cargo tauri dev
 ```
 
 ## Project Structure
 ```text
 .
-├── harness/                 # Python backend package
-│   ├── core/                # MainProcess, lifecycle, permissions, state/log orchestration
-│   ├── data/                # SQLAlchemy models, DB initialization, repository layer
-│   ├── engine/              # DSPy engine, providers, pipeline builder, agent modules
-│   ├── server/              # FastAPI app factory, routes, HTML injector
-│   ├── tools/               # Tool implementations + policy/confirmation runtime
-│   ├── vloop/               # Project storage + encryption + redaction helpers
-│   ├── components/          # Example/legacy Python components
-│   ├── main.py              # CLI entrypoint (`harness`)
-│   └── settings.py          # Env-backed settings model
-├── react/                   # React/Vite dashboard
-│   ├── src/components/root/ # Main root dashboard panels
-│   ├── src/harness/         # Frontend harness types/hooks/provider
-│   └── tests/e2e/           # Playwright tests
+├── src-tauri/               # Layer 0: Rust Kernel (Tauri app, Orchestrator, Sandbox)
+├── harness/                 # Layer 1: Python Backend (FastAPI, DSPy engine, Routing)
+├── react/                   # Layer 2: React Frontend (Vite, Dynamic UI)
+├── docs/                    # Architectural and project documentation
 ├── tests/                   # Python backend test suite
-├── docs/                    # Project documentation set
-├── DOCS/                    # Legacy docs (historical/reference)
 ├── .env.example             # Environment variable template
-└── pyproject.toml           # Python project metadata and tooling config
+└── pyproject.toml           # Python project metadata and dependencies
 ```
 
-## Environment Variables
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| HARNESS_HOST | No | `localhost` | FastAPI host bind/address |
-| HARNESS_PORT | No | `8000` | FastAPI port |
-| HARNESS_DEBUG | No | `true` | `true`: proxy Vite dev server; `false`: serve `react/dist` |
-| VITE_HOST | No | `localhost` | Vite host used by proxy/health checks |
-| VITE_PORT | No | `5173` | Vite port |
-| DSPY_LM_PROVIDER | No | `anthropic` | Active provider type (`anthropic` / `openai` / `ollama`) |
-| DSPY_LM_MODEL | No | `claude-sonnet-4-6` | Default model name |
-| ANTHROPIC_API_KEY | Yes* | none | **Secret**. Required when using Anthropic |
-| OPENAI_API_KEY | Yes* | none | **Secret**. Required when using OpenAI |
-| OLLAMA_BASE_URL | No | `http://localhost:11434` | Ollama endpoint |
-| STATE_DB_PATH | No | `.harness/state.db` | Legacy harness state DB path |
-| LOG_DIR | No | `.harness/logs` | Harness logs directory |
-| VLOOP_DB_URL | No | empty -> SQLite fallback | Async SQLAlchemy DB URL override |
-| VLOOP_PROJECT_DIR | No | empty -> CWD/.vloop | Override `.vloop` data directory |
-| TOOLS_POLICY_PATH | No | `<workspace>/.vloop/policy.json` | Optional tool policy override |
-
-\* Required only for corresponding provider.
-
-## Available Scripts
-### Rust (`harness-core` / CLI)
-- `./harness-core/target/release/vloop-harness run`: start orchestrator; optional `--no-window` and `--frontend-mode dev|static`.
-- `./harness-core/target/release/vloop-harness services start [backend|frontend|all]`: start managed subprocess services.
-- `./harness-core/target/release/vloop-harness services stop [backend|frontend|all]`: stop services.
-- `./harness-core/target/release/vloop-harness services status`: report PID + health for services.
-
-### Python (`pyproject.toml` / CLI)
-- `python -m harness.main internal backend-worker`: internal-only backend launch command.
-
-### Frontend (`react/package.json`)
-- `npm run dev`: start Vite dev server.
-- `npm run build`: run TS check then build production assets.
-- `npm run preview`: preview production build.
-- `npm run typecheck`: TypeScript no-emit type check.
-- `npm run test:e2e`: run headless Playwright suite.
-- `npm run test:e2e:headed`: run headed Playwright suite.
-
-## Testing
-```bash
-# Python tests
-pytest
-
-# Optional with coverage
-pytest --cov=harness --cov-report=term-missing
-
-# Frontend type safety
-cd react && npm run typecheck
-
-# Frontend e2e
-cd react && npm run test:e2e
-```
-Python tests cover route behavior, permissions/policy, storage/repository behavior, and tool execution flows. E2E coverage exists for key root UI behavior via Playwright.
-
-## Deployment
-Current deployment is process-managed local service startup via the CLI service manager. `frontend_mode=static` enables production-style serving from `react/dist` directly behind FastAPI. CI/CD workflow files are not present in this repository, so deployment checks are currently expected to run locally (`pytest`, TypeScript checks, and optional Playwright e2e) before merge.
+## Documentation
+For a deep dive into the system design, please see our new documentation directory at `docs/`.
+- [Architecture & Design](docs/ARCHITECTURE.md)
+- [Implementation Plan](docs/IMPLEMENTATION_PLAN.md)
 
 ## Contributing
-See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
+Please see standard contribution guidelines in the respective component folders. We follow a strict pull request workflow targeting the `main` branch.
