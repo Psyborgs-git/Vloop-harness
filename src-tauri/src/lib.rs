@@ -93,6 +93,7 @@ pub fn run() {
                         "127.0.0.1".to_string(),
                         backend_port,
                         ai_port,
+                        vite_port,
                         frontend_mode,
                     )
                     .await
@@ -103,7 +104,23 @@ pub fn run() {
                 });
             });
 
-            std::thread::sleep(std::time::Duration::from_secs(2));
+            // Wait for backend port to be open before navigating the webview
+            let start_time = std::time::Instant::now();
+            let timeout = std::time::Duration::from_secs(30);
+            while start_time.elapsed() < timeout {
+                if std::net::TcpStream::connect(format!("127.0.0.1:{}", backend_port)).is_ok() {
+                    break;
+                }
+                std::thread::sleep(std::time::Duration::from_millis(100));
+            }
+
+            // Dynamically navigate main webview window to the correct backend port
+            if let Some(main_window) = app.get_webview_window("main") {
+                let url_str = format!("http://127.0.0.1:{}/ui/root", backend_port);
+                if let Ok(url) = tauri::Url::parse(&url_str) {
+                    let _ = main_window.navigate(url);
+                }
+            }
 
             let service_manager = ServiceManager::new(
                 repo_root_clone,

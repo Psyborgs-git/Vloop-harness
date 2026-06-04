@@ -19,6 +19,7 @@ pub fn get_key(name: &str) -> Option<String> {
     vault.keys.get(name).cloned()
 }
 
+#[allow(dead_code)]
 pub fn set_key(name: &str, value: &str) {
     let mut vault = VAULT.lock().unwrap();
     vault.keys.insert(name.to_string(), value.to_string());

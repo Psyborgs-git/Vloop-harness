@@ -8,12 +8,7 @@ from __future__ import annotations
 import httpx
 import pytest
 
-BASE_URL = "http://localhost:9100"
 
-@pytest.fixture
-async def client():
-    async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as c:
-        yield c
 
 class TestHealthAndExistingRoutes:
     @pytest.mark.asyncio

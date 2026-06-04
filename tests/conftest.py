@@ -83,6 +83,10 @@ async def test_app(tmp_path: Path) -> AsyncIterator[FastAPI]:
     app.include_router(optimization_router)
     app.include_router(vector_store_router)
 
+    @app.get("/")
+    async def root() -> dict[str, str]:
+        return {"status": "ok", "service": "vloop-harness", "version": "0.2.0"}
+
 
     # Override the DB dependency so routes use our in-memory DB
     async def _override_get_session() -> AsyncIterator[AsyncSession]:
@@ -108,6 +112,11 @@ async def test_app(tmp_path: Path) -> AsyncIterator[FastAPI]:
     app.state.provider_manager = pm
 
     app.state.main_process = _make_mock_main_process(ai_ready=False)
+
+    # Configure feedback mock to use real FeedbackCollector
+    from harness.engine.optimization.feedback import FeedbackCollector
+    feedback_collector = FeedbackCollector(storage_dir=str(storage.project_dir / "feedback"))
+    app.state.main_process.ai.self_improvement.feedback = feedback_collector
 
     # Mock for Vector Store
     from harness.engine.vector_store.store import InMemoryVecStore

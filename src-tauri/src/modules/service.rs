@@ -209,12 +209,14 @@ impl ServiceManager {
         let state_db_path = self.log_dir.parent().unwrap().join("state.db").to_string_lossy().to_string();
         let log_dir_str = self.log_dir.to_string_lossy().to_string();
         let cache_dir_str = self.log_dir.parent().unwrap().join("dspy_cache").to_string_lossy().to_string();
+        let vite_port_str = self.vite_port.to_string();
         let envs = vec![
             ("HARNESS_DEBUG", harness_debug),
             ("RUST_BASE_AI_URL", &self.rust_completions_url),
             ("STATE_DB_PATH", &state_db_path),
             ("LOG_DIR", &log_dir_str),
             ("CACHE_DIR", &cache_dir_str),
+            ("VITE_PORT", &vite_port_str),
         ];
 
         let proc_pid = self.spawn_service("backend", &cmd, &self.repo_root, envs);

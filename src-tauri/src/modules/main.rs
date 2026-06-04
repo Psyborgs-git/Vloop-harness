@@ -165,6 +165,7 @@ pub async fn run_app_headless(
     host: String,
     port: u16,
     ai_port: u16,
+    vite_port: u16,
     frontend_mode: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let rust_completions_url = format!("http://127.0.0.1:{}/v1", ai_port);
@@ -174,7 +175,7 @@ pub async fn run_app_headless(
         host.clone(),
         port,
         "127.0.0.1".to_string(),
-        9102,
+        vite_port,
         frontend_mode.clone(),
         rust_completions_url,
     );

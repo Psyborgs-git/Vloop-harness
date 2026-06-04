@@ -1,5 +1,6 @@
 use serde_json::Value;
 
+#[allow(dead_code)]
 pub fn send_to_python(channel: &str, payload: Value) {
     // In production, Rust will use HTTP client to push to python /ipc/rust endpoint
     let rt = tokio::runtime::Runtime::new().unwrap();
