@@ -6,16 +6,22 @@ import json
 import re
 from typing import Any
 
+from pydantic import BaseModel
+
 _HEAD_RE = re.compile(r"(<head[^>]*>)", re.IGNORECASE)
+
+
+class HarnessConfigInjector(BaseModel):
+    component_id: str
+    api_base: str
+    ws_base: str
+    initial_state: dict[str, Any]
+    permissions: list[str]
 
 
 def inject_harness_vars(
     html: str,
-    component_id: str,
-    api_base: str,
-    ws_base: str,
-    initial_state: dict[str, Any],
-    permissions: list[str],
+    config: HarnessConfigInjector,
 ) -> str:
     """
     Inject ``window.__HARNESS__`` into the <head> of an HTML document.
@@ -23,11 +29,11 @@ def inject_harness_vars(
     If no <head> tag exists the script is prepended to the document.
     """
     payload = {
-        "COMPONENT_ID": component_id,
-        "API_URL": f"{api_base}/api/{component_id}",
-        "WS_URL": f"{ws_base}/ws/{component_id}",
-        "INITIAL_STATE": initial_state,
-        "PERMISSIONS": permissions,
+        "COMPONENT_ID": config.component_id,
+        "API_URL": f"{config.api_base}/api/{config.component_id}",
+        "WS_URL": f"{config.ws_base}/ws/{config.component_id}",
+        "INITIAL_STATE": config.initial_state,
+        "PERMISSIONS": config.permissions,
     }
     script = (
         "<script>\n"
