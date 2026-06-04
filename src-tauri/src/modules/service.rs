@@ -254,7 +254,13 @@ impl ServiceManager {
             "--host".to_string(),
         ];
 
-        let proc_pid = self.spawn_service("frontend", &cmd, &react_dir, vec![]);
+        let api_url = format!("http://{}:{}", self.backend_host, self.backend_port);
+        let ws_url = format!("ws://{}:{}", self.backend_host, self.backend_port);
+        let envs = vec![
+            ("VITE_API_URL", api_url.as_str()),
+            ("VITE_WS_URL", ws_url.as_str()),
+        ];
+        let proc_pid = self.spawn_service("frontend", &cmd, &react_dir, envs);
         if !self.wait_for_port(&self.vite_host, self.vite_port, 30.0, 0.3) {
             self.terminate_pid(proc_pid);
             panic!("Frontend failed to start on port {}", self.vite_port);

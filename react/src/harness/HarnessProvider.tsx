@@ -64,10 +64,12 @@ function convertLegacyConfig(legacy: LegacyHarnessConfig): HarnessConfig {
 
 // Configuration fallback function (single source of truth)
 function getFallbackConfig(): HarnessConfig {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:9100';
+    const wsUrl = import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:9100';
     return {
         component_id: 'root',
-        api_url: 'http://127.0.0.1:9100/api/root',
-        ws_url: 'ws://127.0.0.1:9100/ws/root',
+        api_url: `${apiUrl}/api/root`,
+        ws_url: `${wsUrl}/ws/root`,
         initial_state: {},
         permissions: [],
     };
