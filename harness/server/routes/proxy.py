@@ -15,7 +15,7 @@ import httpx
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, Response
 
-from harness.server.injector import inject_harness_vars
+from harness.server.injector import HarnessConfigInjector, inject_harness_vars
 
 router = APIRouter()
 
@@ -95,11 +95,13 @@ def _inject_html_from_dist(
     ws_base = f"ws://{settings.harness_host}:{settings.harness_port}"
     html = inject_harness_vars(
         html=raw_html,
-        component_id=component_id,
-        api_base=api_base,
-        ws_base=ws_base,
-        initial_state=initial_state,
-        permissions=permissions,
+        config=HarnessConfigInjector(
+            component_id=component_id,
+            api_base=api_base,
+            ws_base=ws_base,
+            initial_state=initial_state,
+            permissions=permissions,
+        ),
     )
     return HTMLResponse(content=html, status_code=200)
 
@@ -145,11 +147,13 @@ async def serve_root_ui(request: Request, path: str = "") -> Response:
 
     html = inject_harness_vars(
         html=resp.text,
-        component_id="root",
-        api_base=api_base,
-        ws_base=ws_base,
-        initial_state={},
-        permissions=[],
+        config=HarnessConfigInjector(
+            component_id="root",
+            api_base=api_base,
+            ws_base=ws_base,
+            initial_state={},
+            permissions=[],
+        ),
     )
     return HTMLResponse(content=html, status_code=resp.status_code)
 
@@ -248,10 +252,12 @@ async def serve_component_ui(
 
     html = inject_harness_vars(
         html=resp.text,
-        component_id=component_id,
-        api_base=api_base,
-        ws_base=ws_base,
-        initial_state=comp.state,
-        permissions=perms,
+        config=HarnessConfigInjector(
+            component_id=component_id,
+            api_base=api_base,
+            ws_base=ws_base,
+            initial_state=comp.state,
+            permissions=perms,
+        ),
     )
     return HTMLResponse(content=html, status_code=resp.status_code)
