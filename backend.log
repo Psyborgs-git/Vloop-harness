@@ -1,20 +1,20 @@
-[16:44:06] DEBUG    connect_tcp.started                             _trace.py:47
+[16:54:51] DEBUG    connect_tcp.started                             _trace.py:47
                     host='raw.githubusercontent.com' port=443
                     local_address=None timeout=5
                     socket_options=None
            DEBUG    connect_tcp.complete                            _trace.py:47
                     return_value=<httpcore._backends.sync.SyncStrea
-                    m object at 0x7f8cdf61da10>
+                    m object at 0x7f1175e63550>
            DEBUG    start_tls.started ssl_context=<ssl.SSLContext   _trace.py:47
-                    object at 0x7f8cdf13f4a0>
+                    object at 0x7f1175e18440>
                     server_hostname='raw.githubusercontent.com'
                     timeout=5
            DEBUG    start_tls.complete                              _trace.py:47
                     return_value=<httpcore._backends.sync.SyncStrea
-                    m object at 0x7f8cdf1233d0>
+                    m object at 0x7f1175e637d0>
            DEBUG    send_request_headers.started request=<Request > _trace.py:47
            DEBUG    send_request_headers.complete                   _trace.py:47
-           DEBUG    send_request_body.started request=<Request >    _trace.py:47
+[16:54:52] DEBUG    send_request_body.started request=<Request >    _trace.py:47
            DEBUG    send_request_body.complete                      _trace.py:47
            DEBUG    receive_response_headers.started                _trace.py:47
                     request=<Request >
@@ -35,21 +35,21 @@
                     (b'X-Frame-Options', b'deny'),
                     (b'X-XSS-Protection', b'1; mode=block'),
                     (b'X-GitHub-Request-Id',
-                    b'A712:D18F4:C0BFFF:EABE59:6A18F634'),
+                    b'9A08:19268B:1345A9:17235A:6A214610'),
                     (b'Content-Encoding', b'gzip'),
-                    (b'Accept-Ranges', b'bytes'), (b'Date', b'Wed,
-                    03 Jun 2026 16:44:06 GMT'), (b'Via', b'1.1
+                    (b'Accept-Ranges', b'bytes'), (b'Date', b'Thu,
+                    04 Jun 2026 16:54:52 GMT'), (b'Via', b'1.1
                     varnish'), (b'X-Served-By',
-                    b'cache-chi-kigq8000128-CHI'), (b'X-Cache',
-                    b'HIT'), (b'X-Cache-Hits', b'20'), (b'X-Timer',
-                    b'S1780505047.506803,VS0,VE0'), (b'Vary',
+                    b'cache-chi-klot8100097-CHI'), (b'X-Cache',
+                    b'HIT'), (b'X-Cache-Hits', b'21'), (b'X-Timer',
+                    b'S1780592092.163381,VS0,VE0'), (b'Vary',
                     b'Authorization,Accept-Encoding'),
                     (b'Access-Control-Allow-Origin', b'*'),
                     (b'Cross-Origin-Resource-Policy',
                     b'cross-origin'), (b'X-Fastly-Request-ID',
-                    b'5cb8f4eb7200941a6e7af08a1702dac05858b103'),
-                    (b'Expires', b'Wed, 03 Jun 2026 16:49:06 GMT'),
-                    (b'Source-Age', b'145')])
+                    b'502642ecf02cc3f846524c87394b47236ee95998'),
+                    (b'Expires', b'Thu, 04 Jun 2026 16:59:52 GMT'),
+                    (b'Source-Age', b'161')])
            DEBUG    receive_response_body.started request=<Request  _trace.py:47
                     >
            DEBUG    receive_response_body.complete                  _trace.py:47
@@ -57,40 +57,1680 @@
            DEBUG    response_closed.complete                        _trace.py:47
            DEBUG    close.started                                   _trace.py:47
            DEBUG    close.complete                                  _trace.py:47
-[92m16:44:08 - LiteLLM:DEBUG[0m: litellm_logging.py:199 - [Non-Blocking] Unable to import GenericAPILogger - LiteLLM Enterprise Feature - No module named 'litellm_enterprise'
-[16:44:08] DEBUG    [Non-Blocking] Unable to import       litellm_logging.py:199
+[92m16:54:55 - LiteLLM:DEBUG[0m: litellm_logging.py:199 - [Non-Blocking] Unable to import GenericAPILogger - LiteLLM Enterprise Feature - No module named 'litellm_enterprise'
+[16:54:55] DEBUG    [Non-Blocking] Unable to import       litellm_logging.py:199
                     GenericAPILogger - LiteLLM Enterprise
                     Feature - No module named
                     'litellm_enterprise'
-[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:943 - Using AiohttpTransport...
-[16:44:09] DEBUG    Using AiohttpTransport...                http_handler.py:943
-[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:1011 - Creating AiohttpTransport...
+[92m16:54:57 - LiteLLM:DEBUG[0m: http_handler.py:943 - Using AiohttpTransport...
+[16:54:57] DEBUG    Using AiohttpTransport...                http_handler.py:943
+[92m16:54:57 - LiteLLM:DEBUG[0m: http_handler.py:1011 - Creating AiohttpTransport...
            DEBUG    Creating AiohttpTransport...            http_handler.py:1011
-[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:1025 - NEW SESSION: Creating new ClientSession (no shared session provided)
+[92m16:54:57 - LiteLLM:DEBUG[0m: http_handler.py:1025 - NEW SESSION: Creating new ClientSession (no shared session provided)
            DEBUG    NEW SESSION: Creating new ClientSession http_handler.py:1025
                     (no shared session provided)
-[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:943 - Using AiohttpTransport...
+[92m16:54:57 - LiteLLM:DEBUG[0m: http_handler.py:943 - Using AiohttpTransport...
            DEBUG    Using AiohttpTransport...                http_handler.py:943
-[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:1011 - Creating AiohttpTransport...
+[92m16:54:57 - LiteLLM:DEBUG[0m: http_handler.py:1011 - Creating AiohttpTransport...
            DEBUG    Creating AiohttpTransport...            http_handler.py:1011
-[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:1025 - NEW SESSION: Creating new ClientSession (no shared session provided)
+[92m16:54:57 - LiteLLM:DEBUG[0m: http_handler.py:1025 - NEW SESSION: Creating new ClientSession (no shared session provided)
            DEBUG    NEW SESSION: Creating new ClientSession http_handler.py:1025
                     (no shared session provided)
-[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:943 - Using AiohttpTransport...
+[92m16:54:57 - LiteLLM:DEBUG[0m: http_handler.py:943 - Using AiohttpTransport...
            DEBUG    Using AiohttpTransport...                http_handler.py:943
-[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:1011 - Creating AiohttpTransport...
+[92m16:54:57 - LiteLLM:DEBUG[0m: http_handler.py:1011 - Creating AiohttpTransport...
            DEBUG    Creating AiohttpTransport...            http_handler.py:1011
-[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:1025 - NEW SESSION: Creating new ClientSession (no shared session provided)
+[92m16:54:57 - LiteLLM:DEBUG[0m: http_handler.py:1025 - NEW SESSION: Creating new ClientSession (no shared session provided)
            DEBUG    NEW SESSION: Creating new ClientSession http_handler.py:1025
                     (no shared session provided)
-[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:943 - Using AiohttpTransport...
+[92m16:54:57 - LiteLLM:DEBUG[0m: http_handler.py:943 - Using AiohttpTransport...
            DEBUG    Using AiohttpTransport...                http_handler.py:943
-[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:1011 - Creating AiohttpTransport...
+[92m16:54:57 - LiteLLM:DEBUG[0m: http_handler.py:1011 - Creating AiohttpTransport...
            DEBUG    Creating AiohttpTransport...            http_handler.py:1011
-[92m16:44:09 - LiteLLM:DEBUG[0m: http_handler.py:1025 - NEW SESSION: Creating new ClientSession (no shared session provided)
+[92m16:54:57 - LiteLLM:DEBUG[0m: http_handler.py:1025 - NEW SESSION: Creating new ClientSession (no shared session provided)
            DEBUG    NEW SESSION: Creating new ClientSession http_handler.py:1025
                     (no shared session provided)
-backend  healthy  pid=272896   log=.harness/logs/services/backend.log
-frontend healthy  pid=274260   log=.harness/logs/services/frontend.log
-Headless mode — visit http://localhost:9100/ui/root in your browser
-Press Ctrl+C to stop.
+[16:54:59] DEBUG    executing <function connect.<locals>.connector at core.py:62
+                    0x7f11623472e0>
+           DEBUG    operation <function connect.<locals>.connector at core.py:67
+                    0x7f11623472e0> completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    create_function of sqlite3.Connection object at
+                    0x7f11622fe4d0>, 'regexp', 2, <function
+                    SQLiteDialect_pysqlite.on_connect.<locals>.regexp
+                    at 0x7f1162346520>, deterministic=True)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    create_function of sqlite3.Connection object at
+                    0x7f11622fe4d0>, 'regexp', 2, <function
+                    SQLiteDialect_pysqlite.on_connect.<locals>.regexp
+                    at 0x7f1162346520>, deterministic=True) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    create_function of sqlite3.Connection object at
+                    0x7f11622fe4d0>, 'floor', 1, <built-in function
+                    floor>, deterministic=True)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    create_function of sqlite3.Connection object at
+                    0x7f11622fe4d0>, 'floor', 1, <built-in function
+                    floor>, deterministic=True) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f1162358940>, 'PRAGMA read_uncommitted', [])
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f1162358940>, 'PRAGMA read_uncommitted', [])
+                    completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f1162358940>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f1162358940>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f1162358940>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f1162358940>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    rollback of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    rollback of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f1162358a40>, 'PRAGMA
+                    main.table_info("chat_sessions")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f1162358a40>, 'PRAGMA
+                    main.table_info("chat_sessions")', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f1162358a40>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f1162358a40>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f1162358a40>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f1162358a40>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f1162358a40>, 'PRAGMA
+                    temp.table_info("chat_sessions")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f1162358a40>, 'PRAGMA
+                    temp.table_info("chat_sessions")', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f1162358a40>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f1162358a40>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f1162358a40>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f1162358a40>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    main.table_info("chat_messages")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    main.table_info("chat_messages")', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    temp.table_info("chat_messages")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    temp.table_info("chat_messages")', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    main.table_info("dspy_components")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    main.table_info("dspy_components")', ())
+                    completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    temp.table_info("dspy_components")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    temp.table_info("dspy_components")', ())
+                    completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    main.table_info("pipelines")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    main.table_info("pipelines")', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    temp.table_info("pipelines")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    temp.table_info("pipelines")', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    main.table_info("provider_configs")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    main.table_info("provider_configs")', ())
+                    completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    temp.table_info("provider_configs")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    temp.table_info("provider_configs")', ())
+                    completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116235a5c0>, 'PRAGMA
+                    main.table_info("generated_views")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116235a5c0>, 'PRAGMA
+                    main.table_info("generated_views")', ())
+                    completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116235a5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116235a5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116235a5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116235a5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116235a5c0>, 'PRAGMA
+                    temp.table_info("generated_views")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116235a5c0>, 'PRAGMA
+                    temp.table_info("generated_views")', ())
+                    completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116235a5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116235a5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116235a5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116235a5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    main.table_info("telemetry")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    main.table_info("telemetry")', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    temp.table_info("telemetry")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    temp.table_info("telemetry")', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    main.table_info("agent_runs")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    main.table_info("agent_runs")', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    temp.table_info("agent_runs")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226c5c0>, 'PRAGMA
+                    temp.table_info("agent_runs")', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226c5c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f1162358940>, 'PRAGMA
+                    main.table_info("agent_run_steps")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f1162358940>, 'PRAGMA
+                    main.table_info("agent_run_steps")', ())
+                    completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f1162358940>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f1162358940>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f1162358940>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f1162358940>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f1162358940>, 'PRAGMA
+                    temp.table_info("agent_run_steps")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f1162358940>, 'PRAGMA
+                    temp.table_info("agent_run_steps")', ())
+                    completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f1162358940>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f1162358940>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f1162358940>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f1162358940>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f1162358940>, 'PRAGMA
+                    main.table_info("app_manifests")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f1162358940>, 'PRAGMA
+                    main.table_info("app_manifests")', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f1162358940>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f1162358940>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f1162358940>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f1162358940>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f1162358940>, 'PRAGMA
+                    temp.table_info("app_manifests")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f1162358940>, 'PRAGMA
+                    temp.table_info("app_manifests")', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f1162358940>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f1162358940>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f1162358940>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f1162358940>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, 'PRAGMA
+                    main.table_info("tool_traces")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, 'PRAGMA
+                    main.table_info("tool_traces")', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226e7c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226e7c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, 'PRAGMA
+                    temp.table_info("tool_traces")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, 'PRAGMA
+                    temp.table_info("tool_traces")', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226e7c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226e7c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, 'PRAGMA
+                    main.table_info("component_versions")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, 'PRAGMA
+                    main.table_info("component_versions")', ())
+                    completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226e7c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226e7c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, 'PRAGMA
+                    temp.table_info("component_versions")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, 'PRAGMA
+                    temp.table_info("component_versions")', ())
+                    completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226e7c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226e7c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, 'PRAGMA
+                    main.table_info("view_versions")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, 'PRAGMA
+                    main.table_info("view_versions")', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226e7c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226e7c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, 'PRAGMA
+                    temp.table_info("view_versions")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, 'PRAGMA
+                    temp.table_info("view_versions")', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226e7c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226e7c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, 'PRAGMA
+                    main.table_info("eval_datasets")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, 'PRAGMA
+                    main.table_info("eval_datasets")', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226e7c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226e7c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, 'PRAGMA
+                    temp.table_info("eval_datasets")', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, 'PRAGMA
+                    temp.table_info("eval_datasets")', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226e7c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116226e7c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, '\nCREATE TABLE chat_sessions
+                    (\n\tid VARCHAR(36) NOT NULL, \n\ttitle
+                    VARCHAR(255) NOT NULL, \n\tprovider_id
+                    VARCHAR(64), \n\tcreated_at DATETIME NOT NULL,
+                    \n\tupdated_at DATETIME NOT NULL, \n\tPRIMARY KEY
+                    (id)\n)\n\n', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, '\nCREATE TABLE chat_sessions
+                    (\n\tid VARCHAR(36) NOT NULL, \n\ttitle
+                    VARCHAR(255) NOT NULL, \n\tprovider_id
+                    VARCHAR(64), \n\tcreated_at DATETIME NOT NULL,
+                    \n\tupdated_at DATETIME NOT NULL, \n\tPRIMARY KEY
+                    (id)\n)\n\n', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, '\nCREATE TABLE dspy_components
+                    (\n\tid VARCHAR(64) NOT NULL, \n\tname
+                    VARCHAR(255) NOT NULL, \n\tdescription TEXT NOT
+                    NULL, \n\tsignature_fields JSON NOT NULL,
+                    \n\tcode TEXT NOT NULL, \n\tmodule_type
+                    VARCHAR(50) NOT NULL, \n\tis_active BOOLEAN NOT
+                    NULL, \n\tcreated_at DATETIME NOT NULL,
+                    \n\tupdated_at DATETIME NOT NULL, \n\tPRIMARY KEY
+                    (id)\n)\n\n', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, '\nCREATE TABLE dspy_components
+                    (\n\tid VARCHAR(64) NOT NULL, \n\tname
+                    VARCHAR(255) NOT NULL, \n\tdescription TEXT NOT
+                    NULL, \n\tsignature_fields JSON NOT NULL,
+                    \n\tcode TEXT NOT NULL, \n\tmodule_type
+                    VARCHAR(50) NOT NULL, \n\tis_active BOOLEAN NOT
+                    NULL, \n\tcreated_at DATETIME NOT NULL,
+                    \n\tupdated_at DATETIME NOT NULL, \n\tPRIMARY KEY
+                    (id)\n)\n\n', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, '\nCREATE TABLE pipelines
+                    (\n\tid VARCHAR(64) NOT NULL, \n\tname
+                    VARCHAR(255) NOT NULL, \n\tdescription TEXT NOT
+                    NULL, \n\tsteps JSON NOT NULL,
+                    \n\ttool_permissions JSON, \n\tis_active BOOLEAN
+                    NOT NULL, \n\tcreated_at DATETIME NOT NULL,
+                    \n\tupdated_at DATETIME NOT NULL, \n\tPRIMARY KEY
+                    (id)\n)\n\n', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, '\nCREATE TABLE pipelines
+                    (\n\tid VARCHAR(64) NOT NULL, \n\tname
+                    VARCHAR(255) NOT NULL, \n\tdescription TEXT NOT
+                    NULL, \n\tsteps JSON NOT NULL,
+                    \n\ttool_permissions JSON, \n\tis_active BOOLEAN
+                    NOT NULL, \n\tcreated_at DATETIME NOT NULL,
+                    \n\tupdated_at DATETIME NOT NULL, \n\tPRIMARY KEY
+                    (id)\n)\n\n', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, '\nCREATE TABLE provider_configs
+                    (\n\tid VARCHAR(64) NOT NULL, \n\tname
+                    VARCHAR(255) NOT NULL, \n\tprovider_type
+                    VARCHAR(50) NOT NULL, \n\tmodel VARCHAR(255) NOT
+                    NULL, \n\tbase_url VARCHAR(500) NOT NULL,
+                    \n\tencrypted_api_key TEXT NOT NULL,
+                    \n\textra_config JSON NOT NULL, \n\tis_default
+                    BOOLEAN NOT NULL, \n\tcreated_at DATETIME NOT
+                    NULL, \n\tupdated_at DATETIME NOT NULL,
+                    \n\tPRIMARY KEY (id)\n)\n\n', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, '\nCREATE TABLE provider_configs
+                    (\n\tid VARCHAR(64) NOT NULL, \n\tname
+                    VARCHAR(255) NOT NULL, \n\tprovider_type
+                    VARCHAR(50) NOT NULL, \n\tmodel VARCHAR(255) NOT
+                    NULL, \n\tbase_url VARCHAR(500) NOT NULL,
+                    \n\tencrypted_api_key TEXT NOT NULL,
+                    \n\textra_config JSON NOT NULL, \n\tis_default
+                    BOOLEAN NOT NULL, \n\tcreated_at DATETIME NOT
+                    NULL, \n\tupdated_at DATETIME NOT NULL,
+                    \n\tPRIMARY KEY (id)\n)\n\n', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, '\nCREATE TABLE generated_views
+                    (\n\tid VARCHAR(36) NOT NULL, \n\tname
+                    VARCHAR(255) NOT NULL, \n\tcomponent_name
+                    VARCHAR(64) NOT NULL, \n\treact_code TEXT NOT
+                    NULL, \n\tview_spec TEXT NOT NULL, \n\tfile_path
+                    VARCHAR(500), \n\tsession_id VARCHAR(36),
+                    \n\tcreated_at DATETIME NOT NULL, \n\tPRIMARY KEY
+                    (id)\n)\n\n', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116226e7c0>, '\nCREATE TABLE generated_views
+                    (\n\tid VARCHAR(36) NOT NULL, \n\tname
+                    VARCHAR(255) NOT NULL, \n\tcomponent_name
+                    VARCHAR(64) NOT NULL, \n\treact_code TEXT NOT
+                    NULL, \n\tview_spec TEXT NOT NULL, \n\tfile_path
+                    VARCHAR(500), \n\tsession_id VARCHAR(36),
+                    \n\tcreated_at DATETIME NOT NULL, \n\tPRIMARY KEY
+                    (id)\n)\n\n', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116226e7c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f1162587640>, '\nCREATE TABLE telemetry
+                    (\n\tid VARCHAR(36) NOT NULL, \n\tevent_type
+                    VARCHAR(100) NOT NULL, \n\tcomponent_id
+                    VARCHAR(64), \n\tdata JSON, \n\tcreated_at
+                    DATETIME NOT NULL, \n\tPRIMARY KEY (id)\n)\n\n',
+                    ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f1162587640>, '\nCREATE TABLE telemetry
+                    (\n\tid VARCHAR(36) NOT NULL, \n\tevent_type
+                    VARCHAR(100) NOT NULL, \n\tcomponent_id
+                    VARCHAR(64), \n\tdata JSON, \n\tcreated_at
+                    DATETIME NOT NULL, \n\tPRIMARY KEY (id)\n)\n\n',
+                    ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f1162587640>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f1162587640>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f1162587640>, '\nCREATE TABLE agent_runs
+                    (\n\tid VARCHAR(36) NOT NULL, \n\tgoal TEXT NOT
+                    NULL, \n\t"plan" TEXT NOT NULL, \n\tstatus
+                    VARCHAR(20) NOT NULL, \n\tautonomy_mode
+                    VARCHAR(20) NOT NULL, \n\tsession_id VARCHAR(36),
+                    \n\tresult JSON, \n\terror TEXT, \n\tcreated_at
+                    DATETIME NOT NULL, \n\tupdated_at DATETIME NOT
+                    NULL, \n\tPRIMARY KEY (id)\n)\n\n', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f1162587640>, '\nCREATE TABLE agent_runs
+                    (\n\tid VARCHAR(36) NOT NULL, \n\tgoal TEXT NOT
+                    NULL, \n\t"plan" TEXT NOT NULL, \n\tstatus
+                    VARCHAR(20) NOT NULL, \n\tautonomy_mode
+                    VARCHAR(20) NOT NULL, \n\tsession_id VARCHAR(36),
+                    \n\tresult JSON, \n\terror TEXT, \n\tcreated_at
+                    DATETIME NOT NULL, \n\tupdated_at DATETIME NOT
+                    NULL, \n\tPRIMARY KEY (id)\n)\n\n', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f1162587640>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f1162587640>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f1162587640>, '\nCREATE TABLE app_manifests
+                    (\n\tid VARCHAR(36) NOT NULL, \n\tname
+                    VARCHAR(255) NOT NULL, \n\tdescription TEXT NOT
+                    NULL, \n\tbackend_type VARCHAR(30) NOT NULL,
+                    \n\tbackend_id VARCHAR(64), \n\treact_views JSON
+                    NOT NULL, \n\tpermissions JSON NOT NULL,
+                    \n\tstate_schema JSON NOT NULL, \n\tstatus
+                    VARCHAR(20) NOT NULL, \n\tagent_run_id
+                    VARCHAR(36), \n\tcreated_at DATETIME NOT NULL,
+                    \n\tupdated_at DATETIME NOT NULL, \n\tPRIMARY KEY
+                    (id)\n)\n\n', ())
+[16:55:00] DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f1162587640>, '\nCREATE TABLE app_manifests
+                    (\n\tid VARCHAR(36) NOT NULL, \n\tname
+                    VARCHAR(255) NOT NULL, \n\tdescription TEXT NOT
+                    NULL, \n\tbackend_type VARCHAR(30) NOT NULL,
+                    \n\tbackend_id VARCHAR(64), \n\treact_views JSON
+                    NOT NULL, \n\tpermissions JSON NOT NULL,
+                    \n\tstate_schema JSON NOT NULL, \n\tstatus
+                    VARCHAR(20) NOT NULL, \n\tagent_run_id
+                    VARCHAR(36), \n\tcreated_at DATETIME NOT NULL,
+                    \n\tupdated_at DATETIME NOT NULL, \n\tPRIMARY KEY
+                    (id)\n)\n\n', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f1162587640>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f1162587640>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f1162587640>, '\nCREATE TABLE tool_traces
+                    (\n\tid VARCHAR(36) NOT NULL, \n\ttool_name
+                    VARCHAR(64) NOT NULL, \n\tcomponent_id
+                    VARCHAR(64), \n\tsession_id VARCHAR(36),
+                    \n\trun_step_id VARCHAR(36), \n\tinputs JSON,
+                    \n\toutputs JSON, \n\trisk_level VARCHAR(20) NOT
+                    NULL, \n\tconfirmation_token VARCHAR(64),
+                    \n\tduration_ms INTEGER, \n\tsuccess BOOLEAN NOT
+                    NULL, \n\tcreated_at DATETIME NOT NULL,
+                    \n\tPRIMARY KEY (id)\n)\n\n', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f1162587640>, '\nCREATE TABLE tool_traces
+                    (\n\tid VARCHAR(36) NOT NULL, \n\ttool_name
+                    VARCHAR(64) NOT NULL, \n\tcomponent_id
+                    VARCHAR(64), \n\tsession_id VARCHAR(36),
+                    \n\trun_step_id VARCHAR(36), \n\tinputs JSON,
+                    \n\toutputs JSON, \n\trisk_level VARCHAR(20) NOT
+                    NULL, \n\tconfirmation_token VARCHAR(64),
+                    \n\tduration_ms INTEGER, \n\tsuccess BOOLEAN NOT
+                    NULL, \n\tcreated_at DATETIME NOT NULL,
+                    \n\tPRIMARY KEY (id)\n)\n\n', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f1162587640>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f1162587640>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f1162587640>, '\nCREATE TABLE
+                    component_versions (\n\tid VARCHAR(36) NOT NULL,
+                    \n\tcomponent_id VARCHAR(64) NOT NULL,
+                    \n\tversion_number INTEGER NOT NULL, \n\tname
+                    VARCHAR(255) NOT NULL, \n\tdescription TEXT NOT
+                    NULL, \n\tcode TEXT NOT NULL, \n\tmodule_type
+                    VARCHAR(50) NOT NULL, \n\tchange_summary TEXT NOT
+                    NULL, \n\tcreated_at DATETIME NOT NULL,
+                    \n\tPRIMARY KEY (id)\n)\n\n', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f1162587640>, '\nCREATE TABLE
+                    component_versions (\n\tid VARCHAR(36) NOT NULL,
+                    \n\tcomponent_id VARCHAR(64) NOT NULL,
+                    \n\tversion_number INTEGER NOT NULL, \n\tname
+                    VARCHAR(255) NOT NULL, \n\tdescription TEXT NOT
+                    NULL, \n\tcode TEXT NOT NULL, \n\tmodule_type
+                    VARCHAR(50) NOT NULL, \n\tchange_summary TEXT NOT
+                    NULL, \n\tcreated_at DATETIME NOT NULL,
+                    \n\tPRIMARY KEY (id)\n)\n\n', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f1162587640>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f1162587640>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f1162587640>, '\nCREATE TABLE view_versions
+                    (\n\tid VARCHAR(36) NOT NULL, \n\tview_id
+                    VARCHAR(64) NOT NULL, \n\tversion_number INTEGER
+                    NOT NULL, \n\tfile_path VARCHAR(512) NOT NULL,
+                    \n\tsource TEXT NOT NULL, \n\tprompt TEXT,
+                    \n\tagent_run_id VARCHAR(36), \n\tchange_summary
+                    TEXT NOT NULL, \n\tcreated_at DATETIME NOT NULL,
+                    \n\tPRIMARY KEY (id)\n)\n\n', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f1162587640>, '\nCREATE TABLE view_versions
+                    (\n\tid VARCHAR(36) NOT NULL, \n\tview_id
+                    VARCHAR(64) NOT NULL, \n\tversion_number INTEGER
+                    NOT NULL, \n\tfile_path VARCHAR(512) NOT NULL,
+                    \n\tsource TEXT NOT NULL, \n\tprompt TEXT,
+                    \n\tagent_run_id VARCHAR(36), \n\tchange_summary
+                    TEXT NOT NULL, \n\tcreated_at DATETIME NOT NULL,
+                    \n\tPRIMARY KEY (id)\n)\n\n', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f1162587640>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f1162587640>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f1162587640>, '\nCREATE TABLE eval_datasets
+                    (\n\tid VARCHAR(36) NOT NULL, \n\tcomponent_id
+                    VARCHAR(64) NOT NULL, \n\tname VARCHAR(255) NOT
+                    NULL, \n\tdescription TEXT NOT NULL, \n\texamples
+                    JSON NOT NULL, \n\tcreated_at DATETIME NOT NULL,
+                    \n\tupdated_at DATETIME NOT NULL, \n\tPRIMARY KEY
+                    (id)\n)\n\n', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f1162587640>, '\nCREATE TABLE eval_datasets
+                    (\n\tid VARCHAR(36) NOT NULL, \n\tcomponent_id
+                    VARCHAR(64) NOT NULL, \n\tname VARCHAR(255) NOT
+                    NULL, \n\tdescription TEXT NOT NULL, \n\texamples
+                    JSON NOT NULL, \n\tcreated_at DATETIME NOT NULL,
+                    \n\tupdated_at DATETIME NOT NULL, \n\tPRIMARY KEY
+                    (id)\n)\n\n', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f1162587640>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f1162587640>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f1162587640>, '\nCREATE TABLE chat_messages
+                    (\n\tid VARCHAR(36) NOT NULL, \n\tsession_id
+                    VARCHAR(36) NOT NULL, \n\trole VARCHAR(20) NOT
+                    NULL, \n\tcontent TEXT NOT NULL, \n\tmeta JSON,
+                    \n\tcreated_at DATETIME NOT NULL, \n\tPRIMARY KEY
+                    (id), \n\tFOREIGN KEY(session_id) REFERENCES
+                    chat_sessions (id)\n)\n\n', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f1162587640>, '\nCREATE TABLE chat_messages
+                    (\n\tid VARCHAR(36) NOT NULL, \n\tsession_id
+                    VARCHAR(36) NOT NULL, \n\trole VARCHAR(20) NOT
+                    NULL, \n\tcontent TEXT NOT NULL, \n\tmeta JSON,
+                    \n\tcreated_at DATETIME NOT NULL, \n\tPRIMARY KEY
+                    (id), \n\tFOREIGN KEY(session_id) REFERENCES
+                    chat_sessions (id)\n)\n\n', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f1162587640>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f1162587640>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f1162587640>, '\nCREATE TABLE agent_run_steps
+                    (\n\tid VARCHAR(36) NOT NULL, \n\trun_id
+                    VARCHAR(36) NOT NULL, \n\tstep_type VARCHAR(30)
+                    NOT NULL, \n\ttool_name VARCHAR(64),
+                    \n\tinput_data JSON, \n\toutput_data JSON,
+                    \n\tstatus VARCHAR(20) NOT NULL, \n\terror TEXT,
+                    \n\tconfirmation_token VARCHAR(64),
+                    \n\tduration_ms INTEGER, \n\tcreated_at DATETIME
+                    NOT NULL, \n\tPRIMARY KEY (id), \n\tFOREIGN
+                    KEY(run_id) REFERENCES agent_runs (id)\n)\n\n',
+                    ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f1162587640>, '\nCREATE TABLE agent_run_steps
+                    (\n\tid VARCHAR(36) NOT NULL, \n\trun_id
+                    VARCHAR(36) NOT NULL, \n\tstep_type VARCHAR(30)
+                    NOT NULL, \n\ttool_name VARCHAR(64),
+                    \n\tinput_data JSON, \n\toutput_data JSON,
+                    \n\tstatus VARCHAR(20) NOT NULL, \n\terror TEXT,
+                    \n\tconfirmation_token VARCHAR(64),
+                    \n\tduration_ms INTEGER, \n\tcreated_at DATETIME
+                    NOT NULL, \n\tPRIMARY KEY (id), \n\tFOREIGN
+                    KEY(run_id) REFERENCES agent_runs (id)\n)\n\n',
+                    ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f1162587640>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f1162587640>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    commit of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    commit of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    rollback of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    rollback of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f11621d15c0>, 'SELECT provider_configs.id,
+                    provider_configs.name,
+                    provider_configs.provider_type,
+                    provider_configs.model,
+                    provider_configs.base_url,
+                    provider_configs.encrypted_api_key,
+                    provider_configs.extra_config,
+                    provider_configs.is_default,
+                    provider_configs.created_at,
+                    provider_configs.updated_at \nFROM
+                    provider_configs ORDER BY
+                    provider_configs.created_at', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f11621d15c0>, 'SELECT provider_configs.id,
+                    provider_configs.name,
+                    provider_configs.provider_type,
+                    provider_configs.model,
+                    provider_configs.base_url,
+                    provider_configs.encrypted_api_key,
+                    provider_configs.extra_config,
+                    provider_configs.is_default,
+                    provider_configs.created_at,
+                    provider_configs.updated_at \nFROM
+                    provider_configs ORDER BY
+                    provider_configs.created_at', ()) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f11621d15c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f11621d15c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f11621d15c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f11621d15c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f11621d15c0>, 'SELECT provider_configs.id AS
+                    provider_configs_id, provider_configs.name AS
+                    provider_configs_name,
+                    provider_configs.provider_type AS
+                    provider_configs_provider_type,
+                    provider_configs.model AS provider_configs_model,
+                    provider_configs.base_url AS
+                    provider_configs_base_url,
+                    provider_configs.encrypted_api_key AS
+                    provider_configs_encrypted_api_key,
+                    provider_configs.extra_config AS
+                    provider_configs_extra_config,
+                    provider_configs.is_default AS
+                    provider_configs_is_default,
+                    provider_configs.created_at AS
+                    provider_configs_created_at,
+                    provider_configs.updated_at AS
+                    provider_configs_updated_at \nFROM
+                    provider_configs \nWHERE provider_configs.id =
+                    ?', ('provider_eaca7bfa',))
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f11621d15c0>, 'SELECT provider_configs.id AS
+                    provider_configs_id, provider_configs.name AS
+                    provider_configs_name,
+                    provider_configs.provider_type AS
+                    provider_configs_provider_type,
+                    provider_configs.model AS provider_configs_model,
+                    provider_configs.base_url AS
+                    provider_configs_base_url,
+                    provider_configs.encrypted_api_key AS
+                    provider_configs_encrypted_api_key,
+                    provider_configs.extra_config AS
+                    provider_configs_extra_config,
+                    provider_configs.is_default AS
+                    provider_configs_is_default,
+                    provider_configs.created_at AS
+                    provider_configs_created_at,
+                    provider_configs.updated_at AS
+                    provider_configs_updated_at \nFROM
+                    provider_configs \nWHERE provider_configs.id =
+                    ?', ('provider_eaca7bfa',)) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f11621d15c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f11621d15c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f11621d15c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f11621d15c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f11621d15c0>, 'INSERT INTO provider_configs
+                    (id, name, provider_type, model, base_url,
+                    encrypted_api_key, extra_config, is_default,
+                    created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?)', ('provider_eaca7bfa', 'Ollama
+                    (local)', 'ollama', 'llama3.2',
+                    'http://localhost:11434', '', '{}', 1,
+                    '2026-06-04 16:55:00.161604', '2026-06-04
+                    16:55:00.161612'))
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f11621d15c0>, 'INSERT INTO provider_configs
+                    (id, name, provider_type, model, base_url,
+                    encrypted_api_key, extra_config, is_default,
+                    created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?)', ('provider_eaca7bfa', 'Ollama
+                    (local)', 'ollama', 'llama3.2',
+                    'http://localhost:11434', '', '{}', 1,
+                    '2026-06-04 16:55:00.161604', '2026-06-04
+                    16:55:00.161612')) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f11621d15c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f11621d15c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    commit of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    commit of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    rollback of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    rollback of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f11621d15c0>, 'SELECT provider_configs.id,
+                    provider_configs.name,
+                    provider_configs.provider_type,
+                    provider_configs.model,
+                    provider_configs.base_url,
+                    provider_configs.encrypted_api_key,
+                    provider_configs.extra_config,
+                    provider_configs.is_default,
+                    provider_configs.created_at,
+                    provider_configs.updated_at \nFROM
+                    provider_configs \nWHERE provider_configs.id =
+                    ?', ('provider_eaca7bfa',))
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f11621d15c0>, 'SELECT provider_configs.id,
+                    provider_configs.name,
+                    provider_configs.provider_type,
+                    provider_configs.model,
+                    provider_configs.base_url,
+                    provider_configs.encrypted_api_key,
+                    provider_configs.extra_config,
+                    provider_configs.is_default,
+                    provider_configs.created_at,
+                    provider_configs.updated_at \nFROM
+                    provider_configs \nWHERE provider_configs.id =
+                    ?', ('provider_eaca7bfa',)) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f11621d15c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f11621d15c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f11621d15c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f11621d15c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f11621d15c0>, 'SELECT provider_configs.id,
+                    provider_configs.name,
+                    provider_configs.provider_type,
+                    provider_configs.model,
+                    provider_configs.base_url,
+                    provider_configs.encrypted_api_key,
+                    provider_configs.extra_config,
+                    provider_configs.is_default,
+                    provider_configs.created_at,
+                    provider_configs.updated_at \nFROM
+                    provider_configs \nWHERE
+                    provider_configs.is_default = 1\n LIMIT ? OFFSET
+                    ?', (1, 0))
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f11621d15c0>, 'SELECT provider_configs.id,
+                    provider_configs.name,
+                    provider_configs.provider_type,
+                    provider_configs.model,
+                    provider_configs.base_url,
+                    provider_configs.encrypted_api_key,
+                    provider_configs.extra_config,
+                    provider_configs.is_default,
+                    provider_configs.created_at,
+                    provider_configs.updated_at \nFROM
+                    provider_configs \nWHERE
+                    provider_configs.is_default = 1\n LIMIT ? OFFSET
+                    ?', (1, 0)) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f11621d15c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f11621d15c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f11621d15c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f11621d15c0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    rollback of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    rollback of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    rollback of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    rollback of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           INFO     [2m2026-06-04T16:55:00.237804Z[0m [[32m[1minfo logger.py:143
+                    [0m] [1mAI engine attached            [0m
+                    [[0m[1m[34mharness[0m][0m
+                    [36mengine[0m=[35mDSPyEngine[0m
+           DEBUG    connect_tcp.started host='localhost' port=11434 _trace.py:87
+                    local_address=None timeout=5.0
+                    socket_options=None
+           DEBUG    connect_tcp.failed                              _trace.py:87
+                    exception=ConnectError(OSError('All connection
+                    attempts failed'))
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    cursor of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Cursor object at
+                    0x7f116224e840>, 'SELECT dspy_components.id,
+                    dspy_components.name,
+                    dspy_components.description,
+                    dspy_components.signature_fields,
+                    dspy_components.code,
+                    dspy_components.module_type,
+                    dspy_components.is_active,
+                    dspy_components.created_at,
+                    dspy_components.updated_at \nFROM dspy_components
+                    ORDER BY dspy_components.created_at DESC', ())
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Cursor object at
+                    0x7f116224e840>, 'SELECT dspy_components.id,
+                    dspy_components.name,
+                    dspy_components.description,
+                    dspy_components.signature_fields,
+                    dspy_components.code,
+                    dspy_components.module_type,
+                    dspy_components.is_active,
+                    dspy_components.created_at,
+                    dspy_components.updated_at \nFROM dspy_components
+                    ORDER BY dspy_components.created_at DESC', ())
+                    completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116224e840>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchall of sqlite3.Cursor object at
+                    0x7f116224e840>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116224e840>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116224e840>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    rollback of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    rollback of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    rollback of sqlite3.Connection object at
+                    0x7f11622fe4d0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    rollback of sqlite3.Connection object at
+                    0x7f11622fe4d0>) completed
+           INFO     [2m2026-06-04T16:55:00.342660Z[0m [[32m[1minfo logger.py:143
+                    [0m] [1mMainProcess booting…          [0m
+                    [[0m[1m[34mharness[0m][0m
+           DEBUG    executing <function connect.<locals>.connector at core.py:62
+                    0x7f1175b15300>
+           DEBUG    operation <function connect.<locals>.connector at core.py:67
+                    0x7f1175b15300> completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Connection object at
+                    0x7f11621d5030>, '\n            CREATE TABLE IF
+                    NOT EXISTS state (\n                component_id
+                    TEXT NOT NULL,\n                key          TEXT
+                    NOT NULL,\n                value        TEXT NOT
+                    NULL,\n                PRIMARY KEY (component_id,
+                    key)\n            )\n            ', [])
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Connection object at
+                    0x7f11621d5030>, '\n            CREATE TABLE IF
+                    NOT EXISTS state (\n                component_id
+                    TEXT NOT NULL,\n                key          TEXT
+                    NOT NULL,\n                value        TEXT NOT
+                    NULL,\n                PRIMARY KEY (component_id,
+                    key)\n            )\n            ', []) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    commit of sqlite3.Connection object at
+                    0x7f11621d5030>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    commit of sqlite3.Connection object at
+                    0x7f11621d5030>) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    execute of sqlite3.Connection object at
+                    0x7f11621d5030>, 'SELECT component_id, key, value
+                    FROM state', [])
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    execute of sqlite3.Connection object at
+                    0x7f11621d5030>, 'SELECT component_id, key, value
+                    FROM state', []) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    fetchmany of sqlite3.Cursor object at
+                    0x7f116224e4c0>, 64)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    fetchmany of sqlite3.Cursor object at
+                    0x7f116224e4c0>, 64) completed
+           DEBUG    executing functools.partial(<built-in method      core.py:62
+                    close of sqlite3.Cursor object at
+                    0x7f116224e4c0>)
+           DEBUG    operation functools.partial(<built-in method      core.py:67
+                    close of sqlite3.Cursor object at
+                    0x7f116224e4c0>) completed
+           INFO     [2m2026-06-04T16:55:00.377478Z[0m [[32m[1minfo logger.py:143
+                    [0m] [1mStateStore ready              [0m
+                    [[0m[1m[34mharness[0m][0m
+           INFO     [2m2026-06-04T16:55:00.802128Z[0m [[32m[1minfo logger.py:143
+                    [0m] [1mTool runtime ready            [0m
+                    [[0m[1m[34mharness[0m][0m
+                    [36mworkspace[0m=[35m/app[0m

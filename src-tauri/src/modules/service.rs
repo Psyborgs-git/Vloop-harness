@@ -379,7 +379,7 @@ impl ServiceManager {
     fn pid_alive(&self, pid: u32) -> bool {
         if cfg!(windows) {
             if let Ok(output) = Command::new("tasklist")
-                .args(&["/FI", &format!("PID eq {}", pid)])
+                .args(["/FI", &format!("PID eq {}", pid)])
                 .output()
             {
                 let stdout = String::from_utf8_lossy(&output.stdout);

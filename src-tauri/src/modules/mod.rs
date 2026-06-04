@@ -11,3 +11,4 @@ pub mod vault;
 pub mod sandbox;
 pub mod health;
 pub mod ui;
+pub mod terminal;

@@ -68,7 +68,7 @@ pub fn execute_in_sandbox(req: SandboxExecutionRequest) -> Result<SandboxExecuti
 
             let mut full_cmd = req.command.clone();
             for arg in req.args {
-                full_cmd.push_str(" ");
+                full_cmd.push(' ');
                 full_cmd.push_str(&arg);
             }
 
