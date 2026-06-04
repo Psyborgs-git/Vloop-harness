@@ -80,13 +80,12 @@ def _apply_input_map(
     accumulated: dict[str, Any],
 ) -> dict[str, Any]:
     """Resolve input_map entries against the accumulated result dict."""
-    resolved: dict[str, Any] = {}
-    for target_field, source in input_map.items():
-        if isinstance(source, str) and source in accumulated:
-            resolved[target_field] = accumulated[source]
-        else:
-            resolved[target_field] = source  # literal
-    return resolved
+    return {
+        target_field: (
+            accumulated[source] if type(source) is str and source in accumulated else source
+        )
+        for target_field, source in input_map.items()
+    }
 
 
 def _interpolate_params(params: dict[str, Any], accumulated: dict[str, Any]) -> dict[str, Any]:
@@ -94,8 +93,10 @@ def _interpolate_params(params: dict[str, Any], accumulated: dict[str, Any]) -> 
     out: dict[str, Any] = {}
     for k, v in params.items():
         if isinstance(v, str):
+
             def _replace(m: re.Match[str]) -> str:
                 return str(accumulated.get(m.group(1), m.group(0)))
+
             out[k] = re.sub(r"\{(\w+)\}", _replace, v)
         else:
             out[k] = v
@@ -138,7 +139,9 @@ class VLoopPipeline(dspy.Module):
         result: dict[str, Any] = dict(kwargs)
         step_results: list[dict[str, Any]] = []
 
-        for module, config, step_id in zip(self.modules, self.step_configs, self.step_ids, strict=False):
+        for module, config, step_id in zip(
+            self.modules, self.step_configs, self.step_ids, strict=False
+        ):
             input_map: dict[str, Any] = config.get("input_map", {})
             inputs = _apply_input_map(input_map, result)
             # Pass through accumulated fields not already mapped
@@ -176,7 +179,8 @@ class VLoopPipeline(dspy.Module):
                 self.step_configs,
                 self.step_ids,
                 self.step_types,
-                self.tool_names, strict=False,
+                self.tool_names,
+                strict=False,
             )
         ):
             input_map: dict[str, Any] = config.get("input_map", {})
@@ -211,9 +215,7 @@ class VLoopPipeline(dspy.Module):
                     ) from exc
                 except Exception as exc:
                     step_results.append({"step_id": step_id, "error": str(exc)})
-                    raise PipelineRunError(
-                        f"Tool step {step_id!r} failed: {exc}"
-                    ) from exc
+                    raise PipelineRunError(f"Tool step {step_id!r} failed: {exc}") from exc
 
                 output_dict = tool_result.to_dict()
                 result = {**result, **output_dict}
@@ -236,9 +238,7 @@ class VLoopPipeline(dspy.Module):
                     step_results.append({"step_id": step_id, "outputs": output_dict})
                 except Exception as exc:
                     step_results.append({"step_id": step_id, "error": str(exc)})
-                    raise PipelineRunError(
-                        f"Pipeline step {step_id!r} failed: {exc}"
-                    ) from exc
+                    raise PipelineRunError(f"Pipeline step {step_id!r} failed: {exc}") from exc
 
         return dspy.Prediction(step_results=step_results, **result)
 
