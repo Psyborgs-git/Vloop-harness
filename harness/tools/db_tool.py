@@ -118,7 +118,40 @@ class DatabaseTool(AbstractTool):
             def _inspect(conn: Any) -> dict[str, Any]:
                 insp = inspect(conn)
                 tables: dict[str, Any] = {}
-                for table_name in insp.get_table_names():
+
+                table_names = insp.get_table_names()
+
+                # Attempt to use batched column retrieval to avoid N+1 queries
+                if hasattr(insp, "get_multi_columns"):
+                    try:
+                        multi_cols = insp.get_multi_columns()
+
+                        # Re-key by table_name so we don't depend on the dialect's
+                        # default schema key (e.g. 'main', 'public', or None)
+                        multi_cols_by_table = {
+                            t_name: cols
+                            for (_schema, t_name), cols in multi_cols.items()
+                        }
+
+                        for table_name in table_names:
+                            cols = multi_cols_by_table.get(table_name, [])
+                            if not cols:
+                                cols = insp.get_columns(table_name)
+
+                            columns = []
+                            for col in cols:
+                                columns.append({
+                                    "name": col["name"],
+                                    "type": str(col["type"]),
+                                    "nullable": col.get("nullable", True),
+                                })
+                            tables[table_name] = {"columns": columns}
+                        return tables
+                    except (NotImplementedError, AttributeError):
+                        pass
+
+                # Fallback to N+1 loop for older SQLAlchemy or unsupported dialects
+                for table_name in table_names:
                     columns = []
                     for col in insp.get_columns(table_name):
                         columns.append({
