@@ -1,100 +1,73 @@
-# Vloop Harness Architecture
+# System Architecture
 
-Vloop Harness is an AI-driven operating system sandbox. It orchestrates AI-assisted workflows using a strict layered architecture pattern. The system is designed around a native Rust orchestrator, a Python cognitive engine, and a React dynamic userland.
+## Executive Summary
 
-This document outlines the architectural choices, system boundaries, and security patterns.
+Vloop Harness is a local-first AI engineering workbench designed to operate as a secure, three-tiered "AI Operating System" sandbox. It combines a native Rust kernel, a Python-powered cognitive engine, and a React dynamic userland.
 
-## System Overview
+This strict separation of concerns allows the AI Harness to safely execute generated code, query databases, run terminal commands, and navigate web pages while keeping the sensitive core (secrets, file system boundaries, and transport execution) isolated and protected.
 
-The core philosophy of Vloop Harness is **strict domain separation and secure execution.** The system is divided into three major components, or "Layers", each responsible for a distinct set of operations.
+## Macro-Architecture Diagram
 
-### 1. Layer 0: Orchestrator Kernel (Rust / Tauri)
-The **Rust Kernel** acts as the system's "nervous system."
-- **Core Responsibilities**: Secure boot lifecycle, health checks, port allocation, native UI rendering (Tauri), and strict management of the secure vault.
-- **Native Sandbox execution**: Implements transport layers natively using crates like `bollard` for Docker daemon management and `ssh2` for remote connections.
-- **Vault**: Sensitive keys and database credentials are held in a secure Rust-managed vault and are requested dynamically by the Python layer via IPC.
+The system operates across three distinct layers, enforcing a strict boundary constraint: **The Rust Kernel (Layer 0) never communicates directly with the React Frontend (Layer 2).** All communication from the frontend must be routed through the Python Engine (Layer 1).
 
-### 2. Layer 1: Cognitive Engine (Python / FastAPI)
-The **Cognitive Engine** is the system's "brain."
-- **Core Responsibilities**: Hosts the AI routing logic (DSPy/LiteLLM), orchestrates component logic, builds and evaluates AI pipelines, and processes interactions from the user interface.
-- **AST-Based Gating**: Employs `sqlglot` for parsing and validating all AI-generated SQL queries before execution. It dynamically strictly permits reads/writes (`Select`, `Insert`, `Update`, `Delete`) and permanently blocks schema alterations (`Drop`, `Alter`, `Truncate`).
-- **Policy Enforcement**: Enforces boundary limits using a `policy.json` (e.g., workspace limits for the Filesystem Tool, allowed origins for the Browser tool).
-
-### 3. Layer 2: Dynamic Userland (React / Vite)
-The **Dynamic Userland** is the system's "body" and sensory input.
-- **Core Responsibilities**: Renders the frontend interface, provides chat components, visualizes tool traces and pipeline executions.
-- **Dynamic Rendering**: Loads AI-generated code securely within sandboxed iframes/webviews, allowing real-time preview of generated views without compromising the main application DOM.
-
----
-
-## The Strict IPC Rule
-
-A fundamental architectural rule of Vloop Harness is its restricted communication flow:
-
-**The Rust Kernel (Layer 0) MUST NEVER communicate directly with the React Frontend (Layer 2).**
-
-All communication is strictly hierarchical and proxied:
-1. React (Layer 2) talks to Python (Layer 1) via HTTP / WebSockets.
-2. Python (Layer 1) talks to Rust (Layer 0) via IPC / Secure WebSockets.
-
-### Communication Flow Diagram
 ```mermaid
-flowchart TD
-  subgraph Layer2 [Layer 2: Dynamic Userland]
-    UI[React App / Vite]
-    IFRAME[Sandboxed AI Views]
+graph TD
+  %% External Systems
+  LLM[LLM Providers\nAnthropic / OpenAI / Ollama]:::external
+
+  %% Layer 2
+  subgraph Layer 2: Dynamic Userland
+    UI[React Dashboard\nVite]
+    Iframe[Sandboxed AI Views\nIframes]
+    UI --- Iframe
   end
 
-  subgraph Layer1 [Layer 1: Cognitive Engine]
-    FASTAPI[FastAPI Server]
-    DSPY[DSPy / Base Agent]
-    POLICY[Policy Engine & SQLGlt]
+  %% Layer 1
+  subgraph Layer 1: Cognitive Engine
+    FastAPI[FastAPI Backend\nPython 3.11+]
+    DSPy[DSPy Engine\nBase Agent & Pipelines]
+    Policy[Policy & AST Engine\nsqlglot, policy.json]
+    DB[(State DB\nSQLite / PostgreSQL)]
+
+    FastAPI <--> DSPy
+    FastAPI <--> Policy
+    FastAPI <--> DB
   end
 
-  subgraph Layer0 [Layer 0: Orchestrator Kernel]
-    TAURI[Rust Tauri App]
-    VAULT[Secure Secrets Vault]
-    SANDBOX[Execution Sandbox\nDocker/SSH]
+  %% Layer 0
+  subgraph Layer 0: Orchestrator Kernel
+    Tauri[Rust Tauri App]
+    Vault[Secure Vault\nMutex HashMap]
+    Sandbox[Execution Sandbox\nDocker/SSH]
+
+    Tauri <--> Vault
+    Tauri <--> Sandbox
   end
 
-  UI <-->|HTTP/WS| FASTAPI
-  IFRAME -->|Isolated| UI
+  %% Connections
+  UI <-->|HTTP / WS| FastAPI
+  FastAPI <-->|IPC / Secure WS| Tauri
+  DSPy <-->|HTTP API| LLM
 
-  FASTAPI <-->|IPC / WS| TAURI
-  FASTAPI <--> DSPY
-  FASTAPI <--> POLICY
-
-  TAURI <--> VAULT
-  TAURI <--> SANDBOX
+  %% Styling
+  classDef external fill:#f9f,stroke:#333,stroke-width:2px;
+  class LLM external;
 ```
 
----
+## Design Philosophy
 
-## Security & Human-In-The-Loop (HITL)
+The architectural design of Vloop Harness is driven by three core philosophies: **Domain Separation, Secure Sandboxing, and Human-in-the-Loop Control.**
 
-Security is paramount when running AI agents that can generate code, run commands, and execute database queries.
+### 1. Strict Domain Separation
+*   **Layer 0 (Rust/Tauri):** Rust provides speed, memory safety, and low-level system access. It serves as the single source of truth for execution transport (e.g., using `bollard` for Docker and `ssh2` for SSH). It prevents unauthorized system tampering.
+*   **Layer 1 (Python/FastAPI):** Python is the ideal ecosystem for AI engineering, allowing deep integration with DSPy, LiteLLM, and AST-parsing tools like `sqlglot`. It handles the cognitive routing, pipeline generation, and tool decision-making.
+*   **Layer 2 (React/Vite):** The React frontend is isolated from system internals. It dynamically renders AI-generated UI components inside secure iframes, preventing cross-site scripting (XSS) or main-thread blocking by faulty generated code.
 
-### Human-In-The-Loop Workflow
-Intrusive operations require explicit user approval. The flow follows the strict IPC rule:
-1. Python attempts a high-risk operation (e.g., terminal command, DB write).
-2. Python requests permission from the Rust Kernel via IPC.
-3. If Rust determines HITL is required, it denies the request and signals Python.
-4. Python relays the permission request to React via WebSockets.
-5. The User approves/rejects via the React UI.
-6. React notifies Python; Python notifies Rust.
-7. Rust unlocks the operation in the Sandbox.
+### 2. Gated Security & Vaults
+*   **AST-Based Gating:** Instead of blindly passing AI-generated SQL to a database, Layer 1 uses `sqlglot` to parse queries into an Abstract Syntax Tree (AST). It mathematically guarantees that DDL commands (`DROP`, `ALTER`) are blocked, and strictly routes read (`SELECT`) and write (`INSERT`, `UPDATE`) commands to their appropriate tool methods.
+*   **Configurable Policy Engine:** A centralized `policy.json` dictates the exact limits of the agent. It enforces filesystem read/write boundaries, allowed terminal commands, and permissible browser origins.
+*   **Secure Vault:** Sensitive information (API keys, database credentials) is never stored in Layer 1 or Layer 2 memory longer than necessary. Keys are held in a Rust-managed vault (`VAULT` mutex in `modules/vault.rs`) and are retrieved dynamically via IPC when needed.
 
-### AST-based Database Protection
-The Python backend leverages the `sqlglot` library to perform Abstract Syntax Tree (AST) parsing on all generated SQL queries.
-- It accurately detects the target dialect (SQLite/PostgreSQL).
-- It categorizes the operation. Read-only operations (`Select`) are routed to read-only tool methods. Write operations (`Insert`, `Update`, `Delete`) are routed to write tool methods (often requiring HITL).
-- DDL operations (`Drop`, `Alter`, `Truncate`) are permanently blocked by the engine before reaching the database execution layer.
-
-### Configurable Gating (`policy.json`)
-The `policy.json` configures the boundaries of the execution environment. This includes:
-- Defining exactly which folders the FilesystemTool is allowed to read from or write to.
-- Defining exactly which URLs the BrowserTool is allowed to navigate to.
-- Allowlisting or denylisting specific terminal commands for the TerminalTool.
-
-## Data Persistence
-Vloop Harness persists state, logs, and configuration via asynchronous SQLAlchemy (using `asyncpg` for PostgreSQL and `aiosqlite` for local SQLite). SQLite is the default storage mechanism to maintain the "local-first" philosophy, but production deployments can seamlessly swap to PostgreSQL.
+### 3. Human-in-the-Loop (HITL) Execution
+Vloop Harness treats AI agents as autonomous but untrusted.
+Whenever an agent attempts a high-risk or destructive operation (like writing to the database or running an un-allowlisted terminal command), the tool registry halts the execution. It proxies a request to Layer 2 for user confirmation via WebSocket, waiting for the user to explicitly approve or deny the action before unlocking the execution sandbox in Layer 0.
