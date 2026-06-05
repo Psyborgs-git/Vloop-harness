@@ -20,6 +20,11 @@ class HarnessSettings(BaseSettings):
     vite_host: str = Field("localhost", alias="VITE_HOST")
     vite_port: int = Field(9102, alias="VITE_PORT")
 
+    allowed_origins: list[str] = Field(
+        default=["http://localhost:9102", "http://127.0.0.1:9102", "tauri://localhost"],
+        alias="ALLOWED_ORIGINS"
+    )
+
     # Legacy harness state DB (kept for backwards compatibility)
     state_db_path: str = Field(".harness/state.db", alias="STATE_DB_PATH")
     log_dir: str = Field(".harness/logs", alias="LOG_DIR")
