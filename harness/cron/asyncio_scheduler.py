@@ -27,6 +27,7 @@ class AsyncioScheduler(BaseScheduler):
         self.job_next_run: dict[str, datetime] = {}
         self._running = False
         self._task: asyncio.Task[None] | None = None
+        self._background_tasks: set[asyncio.Task[None]] = set()
 
     async def start(self) -> None:
         """Start the background scheduler task."""
