@@ -48,7 +48,7 @@ class CronJobCreate(BaseModel):
 class CronJobUpdate(BaseModel):
     name: str | None = None
     cron_expression: str | None = None
-    target: str | None = None
+    target: Literal["agent_run", "webhook"] | None = None
     target_url: str | None = None
     payload: dict[str, Any] | None = None
     is_active: bool | None = None
