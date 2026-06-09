@@ -33,7 +33,7 @@ router = APIRouter(prefix="/api/cron", tags=["cron"])
 class CronJobCreate(BaseModel):
     name: str
     cron_expression: str = Field(..., description="Cron format e.g. '* * * * *'")
-    target: str = Field(..., description="'agent_run' or 'webhook'")
+    target: Literal["agent_run", "webhook"] = Field(..., description="'agent_run' or 'webhook'")
     target_url: str | None = None
     payload: dict[str, Any] | None = None
     is_active: bool = True
