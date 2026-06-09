@@ -104,8 +104,10 @@ class AsyncioScheduler(BaseScheduler):
 
             if tasks_to_run:
                 for t in tasks_to_run:
-                    # Create async tasks so they don't block
-                    asyncio.create_task(t)
+                    # Create async tasks and keep a strong reference to prevent GC mid-execution
+                    task = asyncio.create_task(t)
+                    self._background_tasks.add(task)
+                    task.add_done_callback(self._background_tasks.discard)
 
             # Sleep for a short interval to avoid missing minute boundaries
             # while not spinning the CPU. 10 seconds is reasonable for minute-level crons.
