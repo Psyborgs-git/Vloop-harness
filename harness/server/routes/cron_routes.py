@@ -11,7 +11,7 @@ Endpoints
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from croniter import croniter
 from fastapi import APIRouter, Depends, HTTPException, Request
