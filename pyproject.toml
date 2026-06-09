@@ -49,6 +49,11 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "psutil>=6.0.0",
     "sqlglot>=23.0.0",
+
+    # Cron / Scheduling
+    "croniter>=2.0.0",
+    "celery>=5.3.0",
+    "redis>=5.0.0",
 ]
 
 [project.optional-dependencies]
