@@ -20,6 +20,7 @@ from harness.data.models import (
     ChatMessage,
     ChatSession,
     ComponentVersion,
+    CronJob,
     DSPyComponentDef,
     EvalDataset,
     GeneratedView,
@@ -27,6 +28,7 @@ from harness.data.models import (
     ProviderConfigDB,
     TelemetryEvent,
     ToolTrace,
+    ViewVersion,
 )
 
 
@@ -375,6 +377,41 @@ class Repository:
         m = await self.session.get(AppManifest, manifest_id)
         if m:
             await self.session.delete(m)
+            await self.session.commit()
+
+    # ── Cron Jobs ─────────────────────────────────────────────────────────────
+
+    async def create_cron_job(self, **kwargs: Any) -> CronJob:
+        job = CronJob(**kwargs)
+        self.session.add(job)
+        await self.session.commit()
+        await self.session.refresh(job)
+        return job
+
+    async def get_cron_job(self, job_id: str) -> CronJob | None:
+        return await self.session.get(CronJob, job_id)
+
+    async def list_cron_jobs(self, active_only: bool = False) -> list[CronJob]:
+        stmt = select(CronJob).order_by(CronJob.created_at.desc())
+        if active_only:
+            stmt = stmt.where(CronJob.is_active == True)
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def update_cron_job(self, job_id: str, **kwargs: Any) -> CronJob | None:
+        job = await self.get_cron_job(job_id)
+        if not job:
+            return None
+        for key, value in kwargs.items():
+            setattr(job, key, value)
+        await self.session.commit()
+        await self.session.refresh(job)
+        return job
+
+    async def delete_cron_job(self, job_id: str) -> None:
+        job = await self.get_cron_job(job_id)
+        if job:
+            await self.session.delete(job)
             await self.session.commit()
 
     # ── Tool traces ───────────────────────────────────────────────────────────
