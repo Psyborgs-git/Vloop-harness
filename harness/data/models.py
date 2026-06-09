@@ -15,6 +15,7 @@ Tables
   tool_traces         — enriched records of every tool call
   component_versions  — point-in-time snapshots of DSPy component definitions (for rollback)
   eval_datasets       — input/output example pairs for evaluating DSPy components
+  cron_jobs           — scheduled background tasks running externally or internally
 """
 
 from __future__ import annotations
@@ -386,6 +387,28 @@ class ViewVersion(Base):
     agent_run_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     change_summary: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
+# ── Cron jobs ──────────────────────────────────────────────────────────────────
+
+
+class CronJob(Base):
+    """A scheduled task configuration."""
+
+    __tablename__ = "cron_jobs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_new_uuid)
+    name: Mapped[str] = mapped_column(String(255))
+    cron_expression: Mapped[str] = mapped_column(String(255))  # e.g. "* * * * *"
+    target: Mapped[str] = mapped_column(String(255))  # "agent_run" or "webhook"
+    target_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    payload: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, onupdate=_utcnow
+    )
 
 
 # ── Eval datasets ──────────────────────────────────────────────────────────────

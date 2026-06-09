@@ -46,3 +46,6 @@ class HarnessSettings(BaseSettings):
     optimization_target_score: float = Field(0.85, alias="OPTIMIZATION_TARGET_SCORE")
     optimization_max_iterations: int = Field(3, alias="OPTIMIZATION_MAX_ITERATIONS")
     optimization_teleprompter: str = Field("BootstrapFewShot", alias="OPTIMIZATION_TELEPROMPTER")
+
+    # Cron / Scheduler
+    cron_scheduler_backend: str = Field("asyncio", alias="CRON_SCHEDULER_BACKEND")

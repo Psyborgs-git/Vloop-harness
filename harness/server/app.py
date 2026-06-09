@@ -30,6 +30,7 @@ from harness.server.routes.analytics_routes import router as analytics_router
 from harness.server.routes.app_routes import router as app_router
 from harness.server.routes.auth_routes import router as auth_router
 from harness.server.routes.chat_routes import router as chat_router
+from harness.server.routes.cron_routes import router as cron_router
 from harness.server.routes.dspy_routes import router as dspy_router
 from harness.server.routes.eval_routes import router as eval_router
 from harness.server.routes.metrics_routes import router as metrics_router
@@ -172,11 +173,27 @@ def create_app(main_process: MainProcess, settings: HarnessSettings) -> FastAPI:
         # Wire tool registry into the pipeline builder after boot
         builder.tool_registry = main_process.tools
 
+        # ── 8. Cron Scheduler ─────────────────────────────────────────────────
+        from harness.cron.factory import get_scheduler
+
+        scheduler = get_scheduler()
+        app.state.scheduler = scheduler
+
+        # Load active jobs
+        async with session_factory() as db_session:
+            repo3 = Repository(db_session)
+            active_jobs = await repo3.list_cron_jobs(active_only=True)
+            for j in active_jobs:
+                await scheduler.add_job(j)
+
+        await scheduler.start()
+
         storage.write_log("info", "VLoop Harness started", db_url=db_url)
 
         yield
 
         # ── Shutdown ──────────────────────────────────────────────────────────
+        await scheduler.stop()
         await main_process.shutdown()
         await close_db()
         storage.write_log("info", "VLoop Harness stopped")
@@ -227,6 +244,7 @@ def create_app(main_process: MainProcess, settings: HarnessSettings) -> FastAPI:
     app.include_router(pipeline_router)
     app.include_router(optimization_router)
     app.include_router(vector_store_router)
+    app.include_router(cron_router)
     app.include_router(proxy.router)  # catch-all last
 
     @app.get("/")
