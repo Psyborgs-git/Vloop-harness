@@ -42,7 +42,8 @@ async def execute_cron_job(
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            await client.post(target_url, json=data)
+            response = await client.post(target_url, json=data)
+            response.raise_for_status()
     except Exception as e:
         import structlog
         logger = structlog.get_logger()
