@@ -47,6 +47,11 @@ class AsyncioScheduler(BaseScheduler):
             except asyncio.CancelledError:
                 pass
             self._task = None
+
+        # Gracefully await any pending background tasks
+        if self._background_tasks:
+            await asyncio.gather(*self._background_tasks, return_exceptions=True)
+
         logger.info("asyncio_scheduler_stopped")
 
     async def add_job(self, job: CronJob) -> None:
