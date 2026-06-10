@@ -186,11 +186,27 @@ pub fn send_keys(session_id: &str, keys: &str) -> Result<(), String> {
 }
 
 pub fn read_buffer(session_id: &str) -> Result<String, String> {
-    let sessions = SESSIONS.lock().unwrap();
-    if let Some(session) = sessions.get(session_id) {
-        let mut buffer = session.buffer.lock().unwrap();
-        let res = String::from_utf8_lossy(&buffer).into_owned();
-        buffer.clear(); // Consume buffer
+    let buffer = {
+        let sessions = SESSIONS.lock().unwrap();
+        sessions.get(session_id).map(|s| s.buffer.clone())
+    };
+    if let Some(buffer) = buffer {
+        let mut buffer = buffer.lock().unwrap();
+        if buffer.is_empty() {
+            return Ok(String::new());
+        }
+        let mut valid_len = buffer.len();
+        match std::str::from_utf8(&buffer) {
+            Ok(_) => {}
+            Err(e) => {
+                valid_len = e.valid_up_to();
+                if e.error_len().is_some() {
+                    valid_len = buffer.len();
+                }
+            }
+        }
+        let res = String::from_utf8_lossy(&buffer[..valid_len]).into_owned();
+        buffer.drain(..valid_len);
         Ok(res)
     } else {
         Err(format!("Session {} not found", session_id))
