@@ -87,7 +87,7 @@ pub fn ensure_python_env(repo_root: &std::path::Path, data_dir: &std::path::Path
         if output.status.success() {
             println!("Found 'uv' on PATH. Creating virtualenv and syncing dependencies...");
             let venv_status = Command::new("uv")
-                .args(&["venv", ".venv"])
+                .args(["venv", ".venv"])
                 .current_dir(data_dir)
                 .stdout(Stdio::inherit())
                 .stderr(Stdio::inherit())
@@ -96,7 +96,7 @@ pub fn ensure_python_env(repo_root: &std::path::Path, data_dir: &std::path::Path
             if let Ok(s) = venv_status {
                 if s.success() {
                     let sync_status = Command::new("uv")
-                        .args(&["pip", "install", "-e", &repo_root.to_string_lossy()])
+                        .args(["pip", "install", "-e", &repo_root.to_string_lossy()])
                         .current_dir(data_dir)
                         .stdout(Stdio::inherit())
                         .stderr(Stdio::inherit())
@@ -121,7 +121,7 @@ pub fn ensure_python_env(repo_root: &std::path::Path, data_dir: &std::path::Path
         if output.status.success() {
             println!("Found Python. Creating virtualenv inside data_dir using '{} -m venv'...", python_cmd);
             let venv_status = Command::new(python_cmd)
-                .args(&["-m", "venv", ".venv"])
+                .args(["-m", "venv", ".venv"])
                 .current_dir(data_dir)
                 .stdout(Stdio::inherit())
                 .stderr(Stdio::inherit())
@@ -137,7 +137,7 @@ pub fn ensure_python_env(repo_root: &std::path::Path, data_dir: &std::path::Path
                     };
 
                     let install_status = Command::new(&pip_path)
-                        .args(&["install", "-e", &repo_root.to_string_lossy()])
+                        .args(["install", "-e", &repo_root.to_string_lossy()])
                         .current_dir(data_dir)
                         .stdout(Stdio::inherit())
                         .stderr(Stdio::inherit())

@@ -184,7 +184,7 @@ async fn call_openai(
         return Err(format!("OpenAI API error: {}", err));
     }
 
-    Ok(res.json().await.map_err(|e| e.to_string())?)
+    res.json().await.map_err(|e| e.to_string())
 }
 
 async fn call_ollama(
@@ -221,7 +221,7 @@ async fn call_ollama(
         return Err(format!("Ollama API error: {}", err));
     }
 
-    Ok(res.json().await.map_err(|e| e.to_string())?)
+    res.json().await.map_err(|e| e.to_string())
 }
 
 #[derive(Deserialize, Debug)]

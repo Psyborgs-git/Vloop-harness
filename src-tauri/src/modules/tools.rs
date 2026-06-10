@@ -146,7 +146,7 @@ impl PolicyEngine {
         let parent = self.project_policy_path.parent().unwrap();
         std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
 
-        let builtin_blocklist = vec!["mkfs", "fdisk", "parted", "shred", "wipefs"];
+        let builtin_blocklist = ["mkfs", "fdisk", "parted", "shred", "wipefs"];
         let safe_perm: Vec<String> = config.permanent_blocklist
             .into_iter()
             .filter(|c| !builtin_blocklist.contains(&c.as_str()))
@@ -231,15 +231,14 @@ impl PolicyEngine {
 
         for dir_policy in &eff.directories {
             let policy_dir = Path::new(&dir_policy.directory);
-            if rel_cwd == policy_dir || (
+            if (rel_cwd == policy_dir || (
                 policy_dir != Path::new(".") && path_is_under(&rel_cwd, policy_dir)
             ) || (
                 policy_dir == Path::new(".") && rel_cwd == Path::new(".")
-            ) {
-                if matched_policy.is_none() || dir_policy.directory.len() > matched_policy.as_ref().unwrap().directory.len() {
+            ))
+                && (matched_policy.is_none() || dir_policy.directory.len() > matched_policy.as_ref().unwrap().directory.len()) {
                     matched_policy = Some(dir_policy.clone());
                 }
-            }
         }
 
         let matched = match matched_policy {
@@ -294,8 +293,8 @@ impl PolicyEngine {
 }
 
 fn command_matches(pattern: &str, command: &str) -> bool {
-    let p = pattern.trim().split_whitespace().next().unwrap_or("");
-    let c = command.trim().split_whitespace().next().unwrap_or("");
+    let p = pattern.split_whitespace().next().unwrap_or("");
+    let c = command.split_whitespace().next().unwrap_or("");
     p == c
 }
 
@@ -515,6 +514,55 @@ impl ToolsManager {
         params: serde_json::Value,
     ) -> Result<ToolResult, String> {
         self.check_perm(cid, Permission::ShellExec)?;
+        let operation = params.get("operation").and_then(|v| v.as_str()).unwrap_or("execute");
+
+        if operation == "start_session" {
+            let session_id = params.get("session_id").and_then(|v| v.as_str()).ok_or("session_id required")?.to_string();
+            let command = params.get("command").and_then(|v| v.as_str()).unwrap_or("bash").to_string();
+            let args_val = params.get("args").and_then(|v| v.as_array());
+            let mut args = Vec::new();
+            if let Some(arr) = args_val {
+                for a in arr {
+                    if let Some(s) = a.as_str() {
+                        args.push(s.to_string());
+                    }
+                }
+            }
+            let cwd_relative = params.get("cwd_relative").and_then(|v| v.as_str()).unwrap_or(".");
+            let cwd_abs = self.workspace_root.join(cwd_relative);
+            let canonical_cwd = cwd_abs.canonicalize().map_err(|e| format!("Invalid working dir: {}", e))?;
+            let canonical_workspace = self.workspace_root.canonicalize().unwrap();
+            if !canonical_cwd.starts_with(&canonical_workspace) {
+                return Ok(ToolResult::error("CWD is outside of the workspace sandbox.".to_string()));
+            }
+
+            self.policy.check_command(&command, &args, &canonical_cwd)?;
+
+            let log_dir = self.data_dir.join(".terminal").join(&session_id);
+
+            crate::modules::terminal::start_local_session(
+                session_id.clone(),
+                canonical_cwd,
+                command,
+                args,
+                log_dir,
+            ).await?;
+
+            return Ok(ToolResult::success(format!("Session {} started", session_id), json!({"session_id": session_id})));
+        } else if operation == "send_keys" {
+            let session_id = params.get("session_id").and_then(|v| v.as_str()).ok_or("session_id required")?;
+            let keys = params.get("keys").and_then(|v| v.as_str()).unwrap_or("");
+            crate::modules::terminal::send_keys(session_id, keys)?;
+            return Ok(ToolResult::success("Keys sent".to_string(), json!({})));
+        } else if operation == "read_buffer" {
+            let session_id = params.get("session_id").and_then(|v| v.as_str()).ok_or("session_id required")?;
+            let buffer = crate::modules::terminal::read_buffer(session_id)?;
+            return Ok(ToolResult::success(buffer.clone(), json!({"buffer": buffer})));
+        } else if operation == "close_session" {
+            let session_id = params.get("session_id").and_then(|v| v.as_str()).ok_or("session_id required")?;
+            crate::modules::terminal::close_session(session_id)?;
+            return Ok(ToolResult::success("Session closed".to_string(), json!({})));
+        }
 
         let command = params.get("command").and_then(|v| v.as_str()).unwrap_or("");
         let cwd_relative = params.get("cwd_relative").and_then(|v| v.as_str()).unwrap_or(".");
@@ -624,16 +672,14 @@ impl ToolsManager {
                 }
                 let mut entries = Vec::new();
                 if let Ok(read_dir) = std::fs::read_dir(&abs_path) {
-                    for entry in read_dir {
-                        if let Ok(entry) = entry {
-                            let metadata = entry.metadata().ok();
-                            entries.push(json!({
-                                "name": entry.file_name().to_string_lossy(),
-                                "type": if entry.path().is_dir() { "dir" } else { "file" },
-                                "size": metadata.as_ref().map(|m| m.len()),
-                                "mtime": metadata.as_ref().and_then(|m| m.modified().ok().and_then(|t| t.duration_since(UNIX_EPOCH).ok().map(|d| d.as_secs_f64()))),
-                            }));
-                        }
+                    for entry in read_dir.flatten() {
+                        let metadata = entry.metadata().ok();
+                        entries.push(json!({
+                            "name": entry.file_name().to_string_lossy(),
+                            "type": if entry.path().is_dir() { "dir" } else { "file" },
+                            "size": metadata.as_ref().map(|m| m.len()),
+                            "mtime": metadata.as_ref().and_then(|m| m.modified().ok().and_then(|t| t.duration_since(UNIX_EPOCH).ok().map(|d| d.as_secs_f64()))),
+                        }));
                     }
                 }
                 Ok(ToolResult::success("".to_string(), json!({
@@ -955,25 +1001,21 @@ impl ToolsManager {
                 let tables_iter = stmt.query_map([], |row| row.get::<_, String>(0)).map_err(|e| e.to_string())?;
 
                 let mut schema: HashMap<String, serde_json::Value> = HashMap::new();
-                for table in tables_iter {
-                    if let Ok(tbl) = table {
-                        let mut col_stmt = conn.prepare(&format!("PRAGMA table_info({})", tbl)).map_err(|e| e.to_string())?;
-                        let cols_iter = col_stmt.query_map([], |row| {
-                            Ok(json!({
-                                "name": row.get::<_, String>(1)?,
-                                "type": row.get::<_, String>(2)?,
-                                "nullable": row.get::<usize, i32>(3)? == 0,
-                            }))
-                        }).map_err(|e| e.to_string())?;
+                for tbl in tables_iter.flatten() {
+                    let mut col_stmt = conn.prepare(&format!("PRAGMA table_info({})", tbl)).map_err(|e| e.to_string())?;
+                    let cols_iter = col_stmt.query_map([], |row| {
+                        Ok(json!({
+                            "name": row.get::<_, String>(1)?,
+                            "type": row.get::<_, String>(2)?,
+                            "nullable": row.get::<usize, i32>(3)? == 0,
+                        }))
+                    }).map_err(|e| e.to_string())?;
 
-                        let mut columns = Vec::new();
-                        for col in cols_iter {
-                            if let Ok(c) = col {
-                                columns.push(c);
-                            }
-                        }
-                        schema.insert(tbl, json!({ "columns": columns }));
+                    let mut columns = Vec::new();
+                    for c in cols_iter.flatten() {
+                        columns.push(c);
                     }
+                    schema.insert(tbl, json!({ "columns": columns }));
                 }
 
                 Ok(ToolResult::success(
