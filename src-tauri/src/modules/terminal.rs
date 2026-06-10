@@ -175,9 +175,12 @@ pub async fn start_local_session(
 }
 
 pub fn send_keys(session_id: &str, keys: &str) -> Result<(), String> {
-    let mut sessions = SESSIONS.lock().unwrap();
-    if let Some(session) = sessions.get_mut(session_id) {
-        let mut transport = session.transport.lock().unwrap();
+    let transport = {
+        let sessions = SESSIONS.lock().unwrap();
+        sessions.get(session_id).map(|s| s.transport.clone())
+    };
+    if let Some(transport) = transport {
+        let mut transport = transport.lock().unwrap();
         transport.write_stdin(keys.as_bytes())?;
         Ok(())
     } else {
