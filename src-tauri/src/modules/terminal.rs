@@ -198,8 +198,11 @@ pub fn read_buffer(session_id: &str) -> Result<String, String> {
 }
 
 pub fn close_session(session_id: &str) -> Result<(), String> {
-    let mut sessions = SESSIONS.lock().unwrap();
-    if let Some(session) = sessions.remove(session_id) {
+    let session = {
+        let mut sessions = SESSIONS.lock().unwrap();
+        sessions.remove(session_id)
+    };
+    if let Some(session) = session {
         let mut transport = session.transport.lock().unwrap();
         let _ = transport.kill();
         Ok(())
