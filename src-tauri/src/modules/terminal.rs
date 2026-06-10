@@ -144,7 +144,7 @@ pub async fn start_local_session(
             if let Ok(ref mut f) = file {
                 let text = String::from_utf8_lossy(&data).into_owned();
                 let log_entry = json!({
-                    "timestamp": std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs_f64(),
+                    "timestamp": std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs_f64()).unwrap_or(0.0),
                     "output": text
                 });
                 let mut line = log_entry.to_string();
