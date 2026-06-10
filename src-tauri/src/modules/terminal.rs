@@ -32,6 +32,7 @@ pub struct LocalTerminalOptions {
 
 pub struct LocalTerminalTransport {
     pty_writer: Mutex<Box<dyn Write + Send>>,
+    child: Mutex<Box<dyn portable_pty::Child + Send>>,
 }
 
 impl TerminalSessionTransport for LocalTerminalTransport {
@@ -44,8 +45,8 @@ impl TerminalSessionTransport for LocalTerminalTransport {
     }
 
     fn kill(&mut self) -> Result<(), String> {
-        // PTY killing handles by standard process or dropping handles (simplified for now)
-        Ok(())
+        let mut child = self.child.lock().unwrap();
+        child.kill().map_err(|e| format!("Failed to kill child process: {}", e))
     }
 
     fn resize(&mut self, _rows: u16, _cols: u16) -> Result<(), String> {
