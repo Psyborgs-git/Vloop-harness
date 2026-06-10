@@ -157,6 +157,7 @@ pub async fn start_local_session(
 
     let transport = LocalTerminalTransport {
         pty_writer: Mutex::new(writer),
+        child: Mutex::new(child),
     };
 
     let session = TerminalSession {
