@@ -80,7 +80,7 @@ pub async fn start_local_session(
     cmd.args(&args);
     cmd.cwd(cwd);
 
-    let _child = pair
+    let child = pair
         .slave
         .spawn_command(cmd)
         .map_err(|e| format!("Failed to spawn command: {}", e))?;
