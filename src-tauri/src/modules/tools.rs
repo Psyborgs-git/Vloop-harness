@@ -530,7 +530,13 @@ impl ToolsManager {
             }
             let cwd_relative = params.get("cwd_relative").and_then(|v| v.as_str()).unwrap_or(".");
             let cwd_abs = self.workspace_root.join(cwd_relative);
-            let canonical_cwd = cwd_abs.canonicalize().unwrap_or(cwd_abs);
+            let canonical_cwd = cwd_abs.canonicalize().map_err(|e| format!("Invalid working dir: {}", e))?;
+            let canonical_workspace = self.workspace_root.canonicalize().unwrap();
+            if !canonical_cwd.starts_with(&canonical_workspace) {
+                return Ok(ToolResult::error("CWD is outside of the workspace sandbox.".to_string()));
+            }
+
+            self.policy.check_command(&command, &args, &canonical_cwd)?;
 
             let log_dir = self.data_dir.join(".terminal").join(&session_id);
 
