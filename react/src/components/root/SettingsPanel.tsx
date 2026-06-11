@@ -167,6 +167,46 @@ export default function SettingsPanel() {
 
   return (
     <Box sx={{ maxWidth: 800, mx: "auto", p: 3, overflow: "auto" }}>
+      {/* Rust Kernel Settings Button */}
+      {(window as any).__TAURI__ && (
+        <Box
+          sx={{
+            p: 2,
+            mb: 4,
+            border: "1px solid",
+            borderColor: "divider",
+            borderRadius: 1,
+            backgroundColor: "action.hover",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: { xs: "wrap", sm: "nowrap" },
+            gap: 2,
+          }}
+        >
+          <Box>
+            <Typography variant="subtitle2" fontWeight={600} color="text.primary">
+              Rust Kernel Configuration
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Configure system-level environment settings, server ports, and completions proxy in an external panel.
+            </Typography>
+          </Box>
+          <Button
+            size="small"
+            variant="contained"
+            color="primary"
+            onClick={() => {
+              (window as any).__TAURI__.core.invoke("open_settings_window")
+                .catch((err: any) => console.error("Failed to open settings window:", err));
+            }}
+            sx={{ flexShrink: 0 }}
+          >
+            Manage Kernel Settings
+          </Button>
+        </Box>
+      )}
+
       {/* Providers */}
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>

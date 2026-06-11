@@ -12,3 +12,4 @@ pub mod sandbox;
 pub mod health;
 pub mod ui;
 pub mod terminal;
+pub mod settings_protocol;

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vloop Harness - Kernel Settings</title>
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --panel-bg: #11131a;
+            --border-color: #212533;
+            --text-color: #f1f5f9;
+            --text-muted: #64748b;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --success: #10b981;
+            --error: #ef4444;
+            --input-bg: #1a1d29;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 560px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+            box-sizing: border-box;
+        }
+
+        h2 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #ffffff;
+        }
+
+        h2 svg {
+            color: var(--primary);
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--primary);
+            margin-bottom: 14px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+            margin-top: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+
+        input, select {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-color);
+            padding: 11px 14px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 28px;
+        }
+
+        button {
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s, border-color 0.2s;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: inherit;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--input-bg);
+            border-color: var(--text-muted);
+        }
+
+        .alert {
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+            line-height: 1.5;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .alert-success {
+            background-color: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .alert-error {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--error);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(11, 12, 16, 0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 1000;
+            backdrop-filter: blur(6px);
+        }
+
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3.5px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            Rust Kernel Settings
+        </h2>
+        <div class="subtitle">Manage system-level configurations, AI proxy endpoints, and underlying server environments for Vloop Harness.</div>
+
+        <div id="alertSuccess" class="alert alert-success"></div>
+        <div id="alertError" class="alert alert-error"></div>
+
+        <form id="settingsForm">
+            <div class="section-title">AI Provider Config</div>
+            <div class="form-group">
+                <label for="provider_type">LM Provider</label>
+                <select id="provider_type" name="DSPY_LM_PROVIDER">
+                    <option value="ollama">Ollama (Local)</option>
+                    <option value="anthropic">Anthropic</option>
+                    <option value="openai">OpenAI</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="model">Default Model</label>
+                <input type="text" id="model" name="DSPY_LM_MODEL" placeholder="e.g. llama3.2, claude-3-5-sonnet-20241022">
+            </div>
+
+            <div id="api_key_group" class="form-group">
+                <label for="api_key">API Key</label>
+                <input type="password" id="api_key" placeholder="Paste your API key here">
+            </div>
+
+            <div id="base_url_group" class="form-group">
+                <label for="base_url">Ollama Base URL</label>
+                <input type="text" id="base_url" name="OLLAMA_BASE_URL" placeholder="http://localhost:11434">
+            </div>
+
+            <div class="section-title">Harness Ports</div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="harness_port">Harness Server Port</label>
+                    <input type="number" id="harness_port" name="HARNESS_PORT" placeholder="9100">
+                </div>
+                <div class="form-group">
+                    <label for="vite_port">Vite Frontend Port</label>
+                    <input type="number" id="vite_port" name="VITE_PORT" placeholder="9102">
+                </div>
+            </div>
+
+            <div class="section-title">System Paths</div>
+            <div class="form-group">
+                <label for="state_db_path">State DB File Path</label>
+                <input type="text" id="state_db_path" name="STATE_DB_PATH" placeholder=".harness/state.db">
+            </div>
+            <div class="form-group">
+                <label for="log_dir">Logs Directory</label>
+                <input type="text" id="log_dir" name="LOG_DIR" placeholder=".harness/logs">
+            </div>
+
+            <div class="btn-group">
+                <button type="submit" class="btn-primary">
+                    Save Configuration
+                </button>
+                <button type="button" id="btnTest" class="btn-secondary">
+                    Test LLM Connectivity
+                </button>
+                <button type="button" id="btnRestart" class="btn-secondary" style="color: #fbbf24; border-color: rgba(251, 191, 36, 0.25);">
+                    Restart Harness Services
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <div id="loadingText" style="font-weight: 500;">Applying configuration...</div>
+    </div>
+
+    <script>
+        const invoke = window.__TAURI__.core.invoke;
+
+        const providerTypeSelect = document.getElementById('provider_type');
+        const apiKeyGroup = document.getElementById('api_key_group');
+        const baseUrlGroup = document.getElementById('base_url_group');
+        const apiKeyLabel = apiKeyGroup.querySelector('label');
+        const apiKeyInput = document.getElementById('api_key');
+
+        function updateFormVisibilities() {
+            const provider = providerTypeSelect.value;
+            if (provider === 'ollama') {
+                apiKeyGroup.style.display = 'none';
+                baseUrlGroup.style.display = 'flex';
+            } else if (provider === 'anthropic') {
+                apiKeyGroup.style.display = 'flex';
+                baseUrlGroup.style.display = 'none';
+                apiKeyLabel.textContent = 'Anthropic API Key';
+            } else if (provider === 'openai') {
+                apiKeyGroup.style.display = 'flex';
+                baseUrlGroup.style.display = 'none';
+                apiKeyLabel.textContent = 'OpenAI API Key';
+            }
+        }
+
+        providerTypeSelect.addEventListener('change', updateFormVisibilities);
+
+        function showMessage(type, text) {
+            const successDiv = document.getElementById('alertSuccess');
+            const errorDiv = document.getElementById('alertError');
+            successDiv.style.display = 'none';
+            errorDiv.style.display = 'none';
+
+            if (type === 'success') {
+                successDiv.textContent = text;
+                successDiv.style.display = 'block';
+                setTimeout(() => { successDiv.style.display = 'none'; }, 6000);
+            } else {
+                errorDiv.textContent = text;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        function showLoading(show, text = 'Loading...') {
+            const overlay = document.getElementById('loadingOverlay');
+            const loadingText = document.getElementById('loadingText');
+            loadingText.textContent = text;
+            overlay.style.display = show ? 'flex' : 'none';
+        }
+
+        // Load current config from Rust
+        async function loadConfig() {
+            showLoading(true, 'Fetching kernel configurations...');
+            try {
+                const config = await invoke('get_settings_config');
+                console.log('Loaded config:', config);
+
+                const provider = config.DSPY_LM_PROVIDER || 'ollama';
+                document.getElementById('provider_type').value = provider;
+                document.getElementById('model').value = config.DSPY_LM_MODEL || '';
+                
+                if (provider === 'anthropic') {
+                    document.getElementById('api_key').value = config.ANTHROPIC_API_KEY || '';
+                } else if (provider === 'openai') {
+                    document.getElementById('api_key').value = config.OPENAI_API_KEY || '';
+                } else {
+                    document.getElementById('api_key').value = '';
+                }
+
+                document.getElementById('base_url').value = config.OLLAMA_BASE_URL || '';
+                document.getElementById('harness_port').value = config.HARNESS_PORT || 9100;
+                document.getElementById('vite_port').value = config.VITE_PORT || 9102;
+                document.getElementById('state_db_path').value = config.STATE_DB_PATH || '';
+                document.getElementById('log_dir').value = config.LOG_DIR || '';
+
+                updateFormVisibilities();
+            } catch (err) {
+                showMessage('error', 'Failed to load configuration: ' + err);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Save config
+        document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoading(true, 'Saving configuration...');
+            
+            const providerType = document.getElementById('provider_type').value;
+            const model = document.getElementById('model').value;
+            const apiKey = document.getElementById('api_key').value;
+            const baseUrl = document.getElementById('base_url').value;
+            const harnessPort = parseInt(document.getElementById('harness_port').value, 10);
+            const vitePort = parseInt(document.getElementById('vite_port').value, 10);
+            const stateDbPath = document.getElementById('state_db_path').value;
+            const logDir = document.getElementById('log_dir').value;
+
+            const payload = {
+                DSPY_LM_PROVIDER: providerType,
+                DSPY_LM_MODEL: model,
+                OLLAMA_BASE_URL: baseUrl,
+                HARNESS_PORT: harnessPort.toString(),
+                VITE_PORT: vitePort.toString(),
+                STATE_DB_PATH: stateDbPath,
+                LOG_DIR: logDir,
+            };
+
+            if (providerType === 'anthropic') {
+                payload.ANTHROPIC_API_KEY = apiKey;
+                payload.OPENAI_API_KEY = '';
+            } else if (providerType === 'openai') {
+                payload.OPENAI_API_KEY = apiKey;
+                payload.ANTHROPIC_API_KEY = '';
+            } else {
+                payload.ANTHROPIC_API_KEY = '';
+                payload.OPENAI_API_KEY = '';
+            }
+
+            try {
+                await invoke('save_settings_config', { config: payload });
+                showMessage('success', 'Configuration successfully saved into .env file!');
+            } catch (err) {
+                showMessage('error', 'Failed to save configuration: ' + err);
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        // Test connection
+        document.getElementById('btnTest').addEventListener('click', async () => {
+            showLoading(true, 'Testing connection to provider...');
+            
+            const providerType = document.getElementById('provider_type').value;
+            const model = document.getElementById('model').value;
+            const apiKey = document.getElementById('api_key').value;
+            const baseUrl = document.getElementById('base_url').value;
+
+            try {
+                const result = await invoke('test_llm_connection', {
+                    providerType,
+                    model,
+                    apiKey,
+                    baseUrl
+                });
+                if (result.success) {
+                    showMessage('success', 'Connection test succeeded! ' + result.message);
+                } else {
+                    showMessage('error', 'Connection test failed: ' + result.message);
+                }
+            } catch (err) {
+                showMessage('error', 'Connection test failed with error: ' + err);
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        // Restart services
+        document.getElementById('btnRestart').addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to restart all underlying Harness services? This will briefly disconnect you.')) {
+                return;
+            }
+            showLoading(true, 'Restarting Vloop Harness services...');
+            try {
+                await invoke('restart_services');
+                showMessage('success', 'Harness services successfully restarted with new configuration!');
+            } catch (err) {
+                showMessage('error', 'Failed to restart services: ' + err);
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        // Initial load
+        window.addEventListener('DOMContentLoaded', loadConfig);
+    </script>
+</body>
+</html>

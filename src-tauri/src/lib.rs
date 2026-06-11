@@ -5,7 +5,8 @@ mod modules;
 
 use modules::service::ServiceManager;
 use serde::Serialize;
-use tauri::{Manager, State};
+use std::collections::HashMap;
+use tauri::{AppHandle, Manager, State, WebviewUrl, WebviewWindowBuilder};
 
 #[derive(Serialize)]
 struct HarnessConfig {
@@ -40,6 +41,179 @@ fn get_harness_config(service_manager: State<ServiceManager>) -> Result<HarnessC
     })
 }
 
+#[tauri::command]
+fn get_settings_config() -> Result<serde_json::Value, String> {
+    let repo_root = modules::main::get_repo_root();
+    let vars = modules::settings_protocol::read_env_vars(&repo_root);
+    
+    let mut map = serde_json::Map::new();
+    for (k, v) in vars {
+        map.insert(k, serde_json::Value::String(v));
+    }
+    Ok(serde_json::Value::Object(map))
+}
+
+#[tauri::command]
+fn save_settings_config(config: HashMap<String, String>) -> Result<(), String> {
+    let repo_root = modules::main::get_repo_root();
+    modules::settings_protocol::update_env_file(&repo_root, &config)
+}
+
+#[tauri::command]
+async fn test_llm_connection(
+    provider_type: String,
+    model: String,
+    api_key: String,
+    base_url: String,
+) -> Result<serde_json::Value, String> {
+    let client = reqwest::Client::new();
+    match provider_type.as_str() {
+        "ollama" => {
+            let url = if base_url.is_empty() { "http://localhost:11434" } else { &base_url };
+            let test_url = format!("{}/api/tags", url.trim_end_matches('/'));
+            match client.get(&test_url).timeout(std::time::Duration::from_secs(5)).send().await {
+                Ok(res) if res.status().is_success() => {
+                    Ok(serde_json::json!({
+                        "success": true,
+                        "message": format!("Connected to Ollama server at {} successfully!", url)
+                    }))
+                }
+                Ok(res) => {
+                    Ok(serde_json::json!({
+                        "success": false,
+                        "message": format!("Ollama returned status code: {}", res.status())
+                    }))
+                }
+                Err(e) => {
+                    Ok(serde_json::json!({
+                        "success": false,
+                        "message": format!("Failed to reach Ollama server: {}", e)
+                    }))
+                }
+            }
+        }
+        "anthropic" => {
+            let res = client.post("https://api.anthropic.com/v1/messages")
+                .header("x-api-key", &api_key)
+                .header("anthropic-version", "2023-06-01")
+                .json(&serde_json::json!({
+                    "model": if model.is_empty() { "claude-3-5-sonnet-20241022" } else { &model },
+                    "messages": [{"role": "user", "content": "ping"}],
+                    "max_tokens": 1
+                }))
+                .timeout(std::time::Duration::from_secs(10))
+                .send()
+                .await;
+
+            match res {
+                Ok(response) => {
+                    let status = response.status();
+                    if status.is_success() {
+                        Ok(serde_json::json!({
+                            "success": true,
+                            "message": "Connection to Anthropic succeeded!"
+                        }))
+                    } else if status.as_u16() == 401 {
+                        Ok(serde_json::json!({
+                            "success": false,
+                            "message": "Anthropic API key is invalid (Unauthorized 401)."
+                        }))
+                    } else {
+                        let text = response.text().await.unwrap_or_default();
+                        Ok(serde_json::json!({
+                            "success": false,
+                            "message": format!("Anthropic API returned status {}: {}", status, text)
+                        }))
+                    }
+                }
+                Err(e) => {
+                    Ok(serde_json::json!({
+                        "success": false,
+                        "message": format!("Failed to reach Anthropic API: {}", e)
+                    }))
+                }
+            }
+        }
+        "openai" => {
+            let url = if base_url.is_empty() { "https://api.openai.com/v1/chat/completions" } else { &base_url };
+            let res = client.post(url)
+                .header("Authorization", format!("Bearer {}", api_key))
+                .json(&serde_json::json!({
+                    "model": if model.is_empty() { "gpt-4o" } else { &model },
+                    "messages": [{"role": "user", "content": "ping"}],
+                    "max_tokens": 1
+                }))
+                .timeout(std::time::Duration::from_secs(10))
+                .send()
+                .await;
+
+            match res {
+                Ok(response) => {
+                    let status = response.status();
+                    if status.is_success() {
+                        Ok(serde_json::json!({
+                            "success": true,
+                            "message": "Connection to OpenAI succeeded!"
+                        }))
+                    } else if status.as_u16() == 401 {
+                        Ok(serde_json::json!({
+                            "success": false,
+                            "message": "OpenAI API key is invalid (Unauthorized 401)."
+                        }))
+                    } else {
+                        let text = response.text().await.unwrap_or_default();
+                        Ok(serde_json::json!({
+                            "success": false,
+                            "message": format!("OpenAI API returned status {}: {}", status, text)
+                        }))
+                    }
+                }
+                Err(e) => {
+                    Ok(serde_json::json!({
+                        "success": false,
+                        "message": format!("Failed to reach OpenAI API: {}", e)
+                    }))
+                }
+            }
+        }
+        _ => {
+            Ok(serde_json::json!({
+                "success": false,
+                "message": format!("Unknown provider type: {}", provider_type)
+            }))
+        }
+    }
+}
+
+#[tauri::command]
+fn restart_services(service_manager: State<ServiceManager>) -> Result<(), String> {
+    println!("Restart requested for Harness services...");
+    let _ = service_manager.stop("all");
+    let statuses = service_manager.start("all");
+    for s in statuses {
+        println!("{:?} - running: {}", s.name, s.running);
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn open_settings_window(app_handle: AppHandle) -> Result<(), String> {
+    if let Some(window) = app_handle.get_webview_window("settings") {
+        let _ = window.set_focus();
+        return Ok(());
+    }
+
+    let url = tauri::Url::parse("vloop://settings").unwrap();
+    let _ = WebviewWindowBuilder::new(&app_handle, "settings", WebviewUrl::CustomProtocol(url))
+        .title("Vloop Harness - Kernel Settings")
+        .inner_size(580.0, 720.0)
+        .resizable(true)
+        .build()
+        .map_err(|e| format!("Failed to open settings window: {}", e))?;
+
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let repo_root = modules::main::get_repo_root();
@@ -61,10 +235,16 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_log::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
+        .register_uri_scheme_protocol("vloop", modules::settings_protocol::handle_vloop_protocol)
         .invoke_handler(tauri::generate_handler![
             get_harness_config,
             modules::vault::get_vault_key,
-            modules::sandbox::run_in_sandbox
+            modules::sandbox::run_in_sandbox,
+            get_settings_config,
+            save_settings_config,
+            test_llm_connection,
+            restart_services,
+            open_settings_window
         ])
         .setup(move |app| {
             let health_report = modules::health::check_system_health(&repo_root_clone, &data_dir_clone);
