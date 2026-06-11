@@ -33,7 +33,7 @@ jobs:
     - name: Run tests with coverage
       run: |
         source .venv/bin/activate
-        pytest --cov=harness --cov-report=term-missing --cov-report=xml tests/ --ignore=tests/test_alerting.py --ignore=tests/test_component_tree.py --ignore=tests/test_confirmation.py --ignore=tests/test_db_tool.py --ignore=tests/test_filesystem_tool.py --ignore=tests/test_metrics.py --ignore=tests/test_permissions.py --ignore=tests/test_policy_engine.py --ignore=tests/test_resource_monitor.py --ignore=tests/test_service_manager.py --ignore=tests/test_state_store.py --ignore=tests/test_terminal_tool.py
+        pytest --cov=harness --cov-report=term-missing --cov-report=xml tests/
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4

@@ -1,3 +1,0 @@
-Original Time:  2.42783s
-Optimized Time: 2.14042s
-Improvement:    11.84%
