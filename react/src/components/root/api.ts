@@ -21,12 +21,30 @@ function base(): string {
   return url.replace(/\/api\/.*/, "");
 }
 
+export function getAuthToken(): string | null {
+  return localStorage.getItem("vloop_auth_token");
+}
+
+export function setAuthToken(token: string | null) {
+  if (token) {
+    localStorage.setItem("vloop_auth_token", token);
+  } else {
+    localStorage.removeItem("vloop_auth_token");
+  }
+}
+
 async function request<T>(
   path: string,
   opts: RequestInit = {}
 ): Promise<T> {
+  const token = getAuthToken();
+  const headers = {
+    "Content-Type": "application/json",
+    ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+    ...opts.headers,
+  };
   const res = await fetch(`${base()}${path}`, {
-    headers: { "Content-Type": "application/json", ...opts.headers },
+    headers,
     ...opts,
   });
   if (!res.ok) {
@@ -570,3 +588,68 @@ export const getMetricsSummary = () =>
 
 export const resetMetrics = () =>
   request<{ status: string }>("/api/metrics/reset", { method: "POST" });
+
+
+// ── Auth & User Management ──────────────────────────────────────────────────
+
+export const login = (data: Record<string, string>) =>
+  request<{ access_token: string; token_type: string }>("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+export const register = (data: Record<string, string>) =>
+  request<any>("/api/auth/register", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+export const getMe = () =>
+  request<any>("/api/auth/me");
+
+
+// ── Chat Channels ─────────────────────────────────────────────────────────────
+
+export interface ChannelType {
+  id: string;
+  name: string;
+  description: string;
+  is_private: boolean;
+  created_by: string;
+  created_at: string;
+}
+
+export interface ChannelMessageType {
+  id: string;
+  channel_id: string;
+  sender_id: string;
+  sender_name: string;
+  sender_type: string;
+  content: string;
+  created_at: string;
+}
+
+export const listChannels = () =>
+  request<ChannelType[]>("/api/channels");
+
+export const createChannel = (data: { name: string; description?: string; is_private?: boolean }) =>
+  request<ChannelType>("/api/channels", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+export const joinChannel = (channelId: string) =>
+  request<{ id: string; channel_id: string; user_id: string; role: string }>(
+    `/api/channels/${channelId}/join`,
+    { method: "POST" }
+  );
+
+export const listChannelMessages = (channelId: string, limit = 100) =>
+  request<ChannelMessageType[]>(`/api/channels/${channelId}/messages?limit=${limit}`);
+
+export const sendChannelMessage = (channelId: string, content: string) =>
+  request<ChannelMessageType>(`/api/channels/${channelId}/messages`, {
+    method: "POST",
+    body: JSON.stringify({ content }),
+  });
+

@@ -1,0 +1,6 @@
+{
+  "files": ["react/index.html", "react/root.html"],
+  "insertBefore": "</head>",
+  "commentSyntax": "<!-- {} -->",
+  "cspChecked": true
+}

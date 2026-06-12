@@ -13,3 +13,4 @@ pub mod health;
 pub mod ui;
 pub mod terminal;
 pub mod settings_protocol;
+pub mod sandbox_grpc;

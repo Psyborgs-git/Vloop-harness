@@ -4,7 +4,9 @@ Authentication and authorization API routes.
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from harness.data.db import get_session
 from harness.core.auth import (
     Token,
     User,
@@ -17,8 +19,9 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 security = HTTPBearer()
 
 
-def get_current_user(
+async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(get_session),
 ) -> User:
     """Dependency to get the current authenticated user."""
     auth_manager = get_auth_manager()
@@ -30,14 +33,14 @@ def get_current_user(
             detail="Invalid or expired token",
         )
     
-    user = auth_manager.get_user(token_data.user_id)
+    user = await auth_manager.get_user(db, token_data.user_id)
     if not user or not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found or inactive",
         )
     
-    return user
+    return User.from_orm(user)
 
 
 def require_admin(current_user: User = Depends(get_current_user)) -> User:
@@ -51,16 +54,16 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
 
 
 @router.post("/register", response_model=User)
-async def register(user_create: UserCreate):
-    """Register a new user (admin only)."""
+async def register(
+    user_create: UserCreate,
+    db: AsyncSession = Depends(get_session),
+):
+    """Register a new user."""
     auth_manager = get_auth_manager()
     
-    # Check if current user is admin (simplified - in production, use proper auth)
-    # For now, allow registration without auth for initial setup
-    
     try:
-        user = auth_manager.create_user(user_create)
-        return user
+        user = await auth_manager.create_user(db, user_create)
+        return User.from_orm(user)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -69,10 +72,13 @@ async def register(user_create: UserCreate):
 
 
 @router.post("/login", response_model=Token)
-async def login(login: UserLogin):
+async def login(
+    login: UserLogin,
+    db: AsyncSession = Depends(get_session),
+):
     """Authenticate a user and return a token."""
     auth_manager = get_auth_manager()
-    user = auth_manager.authenticate(login)
+    user = await auth_manager.authenticate(db, login)
     
     if not user:
         raise HTTPException(
@@ -101,10 +107,14 @@ async def get_me(current_user: User = Depends(get_current_user)):
 
 
 @router.get("/users", response_model=list[User])
-async def list_users(current_user: User = Depends(require_admin)):
+async def list_users(
+    current_user: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_session),
+):
     """List all users (admin only)."""
     auth_manager = get_auth_manager()
-    return auth_manager.list_users()
+    users = await auth_manager.list_users(db)
+    return [User.from_orm(u) for u in users]
 
 
 @router.put("/users/{user_id}/role", response_model=User)
@@ -112,10 +122,11 @@ async def update_user_role(
     user_id: str,
     role: str,
     current_user: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_session),
 ):
     """Update a user's role (admin only)."""
     auth_manager = get_auth_manager()
-    user = auth_manager.update_user_role(user_id, role)
+    user = await auth_manager.update_user_role(db, user_id, role)
     
     if not user:
         raise HTTPException(
@@ -123,17 +134,18 @@ async def update_user_role(
             detail="User not found",
         )
     
-    return user
+    return User.from_orm(user)
 
 
 @router.post("/users/{user_id}/deactivate", response_model=User)
 async def deactivate_user(
     user_id: str,
     current_user: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_session),
 ):
     """Deactivate a user (admin only)."""
     auth_manager = get_auth_manager()
-    user = auth_manager.deactivate_user(user_id)
+    user = await auth_manager.deactivate_user(db, user_id)
     
     if not user:
         raise HTTPException(
@@ -141,4 +153,4 @@ async def deactivate_user(
             detail="User not found",
         )
     
-    return user
+    return User.from_orm(user)

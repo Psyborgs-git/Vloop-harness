@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package sandbox;
+
+// Defines the gRPC service for managing and interacting with sandboxes
+service SandboxService {
+  // Provision a new sandbox (local, docker, ssh)
+  rpc Provision (ProvisionRequest) returns (ProvisionResponse);
+
+  // Teardown a sandbox
+  rpc Teardown (TeardownRequest) returns (TeardownResponse);
+
+  // Bidirectional stream for terminal interactions (stdin, stdout, stderr)
+  rpc TerminalStream (stream TerminalInput) returns (stream TerminalOutput);
+}
+
+message ProvisionRequest {
+  string session_id = 1;
+  SandboxConfig config = 2;
+}
+
+message SandboxConfig {
+  enum Type {
+    LOCAL = 0;
+    DOCKER = 1;
+    SSH = 2;
+  }
+  Type type = 1;
+  string image = 2; // For Docker
+  string host = 3; // For SSH
+  string user = 4; // For SSH
+  string command = 5;
+  repeated string args = 6;
+  string cwd = 7;
+}
+
+message ProvisionResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+message TeardownRequest {
+  string session_id = 1;
+}
+
+message TeardownResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+message TerminalInput {
+  string session_id = 1;
+  enum InputType {
+    RAW_TEXT = 0;
+    CONTROL_KEY = 1;
+    RESIZE = 2;
+  }
+  InputType type = 2;
+  bytes data = 3; // Raw text or control key payload
+  uint32 rows = 4; // For resize
+  uint32 cols = 5; // For resize
+}
+
+message TerminalOutput {
+  string session_id = 1;
+  enum OutputType {
+    STDOUT = 0;
+    STDERR = 1;
+    EXIT = 2;
+  }
+  OutputType type = 2;
+  bytes data = 3;
+  int32 exit_code = 4; // For EXIT
+}

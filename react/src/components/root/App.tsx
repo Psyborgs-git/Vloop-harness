@@ -26,6 +26,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import SettingsIcon from "@mui/icons-material/Settings";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import ViewListIcon from "@mui/icons-material/ViewList";
+import ForumIcon from "@mui/icons-material/Forum";
 import {
     AppBar,
     Badge,
@@ -50,6 +51,7 @@ import { useHarness } from "@harness/useHarness";
 import * as api from "./api";
 import { AnalyticsProvider, useAnalytics } from "./analytics";
 import ChatPanel from "./ChatPanel";
+import ChannelsPanel from "./ChannelsPanel";
 import CommandPalette from "./CommandPalette";
 import type { PaletteNavType } from "./CommandPalette";
 import ContextualPanel from "./ContextualPanel";
@@ -151,6 +153,7 @@ function AppContent() {
     const [viewRegistryOpen, setViewRegistryOpen] = useState(false);
     const [focusId, setFocusId] = useState<string | null>(null);
     const [contextPanel, setContextPanel] = useState<ContextPanelState>({ type: null });
+    const [currentView, setCurrentView] = useState<"chat" | "channels">("chat");
 
     // ── Workspace state ────────────────────────────────────────────────────────
     const [workspaceMode, setWorkspaceMode] = useState(false);
@@ -370,13 +373,31 @@ function AppContent() {
                             </IconButton>
                         </Tooltip>
 
+                        {/* Channels toggle */}
+                        <Tooltip title={currentView === "channels" ? "Exit Channels" : "Open Channels"}>
+                            <IconButton
+                                size="small"
+                                onClick={() => {
+                                    setCurrentView((v) => {
+                                        const next = v === "channels" ? "chat" : "channels";
+                                        if (next === "channels") setWorkspaceMode(false);
+                                        return next;
+                                    });
+                                }}
+                                sx={{ color: currentView === "channels" ? "primary.main" : "text.secondary" }}
+                            >
+                                <ForumIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+
                         {/* Workspace toggle */}
                         <Tooltip title={workspaceMode ? "Exit workspace" : "Open workspace"}>
                             <IconButton
                                 size="small"
                                 onClick={() => {
-                                    analytics.trackAction("workspace.toggle", { data: { next_mode: !workspaceMode } });
-                                    setWorkspaceMode((v) => !v);
+                                    const next = !workspaceMode;
+                                    setWorkspaceMode(next);
+                                    if (next) setCurrentView("chat");
                                 }}
                                 sx={{ color: workspaceMode ? "primary.main" : "text.secondary" }}
                             >
@@ -496,13 +517,17 @@ function AppContent() {
                             </Box>
                         </Box>
                     ) : (
-                        /* ── Chat mode: full-width ChatPanel ── */
-                        <ChatPanel
-                            focusSessionId={focusId}
-                            onFocused={() => setFocusId(null)}
-                            onOpenPanel={openContextPanel}
-                            onOpenWorkspace={openInWorkspace}
-                        />
+                        /* ── Chat mode: full-width ChatPanel or ChannelsPanel ── */
+                        currentView === "channels" ? (
+                            <ChannelsPanel />
+                        ) : (
+                            <ChatPanel
+                                focusSessionId={focusId}
+                                onFocused={() => setFocusId(null)}
+                                onOpenPanel={openContextPanel}
+                                onOpenWorkspace={openInWorkspace}
+                            />
+                        )
                     )}
                 </Box>
             </Box>

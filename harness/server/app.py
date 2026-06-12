@@ -29,6 +29,7 @@ from harness.server.routes.alerting_routes import router as alerting_router
 from harness.server.routes.analytics_routes import router as analytics_router
 from harness.server.routes.app_routes import router as app_router
 from harness.server.routes.auth_routes import router as auth_router
+from harness.server.routes.channels_routes import router as channels_router
 from harness.server.routes.chat_routes import router as chat_router
 from harness.server.routes.cron_routes import router as cron_router
 from harness.server.routes.dspy_routes import router as dspy_router
@@ -241,6 +242,7 @@ def create_app(main_process: MainProcess, settings: HarnessSettings) -> FastAPI:
     app.include_router(metrics_router)
     app.include_router(analytics_router)
     app.include_router(auth_router)
+    app.include_router(channels_router)
     app.include_router(pipeline_router)
     app.include_router(optimization_router)
     app.include_router(vector_store_router)

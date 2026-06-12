@@ -433,3 +433,51 @@ class EvalDataset(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, onupdate=_utcnow
     )
+
+
+# ── Chat Channels ─────────────────────────────────────────────────────────────
+
+
+class UserDB(Base):
+    __tablename__ = "users"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_new_uuid)
+    username: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[str] = mapped_column(String(50), default="user")  # admin, user
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
+class ChannelDB(Base):
+    __tablename__ = "channels"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_new_uuid)
+    name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    description: Mapped[str] = mapped_column(Text, default="")
+    is_private: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_by: Mapped[str] = mapped_column(String(36), nullable=False)  # UserDB.id
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
+class ChannelMemberDB(Base):
+    __tablename__ = "channel_members"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_new_uuid)
+    channel_id: Mapped[str] = mapped_column(String(36), ForeignKey("channels.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    role: Mapped[str] = mapped_column(String(50), default="member")  # owner, admin, member
+    joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
+class ChannelMessageDB(Base):
+    __tablename__ = "channel_messages"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_new_uuid)
+    channel_id: Mapped[str] = mapped_column(String(36), ForeignKey("channels.id", ondelete="CASCADE"), nullable=False)
+    sender_id: Mapped[str] = mapped_column(String(64), nullable=False)  # UserDB.id or 'ai' or external sender id
+    sender_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    sender_type: Mapped[str] = mapped_column(String(50), default="human")  # human, ai, telegram, whatsapp
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+

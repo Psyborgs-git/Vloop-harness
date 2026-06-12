@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-11T00:00:00.000Z",
+  "title": "Design System: Vloop Harness",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Intelligent Indigo", "canonical": "#6366f1", "tonalRamp": ["#0d0e32", "#1b1d64", "#2c3099", "#4145cf", "#6366f1", "#818cf8", "#a5b4fc", "#c7d2fe"] },
+      "secondary": { "role": "secondary", "displayName": "Fluid Magenta", "canonical": "#ec4899", "tonalRamp": ["#310619", "#5f0c32", "#90114b", "#c11666", "#ec4899", "#f472b6", "#f9a8d4", "#fbcfe8"] },
+      "background-default": { "role": "neutral", "displayName": "Obsidian Vault", "canonical": "#0f0f13", "tonalRamp": ["#020204", "#060608", "#0b0b0e", "#0f0f13", "#1b1b22", "#2e2e39", "#4b4b59", "#78788a"] },
+      "background-paper": { "role": "neutral", "displayName": "Obsidian Paper", "canonical": "#1a1a24", "tonalRamp": ["#05050b", "#0d0d16", "#141420", "#1a1a24", "#282835", "#3c3c4c", "#5a5a6b", "#86869a"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero headers or system setup overlays." },
+      "headline": { "displayName": "Headline", "purpose": "Panel-level title headers." },
+      "title": { "displayName": "Title", "purpose": "Card titles and workspace window headers." },
+      "body": { "displayName": "Body", "purpose": "Standard paragraphs and body text copy." },
+      "label": { "displayName": "Label", "purpose": "Compact action text, button labels, and small meta headers." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Standard transitions for interactive components." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Standard action target for executing pipelines and confirming selections.",
+      "html": "<button class=\"ds-btn-primary\">Execute Pipeline</button>",
+      "css": ".ds-btn-primary { background: #6366f1; color: #ffffff; border: none; border-radius: 8px; padding: 8px 16px; font-family: Inter, sans-serif; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: background 0.15s ease-in-out; } .ds-btn-primary:hover { background: #4f46e5; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Feedback or secondary triggers like pausing an active agent runner.",
+      "html": "<button class=\"ds-btn-secondary\">Pause Agent</button>",
+      "css": ".ds-btn-secondary { background: #ec4899; color: #ffffff; border: none; border-radius: 8px; padding: 8px 16px; font-family: Inter, sans-serif; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: background 0.15s ease-in-out; } .ds-btn-secondary:hover { background: #db2777; }"
+    },
+    {
+      "name": "Card Container",
+      "kind": "card",
+      "description": "Standard flat surface with clear compact layout borders.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-title\">Agent Sandbox Vault</div><div class=\"ds-card-body\">The orchestrator kernel is ready to compile execution settings.</div></div>",
+      "css": ".ds-card { background: #1a1a24; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px; font-family: Inter, sans-serif; } .ds-card-title { color: #e2e8f0; font-size: 1rem; font-weight: 600; margin-bottom: 8px; } .ds-card-body { color: #94a3b8; font-size: 0.875rem; line-height: 1.5; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "description": "Compact input text fields with transition focus borders.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Enter configuration parameter...\" />",
+      "css": ".ds-input { background: #0f0f13; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 12px; color: #e2e8f0; font-family: Inter, sans-serif; font-size: 0.875rem; width: 100%; transition: border-color 0.15s; } .ds-input:focus { outline: none; border-color: #6366f1; } .ds-input::placeholder { color: #475569; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Fluid Terminal",
+    "overview": "Vloop Harness is designed as a highly secure, privacy-first developer workspace that bridges the gap between deep infrastructure sandboxing and visual AI execution. Modeled after modern CLI shells and local-first IDEs, \"The Fluid Terminal\" prioritizes screen density, instant responsiveness, and distraction-free layouts to keep AI engineers in their flow.\n\nThe aesthetic is characterized by high-contrast monochrome foundations accented with purposeful, vibrant signals that represent active states and pipeline execution. It explicitly rejects cluttered SaaS dashboard patterns, non-intuitive layered shadows, and unnecessary decorative glassmorphism.",
+    "keyCharacteristics": [
+      "Zero-Latency Feel: Snappy micro-interactions and transitions with standard exponential easing.",
+      "Strict Information Density: Compact spacing, legible typography, and structured content boundaries.",
+      "Visual Gating: Status colors are used sparingly to indicate agent execution and system safety."
+    ],
+    "rules": [
+      { "name": "The Obsidian Restraint Rule", "body": "The primary 'Intelligent Indigo' accent should never cover more than 10% of any screen. If everything glows, nothing is important.", "section": "colors" },
+      { "name": "The No-Faux-Glow Rule", "body": "Do not use colored glowing shadows around cards or text. Colors are indicators of state and system health, not decorative trim.", "section": "colors" },
+      { "name": "The Monospace Equality Rule", "body": "Use code blocks and monospace font families for all pipeline steps, sandbox states, and terminal commands to maintain an authentic local-first environment feel.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Surfaces are perfectly flat at rest. Shadow vocabulary is completely absent; instead, elevation is suggested strictly by a shift in container background or border contrast.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use monospace fonts for commands, sandbox IDs, and dspy configurations.",
+      "Do keep spacing compact to ensure all telemetry, sandboxes, and logs fit on a single screen without scrolling where possible.",
+      "Do use Fluid Magenta strictly to represent human-in-the-loop requests and urgent sandbox actions."
+    ],
+    "donts": [
+      "Don't use soft decorative drop shadows or glassmorphism backgrounds.",
+      "Don't use multi-color gradient text or colorful card glow effects.",
+      "Don't use thick left-side accent borders on callouts or cards.",
+      "Don't use heavy margin spacing that dilutes screen density and forces the developer out of the terminal flow."
+    ]
+  }
+}

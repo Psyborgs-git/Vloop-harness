@@ -37,7 +37,7 @@ pub fn execute_in_sandbox(req: SandboxExecutionRequest) -> Result<SandboxExecuti
             })
         }
         SandboxType::Docker { image } => {
-            let mut args = vec!["run".to_string(), "--rm".to_string(), image];
+            let mut args = vec!["run".to_string(), "--rm".to_string(), "--network=none".to_string(), image];
             args.push(req.command);
             args.extend(req.args);
 

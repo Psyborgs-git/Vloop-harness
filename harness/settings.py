@@ -25,6 +25,7 @@ class HarnessSettings(BaseSettings):
         "http://localhost:9102,tauri://localhost,http://localhost:1420",
         alias="ALLOWED_ORIGINS",
     )
+    jwt_secret: str = Field("vloop-super-secret-key-change-in-production", alias="JWT_SECRET")
 
     # Legacy harness state DB (kept for backwards compatibility)
     state_db_path: str = Field(".harness/state.db", alias="STATE_DB_PATH")

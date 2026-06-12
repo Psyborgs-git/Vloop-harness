@@ -258,6 +258,7 @@ pub fn run() {
             let backend_port = modules::health::get_available_port(9100);
             let ai_port = modules::health::get_available_port(backend_port + 1);
             let vite_port = modules::health::get_available_port(5173);
+            let grpc_port = modules::health::get_available_port(backend_port + 2);
 
             let repo_root = repo_root_clone.clone();
             let data_dir = data_dir_clone.clone();
@@ -267,6 +268,19 @@ pub fn run() {
             std::thread::spawn(move || {
                 let rt = tokio::runtime::Runtime::new().unwrap();
                 rt.block_on(async {
+                    // Start gRPC server
+                    let grpc_addr = format!("127.0.0.1:{}", grpc_port).parse().unwrap();
+                    let sandbox_service = modules::sandbox_grpc::MySandboxService::default();
+                    let grpc_server = tonic::transport::Server::builder()
+                        .add_service(modules::sandbox_grpc::pb::sandbox_service_server::SandboxServiceServer::new(sandbox_service))
+                        .serve(grpc_addr);
+                    
+                    tokio::spawn(async move {
+                        if let Err(e) = grpc_server.await {
+                            eprintln!("gRPC server failed: {}", e);
+                        }
+                    });
+
                     if let Err(e) = modules::main::run_app_headless(
                         repo_root,
                         data_dir,
