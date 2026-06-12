@@ -13,9 +13,11 @@ use tokio::sync::mpsc;
 pub trait TerminalSessionTransport: Send + Sync {
     fn write_stdin(&mut self, data: &[u8]) -> Result<(), String>;
     fn kill(&mut self) -> Result<(), String>;
+    #[allow(dead_code)]
     fn resize(&mut self, rows: u16, cols: u16) -> Result<(), String>;
 }
 
+#[allow(dead_code)]
 pub struct TerminalSession {
     pub session_id: String,
     transport: Arc<Mutex<Box<dyn TerminalSessionTransport>>>,
@@ -23,6 +25,7 @@ pub struct TerminalSession {
     buffer: Arc<Mutex<Vec<u8>>>, // Recent buffer
 }
 
+#[allow(dead_code)]
 #[derive(Serialize, Deserialize, Clone)]
 pub struct LocalTerminalOptions {
     pub cwd: PathBuf,

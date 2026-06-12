@@ -12,9 +12,9 @@ router = APIRouter()
 @router.websocket("/ws/root")
 async def root_ws(ws: WebSocket) -> None:
     """Keep-alive WebSocket for the main dashboard (no legacy component needed)."""
-    await ws.accept()
-    await ws.send_text(json.dumps({"type": "state_update", "data": {}}))
     try:
+        await ws.accept()
+        await ws.send_text(json.dumps({"type": "state_update", "data": {}}))
         while True:
             await ws.receive_text()  # drain any client messages
     except WebSocketDisconnect:
@@ -30,14 +30,14 @@ async def component_ws(component_id: str, ws: WebSocket) -> None:
         await ws.close(code=4004, reason="Component not found")
         return
 
-    await ws.accept()
-    comp._add_ws(ws)
-    mp.logger.get(component_id).info("WebSocket connected")
-
-    # Send initial state immediately
-    await ws.send_text(json.dumps({"type": "state_update", "data": comp.state}))
-
     try:
+        await ws.accept()
+        comp._add_ws(ws)
+        mp.logger.get(component_id).info("WebSocket connected")
+
+        # Send initial state immediately
+        await ws.send_text(json.dumps({"type": "state_update", "data": comp.state}))
+
         while True:
             raw = await ws.receive_text()
             try:

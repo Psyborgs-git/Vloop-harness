@@ -27,6 +27,7 @@ struct FailsafeUi {
 }
 
 impl eframe::App for FailsafeUi {
+    #[allow(deprecated)]
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("Vloop Kernel Failsafe UI");

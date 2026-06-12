@@ -1,7 +1,6 @@
 use tonic::{Request, Response, Status, Streaming};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
-use uuid::Uuid;
 
 pub mod pb {
     tonic::include_proto!("sandbox");
@@ -19,7 +18,7 @@ impl SandboxService for MySandboxService {
         &self,
         request: Request<ProvisionRequest>,
     ) -> Result<Response<ProvisionResponse>, Status> {
-        let req = request.into_inner();
+        let _req = request.into_inner();
         // Implement actual provisioning logic using terminal/sandbox module
         
         Ok(Response::new(ProvisionResponse {

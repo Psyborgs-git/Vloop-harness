@@ -14,7 +14,7 @@ Boot sequence
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -50,7 +50,7 @@ if TYPE_CHECKING:
 def create_app(main_process: MainProcess, settings: HarnessSettings) -> FastAPI:
 
     @asynccontextmanager
-    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         # ── 1. VLoop directories ──────────────────────────────────────────────
         from harness.vloop.storage import VLoopStorage
 

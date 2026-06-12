@@ -29,12 +29,22 @@ _console = Console(stderr=True)
 
 
 def _configure_stdlib() -> None:
+    import os
+    harness_debug = os.getenv("HARNESS_DEBUG", "true").lower() in ("true", "1")
+    level = logging.DEBUG if harness_debug else logging.INFO
+
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=level,
         format="%(message)s",
         datefmt="[%X]",
         handlers=[RichHandler(console=_console, rich_tracebacks=True, markup=True)],
     )
+
+    # Silence extremely chatty third-party loggers
+    logging.getLogger("sqlalchemy").setLevel(logging.WARNING)
+    logging.getLogger("aiosqlite").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
 def _build_structlog() -> None:

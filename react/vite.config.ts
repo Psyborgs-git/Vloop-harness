@@ -46,5 +46,9 @@ export default defineConfig({
       host: "localhost",
       port: 9102,
     },
+    allowedHosts: [
+      "jae.local",
+      "localhost"
+    ]
   },
 });
