@@ -51,12 +51,12 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
 
 
 @router.post("/register", response_model=User)
-async def register(user_create: UserCreate):
+async def register(
+    user_create: UserCreate,
+    current_user: User = Depends(require_admin),
+):
     """Register a new user (admin only)."""
     auth_manager = get_auth_manager()
-    
-    # Check if current user is admin (simplified - in production, use proper auth)
-    # For now, allow registration without auth for initial setup
     
     try:
         user = auth_manager.create_user(user_create)
