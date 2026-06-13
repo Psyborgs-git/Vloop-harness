@@ -5,7 +5,7 @@
   "identifier": "com.vloop.harness",
   "build": {
     "frontendDist": "../src-tauri/static",
-    "devUrl": "http://127.0.0.1:9100/ui/root",
+    "devUrl": "vloop://settings",
     "beforeDevCommand": "",
     "beforeBuildCommand": "cd react && npm run build"
   },

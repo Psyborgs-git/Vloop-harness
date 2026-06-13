@@ -298,7 +298,7 @@ pub fn run() {
                 });
             });
 
-            // Wait for backend port to be open before navigating the webview
+            // Wait for backend port to be open to ensure Python orchestrator is ready
             let start_time = std::time::Instant::now();
             let timeout = std::time::Duration::from_secs(30);
             while start_time.elapsed() < timeout {
@@ -308,13 +308,8 @@ pub fn run() {
                 std::thread::sleep(std::time::Duration::from_millis(100));
             }
 
-            // Dynamically navigate main webview window to the correct backend port
-            if let Some(main_window) = app.get_webview_window("main") {
-                let url_str = format!("http://127.0.0.1:{}/ui/root", backend_port);
-                if let Ok(url) = tauri::Url::parse(&url_str) {
-                    let _ = main_window.navigate(url);
-                }
-            }
+            // Note: We no longer navigate the main window here. 
+            // The rust kernel window remains on vloop://settings as the Command Center.
 
             let service_manager = ServiceManager::new(
                 repo_root_clone,

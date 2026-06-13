@@ -1,9 +1,21 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ProcessConfig {
+    pub name: String,
+    pub command: Vec<String>,
+    pub cwd: Option<String>,
+    pub env: HashMap<String, String>,
+    pub check_port: Option<u16>,
+    pub check_host: Option<String>,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 struct PidData {
@@ -13,8 +25,7 @@ struct PidData {
     started_at: f64,
 }
 
-#[derive(Debug)]
-#[allow(dead_code)]
+#[derive(Debug, Serialize, Clone)]
 pub struct ServiceStatus {
     pub name: String,
     pub running: bool,
@@ -29,10 +40,12 @@ pub struct ServiceManager {
     service_dir: PathBuf,
     backend_host: String,
     backend_port: u16,
+    #[allow(dead_code)]
     vite_host: String,
     vite_port: u16,
     frontend_mode: String,
     rust_completions_url: String,
+    processes: Arc<RwLock<HashMap<String, ProcessConfig>>>,
 }
 
 impl ServiceManager {
@@ -50,81 +63,34 @@ impl ServiceManager {
         let service_dir = log_dir.join("services");
         fs::create_dir_all(&service_dir).ok();
 
-        Self {
-            repo_root,
+        let mut manager = Self {
+            repo_root: repo_root.clone(),
             log_dir,
             service_dir,
-            backend_host,
+            backend_host: backend_host.clone(),
             backend_port,
             vite_host,
             vite_port,
-            frontend_mode,
-            rust_completions_url,
-        }
+            frontend_mode: frontend_mode.clone(),
+            rust_completions_url: rust_completions_url.clone(),
+            processes: Arc::new(RwLock::new(HashMap::new())),
+        };
+
+        manager.register_default_processes();
+        manager
     }
 
-    pub fn start(&self, target: &str) -> Vec<ServiceStatus> {
-        let targets = self.expand_target(target);
-        let mut statuses = Vec::new();
-        for name in targets {
-            if name == "backend" {
-                statuses.push(self.start_backend());
-            } else if name == "frontend" {
-                statuses.push(self.start_frontend());
-            }
-        }
-        statuses
+    pub fn register_process(&self, config: ProcessConfig) {
+        let mut processes = self.processes.write().unwrap();
+        processes.insert(config.name.clone(), config);
     }
 
-    pub fn stop(&self, target: &str) -> Vec<ServiceStatus> {
-        let targets = self.expand_target(target);
-        let mut statuses = Vec::new();
-        for name in targets {
-            statuses.push(self.stop_service(&name));
-        }
-        statuses
+    pub fn unregister_process(&self, name: &str) {
+        let mut processes = self.processes.write().unwrap();
+        processes.remove(name);
     }
 
-    #[allow(dead_code)]
-    pub fn status(&self) -> Vec<ServiceStatus> {
-        let mut statuses = Vec::new();
-        for name in &["backend", "frontend"] {
-            if *name == "frontend" && self.frontend_mode == "static" {
-                statuses.push(ServiceStatus {
-                    name: "frontend".to_string(),
-                    running: true,
-                    healthy: true,
-                    log_path: self.service_log("frontend"),
-                    detail: "static mode (served by backend)".to_string(),
-                });
-                continue;
-            }
-            statuses.push(self.status_for(name));
-        }
-        statuses
-    }
-
-    // Configuration getters for Tauri commands
-    pub fn backend_host(&self) -> &str {
-        &self.backend_host
-    }
-
-    pub fn backend_port(&self) -> u16 {
-        self.backend_port
-    }
-
-    pub fn is_backend_running(&self) -> bool {
-        let status = self.status_for("backend");
-        status.running && status.healthy
-    }
-
-    fn start_backend(&self) -> ServiceStatus {
-        let mut status = self.status_for("backend");
-        if status.running && status.healthy {
-            status.detail = format!("already running on http://{}:{}", self.backend_host, self.backend_port);
-            return status;
-        }
-
+    fn register_default_processes(&mut self) {
         // 1. Prefer an existing .venv at the repo root (dev setup)
         let mut python_path: Option<PathBuf> = None;
         let repo_venv = self.repo_root.join(".venv");
@@ -159,15 +125,15 @@ impl ServiceManager {
                 py.to_string_lossy().to_string(),
                 "-m".to_string(),
                 "harness.main".to_string(),
-                "internal".to_string(),
-                "backend-worker".to_string(),
+                "run".to_string(),
                 "--host".to_string(),
                 self.backend_host.clone(),
                 "--port".to_string(),
                 self.backend_port.to_string(),
+                "--frontend-mode".to_string(),
+                self.frontend_mode.clone(),
             ]
         } else {
-            // 3. No venv found — try uv run (creates ephemeral env from pyproject.toml)
             let has_uv = Command::new("uv")
                 .arg("--version")
                 .output()
@@ -181,94 +147,139 @@ impl ServiceManager {
                     "python".to_string(),
                     "-m".to_string(),
                     "harness.main".to_string(),
-                    "internal".to_string(),
-                    "backend-worker".to_string(),
+                    "run".to_string(),
                     "--host".to_string(),
                     self.backend_host.clone(),
                     "--port".to_string(),
                     self.backend_port.to_string(),
+                    "--frontend-mode".to_string(),
+                    self.frontend_mode.clone(),
                 ]
             } else {
-                // 4. Final fallback: system python3
                 let python_cmd = if cfg!(windows) { "python" } else { "python3" };
                 vec![
                     python_cmd.to_string(),
                     "-m".to_string(),
                     "harness.main".to_string(),
-                    "internal".to_string(),
-                    "backend-worker".to_string(),
+                    "run".to_string(),
                     "--host".to_string(),
                     self.backend_host.clone(),
                     "--port".to_string(),
                     self.backend_port.to_string(),
+                    "--frontend-mode".to_string(),
+                    self.frontend_mode.clone(),
                 ]
             }
         };
 
-        let harness_debug = if self.frontend_mode == "static" { "false" } else { "true" };
         let state_db_path = self.log_dir.parent().unwrap().join("state.db").to_string_lossy().to_string();
         let log_dir_str = self.log_dir.to_string_lossy().to_string();
         let cache_dir_str = self.log_dir.parent().unwrap().join("dspy_cache").to_string_lossy().to_string();
         let vite_port_str = self.vite_port.to_string();
-        let envs = vec![
-            ("HARNESS_DEBUG", harness_debug),
-            ("RUST_BASE_AI_URL", &self.rust_completions_url),
-            ("STATE_DB_PATH", &state_db_path),
-            ("LOG_DIR", &log_dir_str),
-            ("CACHE_DIR", &cache_dir_str),
-            ("VITE_PORT", &vite_port_str),
-        ];
+        
+        let mut envs = HashMap::new();
+        envs.insert("RUST_BASE_AI_URL".to_string(), self.rust_completions_url.clone());
+        envs.insert("STATE_DB_PATH".to_string(), state_db_path);
+        envs.insert("LOG_DIR".to_string(), log_dir_str);
+        envs.insert("CACHE_DIR".to_string(), cache_dir_str);
+        envs.insert("VITE_PORT".to_string(), vite_port_str);
 
-        let proc_pid = self.spawn_service("backend", &cmd, &self.repo_root, envs);
-        if !self.wait_for_port(&self.backend_host, self.backend_port, 120.0, 0.3) {
-            self.terminate_pid(proc_pid);
-            panic!("Backend failed to start on port {}", self.backend_port);
-        }
+        let python_orchestrator = ProcessConfig {
+            name: "python_orchestrator".to_string(),
+            command: cmd,
+            cwd: Some(self.repo_root.to_string_lossy().to_string()),
+            env: envs,
+            check_port: Some(self.backend_port),
+            check_host: Some(self.backend_host.clone()),
+        };
 
-        self.status_for("backend")
+        self.register_process(python_orchestrator);
     }
 
-    fn start_frontend(&self) -> ServiceStatus {
-        if self.frontend_mode == "static" {
-            return ServiceStatus {
-                name: "frontend".to_string(),
-                running: true,
-                healthy: true,
-                log_path: self.service_log("frontend"),
-                detail: "static mode (served by backend)".to_string(),
+    pub fn start(&self, target: &str) -> Vec<ServiceStatus> {
+        let targets = self.expand_target(target);
+        let mut statuses = Vec::new();
+        
+        for name in targets {
+            let config_opt = {
+                let processes = self.processes.read().unwrap();
+                processes.get(&name).cloned()
             };
-        }
 
-        let mut status = self.status_for("frontend");
+            if let Some(config) = config_opt {
+                statuses.push(self.start_process(config));
+            } else {
+                 statuses.push(ServiceStatus {
+                    name: name.clone(),
+                    running: false,
+                    healthy: false,
+                    log_path: self.service_log(&name),
+                    detail: format!("Process config not found for {}", name),
+                });
+            }
+        }
+        statuses
+    }
+
+    pub fn stop(&self, target: &str) -> Vec<ServiceStatus> {
+        let targets = self.expand_target(target);
+        let mut statuses = Vec::new();
+        for name in targets {
+            statuses.push(self.stop_service(&name));
+        }
+        statuses
+    }
+
+    #[allow(dead_code)]
+    pub fn status(&self) -> Vec<ServiceStatus> {
+        let mut statuses = Vec::new();
+        let processes = self.processes.read().unwrap();
+        for name in processes.keys() {
+            statuses.push(self.status_for(name));
+        }
+        statuses
+    }
+
+    // Configuration getters for Tauri commands
+    pub fn backend_host(&self) -> &str {
+        &self.backend_host
+    }
+
+    pub fn backend_port(&self) -> u16 {
+        self.backend_port
+    }
+
+    pub fn is_backend_running(&self) -> bool {
+        let status = self.status_for("python_orchestrator");
+        status.running && status.healthy
+    }
+
+    fn start_process(&self, config: ProcessConfig) -> ServiceStatus {
+        let mut status = self.status_for(&config.name);
         if status.running && status.healthy {
-            status.detail = format!("already running on http://{}:{}", self.vite_host, self.vite_port);
+            status.detail = "already running".to_string();
+            if let (Some(host), Some(port)) = (&config.check_host, config.check_port) {
+                status.detail = format!("already running on http://{}:{}", host, port);
+            }
             return status;
         }
 
-        let react_dir = self.repo_root.join("react");
-        let cmd = vec![
-            "npm".to_string(),
-            "run".to_string(),
-            "dev".to_string(),
-            "--".to_string(),
-            "--port".to_string(),
-            self.vite_port.to_string(),
-            "--host".to_string(),
-        ];
-
-        let api_url = format!("http://{}:{}", self.backend_host, self.backend_port);
-        let ws_url = format!("ws://{}:{}", self.backend_host, self.backend_port);
-        let envs = vec![
-            ("VITE_API_URL", api_url.as_str()),
-            ("VITE_WS_URL", ws_url.as_str()),
-        ];
-        let proc_pid = self.spawn_service("frontend", &cmd, &react_dir, envs);
-        if !self.wait_for_port(&self.vite_host, self.vite_port, 30.0, 0.3) {
-            self.terminate_pid(proc_pid);
-            panic!("Frontend failed to start on port {}", self.vite_port);
+        let cwd = config.cwd.map(PathBuf::from).unwrap_or_else(|| self.repo_root.clone());
+        let env_vec: Vec<(&str, &str)> = config.env.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
+        
+        let proc_pid = self.spawn_service(&config.name, &config.command, &cwd, env_vec);
+        
+        if let (Some(host), Some(port)) = (&config.check_host, config.check_port) {
+            if !self.wait_for_port(host, port, 120.0, 0.3) {
+                self.terminate_pid(proc_pid);
+                panic!("Process {} failed to start on port {}", config.name, port);
+            }
+        } else {
+            // Give it a brief moment if no port check is configured
+            thread::sleep(Duration::from_millis(500));
         }
 
-        self.status_for("frontend")
+        self.status_for(&config.name)
     }
 
     fn stop_service(&self, name: &str) -> ServiceStatus {
@@ -285,11 +296,20 @@ impl ServiceManager {
         let pid = self.read_pid(name);
         let running = pid.map(|p| self.pid_alive(p)).unwrap_or(false);
 
+        let config_opt = {
+            let processes = self.processes.read().unwrap();
+            processes.get(name).cloned()
+        };
+
         let healthy = if running {
-            if name == "backend" {
-                self.wait_for_port(&self.backend_host, self.backend_port, 0.5, 0.1)
+            if let Some(config) = config_opt {
+                if let (Some(host), Some(port)) = (config.check_host, config.check_port) {
+                    self.wait_for_port(&host, port, 0.5, 0.1)
+                } else {
+                    true // No health check configured, assume healthy if running
+                }
             } else {
-                self.wait_for_port(&self.vite_host, self.vite_port, 0.5, 0.1)
+                false // Process not registered anymore
             }
         } else {
             false
@@ -316,7 +336,8 @@ impl ServiceManager {
 
     fn expand_target(&self, target: &str) -> Vec<String> {
         if target == "all" {
-            vec!["backend".to_string(), "frontend".to_string()]
+            let processes = self.processes.read().unwrap();
+            processes.keys().cloned().collect()
         } else {
             vec![target.to_string()]
         }
@@ -442,3 +463,4 @@ impl ServiceManager {
         self.service_dir.join(format!("{}.pid", name))
     }
 }
+
