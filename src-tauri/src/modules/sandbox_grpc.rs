@@ -1,13 +1,11 @@
-use tonic::{Request, Response, Status, Streaming};
-use tokio::sync::mpsc;
-use tokio_stream::wrappers::ReceiverStream;
+use tonic::{Request, Response, Status};
 
 pub mod pb {
     tonic::include_proto!("sandbox");
 }
 
 use pb::sandbox_service_server::SandboxService;
-use pb::{ProvisionRequest, ProvisionResponse, TeardownRequest, TeardownResponse, TerminalInput, TerminalOutput};
+use pb::{ProvisionRequest, ProvisionResponse, TeardownRequest, TeardownResponse};
 
 #[derive(Default)]
 pub struct MySandboxService {}
@@ -39,30 +37,7 @@ impl SandboxService for MySandboxService {
         }))
     }
 
-    type TerminalStreamStream = ReceiverStream<Result<TerminalOutput, Status>>;
 
-    async fn terminal_stream(
-        &self,
-        request: Request<Streaming<TerminalInput>>,
-    ) -> Result<Response<Self::TerminalStreamStream>, Status> {
-        let mut in_stream = request.into_inner();
-        let (tx, rx) = mpsc::channel(128);
-
-        tokio::spawn(async move {
-            while let Ok(Some(input)) = in_stream.message().await {
-                // Here we would route the input to the actual terminal session via PTY
-                // For now, we just echo back stdout
-                let _ = tx.send(Ok(TerminalOutput {
-                    session_id: input.session_id,
-                    r#type: pb::terminal_output::OutputType::Stdout as i32,
-                    data: format!("Echo: {:?}", input.data).into_bytes(),
-                    exit_code: 0,
-                })).await;
-            }
-        });
-
-        Ok(Response::new(ReceiverStream::new(rx)))
-    }
 }
 
 #[cfg(test)]

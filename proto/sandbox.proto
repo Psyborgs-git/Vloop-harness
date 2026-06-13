@@ -10,8 +10,6 @@ service SandboxService {
   // Teardown a sandbox
   rpc Teardown (TeardownRequest) returns (TeardownResponse);
 
-  // Bidirectional stream for terminal interactions (stdin, stdout, stderr)
-  rpc TerminalStream (stream TerminalInput) returns (stream TerminalOutput);
 }
 
 message ProvisionRequest {
@@ -48,27 +46,3 @@ message TeardownResponse {
   string error_message = 2;
 }
 
-message TerminalInput {
-  string session_id = 1;
-  enum InputType {
-    RAW_TEXT = 0;
-    CONTROL_KEY = 1;
-    RESIZE = 2;
-  }
-  InputType type = 2;
-  bytes data = 3; // Raw text or control key payload
-  uint32 rows = 4; // For resize
-  uint32 cols = 5; // For resize
-}
-
-message TerminalOutput {
-  string session_id = 1;
-  enum OutputType {
-    STDOUT = 0;
-    STDERR = 1;
-    EXIT = 2;
-  }
-  OutputType type = 2;
-  bytes data = 3;
-  int32 exit_code = 4; // For EXIT
-}

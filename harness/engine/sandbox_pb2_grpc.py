@@ -5,7 +5,7 @@ import warnings
 
 from . import sandbox_pb2 as sandbox__pb2
 
-GRPC_GENERATED_VERSION = '1.81.0'
+GRPC_GENERATED_VERSION = '1.81.1'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -45,11 +45,6 @@ class SandboxServiceStub:
                 request_serializer=sandbox__pb2.TeardownRequest.SerializeToString,
                 response_deserializer=sandbox__pb2.TeardownResponse.FromString,
                 _registered_method=True)
-        self.TerminalStream = channel.stream_stream(
-                '/sandbox.SandboxService/TerminalStream',
-                request_serializer=sandbox__pb2.TerminalInput.SerializeToString,
-                response_deserializer=sandbox__pb2.TerminalOutput.FromString,
-                _registered_method=True)
 
 
 class SandboxServiceServicer:
@@ -70,13 +65,6 @@ class SandboxServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def TerminalStream(self, request_iterator, context):
-        """Bidirectional stream for terminal interactions (stdin, stdout, stderr)
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
 
 def add_SandboxServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -89,11 +77,6 @@ def add_SandboxServiceServicer_to_server(servicer, server):
                     servicer.Teardown,
                     request_deserializer=sandbox__pb2.TeardownRequest.FromString,
                     response_serializer=sandbox__pb2.TeardownResponse.SerializeToString,
-            ),
-            'TerminalStream': grpc.stream_stream_rpc_method_handler(
-                    servicer.TerminalStream,
-                    request_deserializer=sandbox__pb2.TerminalInput.FromString,
-                    response_serializer=sandbox__pb2.TerminalOutput.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -151,33 +134,6 @@ class SandboxService:
             '/sandbox.SandboxService/Teardown',
             sandbox__pb2.TeardownRequest.SerializeToString,
             sandbox__pb2.TeardownResponse.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def TerminalStream(request_iterator,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.stream_stream(
-            request_iterator,
-            target,
-            '/sandbox.SandboxService/TerminalStream',
-            sandbox__pb2.TerminalInput.SerializeToString,
-            sandbox__pb2.TerminalOutput.FromString,
             options,
             channel_credentials,
             insecure,

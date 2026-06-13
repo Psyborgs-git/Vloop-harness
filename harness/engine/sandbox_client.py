@@ -3,7 +3,7 @@ import asyncio
 from typing import AsyncGenerator, Optional
 import structlog
 
-from .sandbox_pb2 import ProvisionRequest, SandboxConfig, TeardownRequest, TerminalInput, TerminalOutput
+from .sandbox_pb2 import ProvisionRequest, SandboxConfig, TeardownRequest
 from .sandbox_pb2_grpc import SandboxServiceStub
 from .middleware.context_cleaner import ContextCleaner
 
@@ -61,33 +61,4 @@ class SandboxClient:
             logger.error("Teardown failed", error=str(e))
             return False
 
-    def _map_key(self, text: str) -> bytes:
-        return KEY_MATRIX.get(text, text.encode('utf-8'))
 
-    async def stream_terminal(self, session_id: str, input_stream: AsyncGenerator[str, None]) -> AsyncGenerator[str, None]:
-        await self.connect()
-
-        async def request_generator():
-            async for text in input_stream:
-                if text in KEY_MATRIX:
-                    yield TerminalInput(
-                        session_id=session_id,
-                        type=TerminalInput.InputType.CONTROL_KEY,
-                        data=self._map_key(text)
-                    )
-                else:
-                    yield TerminalInput(
-                        session_id=session_id,
-                        type=TerminalInput.InputType.RAW_TEXT,
-                        data=text.encode('utf-8')
-                    )
-
-        try:
-            responses = self.stub.TerminalStream(request_generator())
-            async for resp in responses:
-                if resp.type in (TerminalOutput.OutputType.STDOUT, TerminalOutput.OutputType.STDERR):
-                    raw_text = resp.data.decode('utf-8', errors='replace')
-                    cleaned_text = self.cleaner.clean(raw_text)
-                    yield cleaned_text
-        except grpc.RpcError as e:
-            logger.error("Terminal stream error", error=str(e))

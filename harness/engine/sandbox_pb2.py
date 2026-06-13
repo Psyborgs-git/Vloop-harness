@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rsandbox.proto\x12\x07sandbox\"N\n\x10ProvisionRequest\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12&\n\x06\x63onfig\x18\x02 \x01(\x0b\x32\x16.sandbox.SandboxConfig\"\xb9\x01\n\rSandboxConfig\x12)\n\x04type\x18\x01 \x01(\x0e\x32\x1b.sandbox.SandboxConfig.Type\x12\r\n\x05image\x18\x02 \x01(\t\x12\x0c\n\x04host\x18\x03 \x01(\t\x12\x0c\n\x04user\x18\x04 \x01(\t\x12\x0f\n\x07\x63ommand\x18\x05 \x01(\t\x12\x0c\n\x04\x61rgs\x18\x06 \x03(\t\x12\x0b\n\x03\x63wd\x18\x07 \x01(\t\"&\n\x04Type\x12\t\n\x05LOCAL\x10\x00\x12\n\n\x06\x44OCKER\x10\x01\x12\x07\n\x03SSH\x10\x02\";\n\x11ProvisionResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x15\n\rerror_message\x18\x02 \x01(\t\"%\n\x0fTeardownRequest\x12\x12\n\nsession_id\x18\x01 \x01(\t\":\n\x10TeardownResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x15\n\rerror_message\x18\x02 \x01(\t\"\xb5\x01\n\rTerminalInput\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12.\n\x04type\x18\x02 \x01(\x0e\x32 .sandbox.TerminalInput.InputType\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\x0c\x12\x0c\n\x04rows\x18\x04 \x01(\r\x12\x0c\n\x04\x63ols\x18\x05 \x01(\r\"6\n\tInputType\x12\x0c\n\x08RAW_TEXT\x10\x00\x12\x0f\n\x0b\x43ONTROL_KEY\x10\x01\x12\n\n\x06RESIZE\x10\x02\"\xa7\x01\n\x0eTerminalOutput\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12\x30\n\x04type\x18\x02 \x01(\x0e\x32\".sandbox.TerminalOutput.OutputType\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\x0c\x12\x11\n\texit_code\x18\x04 \x01(\x05\".\n\nOutputType\x12\n\n\x06STDOUT\x10\x00\x12\n\n\x06STDERR\x10\x01\x12\x08\n\x04\x45XIT\x10\x02\x32\xdc\x01\n\x0eSandboxService\x12\x42\n\tProvision\x12\x19.sandbox.ProvisionRequest\x1a\x1a.sandbox.ProvisionResponse\x12?\n\x08Teardown\x12\x18.sandbox.TeardownRequest\x1a\x19.sandbox.TeardownResponse\x12\x45\n\x0eTerminalStream\x12\x16.sandbox.TerminalInput\x1a\x17.sandbox.TerminalOutput(\x01\x30\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rsandbox.proto\x12\x07sandbox\"N\n\x10ProvisionRequest\x12\x12\n\nsession_id\x18\x01 \x01(\t\x12&\n\x06\x63onfig\x18\x02 \x01(\x0b\x32\x16.sandbox.SandboxConfig\"\xb9\x01\n\rSandboxConfig\x12)\n\x04type\x18\x01 \x01(\x0e\x32\x1b.sandbox.SandboxConfig.Type\x12\r\n\x05image\x18\x02 \x01(\t\x12\x0c\n\x04host\x18\x03 \x01(\t\x12\x0c\n\x04user\x18\x04 \x01(\t\x12\x0f\n\x07\x63ommand\x18\x05 \x01(\t\x12\x0c\n\x04\x61rgs\x18\x06 \x03(\t\x12\x0b\n\x03\x63wd\x18\x07 \x01(\t\"&\n\x04Type\x12\t\n\x05LOCAL\x10\x00\x12\n\n\x06\x44OCKER\x10\x01\x12\x07\n\x03SSH\x10\x02\";\n\x11ProvisionResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x15\n\rerror_message\x18\x02 \x01(\t\"%\n\x0fTeardownRequest\x12\x12\n\nsession_id\x18\x01 \x01(\t\":\n\x10TeardownResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x15\n\rerror_message\x18\x02 \x01(\t2\x95\x01\n\x0eSandboxService\x12\x42\n\tProvision\x12\x19.sandbox.ProvisionRequest\x1a\x1a.sandbox.ProvisionResponse\x12?\n\x08Teardown\x12\x18.sandbox.TeardownRequest\x1a\x19.sandbox.TeardownResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -43,14 +43,6 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_TEARDOWNREQUEST']._serialized_end=392
   _globals['_TEARDOWNRESPONSE']._serialized_start=394
   _globals['_TEARDOWNRESPONSE']._serialized_end=452
-  _globals['_TERMINALINPUT']._serialized_start=455
-  _globals['_TERMINALINPUT']._serialized_end=636
-  _globals['_TERMINALINPUT_INPUTTYPE']._serialized_start=582
-  _globals['_TERMINALINPUT_INPUTTYPE']._serialized_end=636
-  _globals['_TERMINALOUTPUT']._serialized_start=639
-  _globals['_TERMINALOUTPUT']._serialized_end=806
-  _globals['_TERMINALOUTPUT_OUTPUTTYPE']._serialized_start=760
-  _globals['_TERMINALOUTPUT_OUTPUTTYPE']._serialized_end=806
-  _globals['_SANDBOXSERVICE']._serialized_start=809
-  _globals['_SANDBOXSERVICE']._serialized_end=1029
+  _globals['_SANDBOXSERVICE']._serialized_start=455
+  _globals['_SANDBOXSERVICE']._serialized_end=604
 # @@protoc_insertion_point(module_scope)
