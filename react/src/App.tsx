@@ -33,10 +33,12 @@ export default function App() {
             return;
         }
 
-        let ws: WebSocket;
-        let reconnectTimer: number;
+        let ws: WebSocket | null = null;
+        let reconnectTimer: number | undefined;
+        let isAlive = true;
 
         function connect() {
+            if (!isAlive) return;
             try {
                 ws = new WebSocket(wsUrl);
 
@@ -45,11 +47,11 @@ export default function App() {
                 };
 
                 ws.onmessage = (event) => {
+                    if (!isAlive) return;
                     try {
                         const data = JSON.parse(event.data);
                         if (data.event === "module_updated" && data.path) {
                             console.log(`Module updated: ${data.path}`);
-                            // Remove leading slash if present to match our sanitized path format
                             const sanitizedPath = data.path.replace(/^\/+/, '');
                             updateVersion(sanitizedPath, Date.now());
                         }
@@ -59,25 +61,32 @@ export default function App() {
                 };
 
                 ws.onclose = () => {
+                    if (!isAlive) return;
                     console.log("WebSocket connection closed, reconnecting...");
                     reconnectTimer = window.setTimeout(connect, 3000);
                 };
 
                 ws.onerror = (err) => {
                     console.error("WebSocket error:", err);
-                    ws.close();
+                    if (ws) {
+                        ws.close();
+                    }
                 };
             } catch (err) {
                 console.error("Error establishing WebSocket:", err);
-                reconnectTimer = window.setTimeout(connect, 3000);
+                if (isAlive) {
+                    reconnectTimer = window.setTimeout(connect, 3000);
+                }
             }
         }
 
         connect();
 
         return () => {
+            isAlive = false;
             clearTimeout(reconnectTimer);
             if (ws) {
+                ws.onclose = null;
                 ws.close();
             }
         };
