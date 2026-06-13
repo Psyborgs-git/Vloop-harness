@@ -40,8 +40,6 @@ pub struct ServiceManager {
     service_dir: PathBuf,
     backend_host: String,
     backend_port: u16,
-    #[allow(dead_code)]
-    vite_host: String,
     vite_port: u16,
     frontend_mode: String,
     rust_completions_url: String,
@@ -54,7 +52,6 @@ impl ServiceManager {
         data_dir: PathBuf,
         backend_host: String,
         backend_port: u16,
-        vite_host: String,
         vite_port: u16,
         frontend_mode: String,
         rust_completions_url: String,
@@ -69,7 +66,6 @@ impl ServiceManager {
             service_dir,
             backend_host: backend_host.clone(),
             backend_port,
-            vite_host,
             vite_port,
             frontend_mode: frontend_mode.clone(),
             rust_completions_url: rust_completions_url.clone(),
@@ -79,18 +75,12 @@ impl ServiceManager {
         manager.register_default_processes();
         manager
     }
+pub fn register_process(&self, config: ProcessConfig) {
+    let mut processes = self.processes.write().unwrap();
+    processes.insert(config.name.clone(), config);
+}
 
-    pub fn register_process(&self, config: ProcessConfig) {
-        let mut processes = self.processes.write().unwrap();
-        processes.insert(config.name.clone(), config);
-    }
-
-    pub fn unregister_process(&self, name: &str) {
-        let mut processes = self.processes.write().unwrap();
-        processes.remove(name);
-    }
-
-    fn register_default_processes(&mut self) {
+fn register_default_processes(&mut self) {
         // 1. Prefer an existing .venv at the repo root (dev setup)
         let mut python_path: Option<PathBuf> = None;
         let repo_venv = self.repo_root.join(".venv");
@@ -372,6 +362,7 @@ impl ServiceManager {
             command.env(k, v);
         }
 
+        #[allow(clippy::zombie_processes)]
         let child = command.spawn().expect("Failed to spawn process");
         let pid = child.id();
         self.write_pid(name, pid, cmd, cwd);

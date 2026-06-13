@@ -1051,6 +1051,7 @@ impl ToolsManager {
                 let mut rows_iter = stmt.query([]).map_err(|e| e.to_string())?; // Simple query without named bindings for rust bridge, or map parameters
                 while let Some(row) = rows_iter.next().map_err(|e| e.to_string())? {
                     let mut r_map = serde_json::Map::new();
+                    #[allow(clippy::needless_range_loop)]
                     for idx in 0..col_count {
                         let name = &col_names[idx];
                         let val: rusqlite::types::Value = row.get(idx).unwrap_or(rusqlite::types::Value::Null);

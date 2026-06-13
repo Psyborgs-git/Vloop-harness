@@ -174,7 +174,6 @@ pub async fn run_app_headless(
         data_dir.clone(),
         host.clone(),
         port,
-        "127.0.0.1".to_string(),
         vite_port,
         frontend_mode.clone(),
         rust_completions_url,

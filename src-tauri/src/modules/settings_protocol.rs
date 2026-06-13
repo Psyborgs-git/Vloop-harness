@@ -39,6 +39,7 @@ pub fn read_env_vars(repo_root: &Path) -> HashMap<String, String> {
             let key = trimmed[..pos].trim().to_string();
             let mut clean_value = trimmed[pos + 1..].trim().to_string();
             // Strip quotes if any
+            #[allow(clippy::collapsible_if)]
             if (clean_value.starts_with('"') && clean_value.ends_with('"'))
                 || (clean_value.starts_with('\'') && clean_value.ends_with('\''))
             {

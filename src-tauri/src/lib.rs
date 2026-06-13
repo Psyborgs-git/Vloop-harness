@@ -316,7 +316,6 @@ pub fn run() {
                 data_dir_clone,
                 "127.0.0.1".to_string(),
                 backend_port,
-                "127.0.0.1".to_string(),
                 vite_port,
                 frontend_mode_clone,
                 format!("http://127.0.0.1:{}/v1", ai_port),
