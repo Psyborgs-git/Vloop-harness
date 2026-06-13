@@ -19,6 +19,11 @@ pub fn get_key(name: &str) -> Option<String> {
     vault.keys.get(name).cloned()
 }
 
+pub fn get_all_keys() -> HashMap<String, String> {
+    let vault = VAULT.lock().unwrap();
+    vault.keys.clone()
+}
+
 #[allow(dead_code)]
 pub fn set_key(name: &str, value: &str) {
     let mut vault = VAULT.lock().unwrap();

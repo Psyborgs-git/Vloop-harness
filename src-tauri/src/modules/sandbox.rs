@@ -23,12 +23,20 @@ pub struct SandboxExecutionResult {
 }
 
 pub fn execute_in_sandbox(req: SandboxExecutionRequest) -> Result<SandboxExecutionResult, String> {
+    // Fetch vault credentials to inject as environment variables
+    let vault_env = crate::modules::vault::get_all_keys();
+
     match req.sandbox {
         SandboxType::Local => {
-            let output = Command::new(&req.command)
-                .args(&req.args)
-                .output()
-                .map_err(|e| e.to_string())?;
+            let mut cmd = Command::new(&req.command);
+            cmd.args(&req.args);
+            
+            // Inject vault variables
+            for (k, v) in vault_env.iter() {
+                cmd.env(k, v);
+            }
+
+            let output = cmd.output().map_err(|e| e.to_string())?;
 
             Ok(SandboxExecutionResult {
                 stdout: String::from_utf8_lossy(&output.stdout).to_string(),
@@ -37,7 +45,15 @@ pub fn execute_in_sandbox(req: SandboxExecutionRequest) -> Result<SandboxExecuti
             })
         }
         SandboxType::Docker { image } => {
-            let mut args = vec!["run".to_string(), "--rm".to_string(), "--network=none".to_string(), image];
+            let mut args = vec!["run".to_string(), "--rm".to_string(), "--network=none".to_string()];
+            
+            // Inject vault variables into docker
+            for (k, v) in vault_env.iter() {
+                args.push("-e".to_string());
+                args.push(format!("{}={}", k, v));
+            }
+            
+            args.push(image);
             args.push(req.command);
             args.extend(req.args);
 
@@ -65,6 +81,11 @@ pub fn execute_in_sandbox(req: SandboxExecutionRequest) -> Result<SandboxExecuti
             sess.userauth_agent(&user).map_err(|e| e.to_string())?;
 
             let mut channel = sess.channel_session().map_err(|e| e.to_string())?;
+
+            // Inject vault variables
+            for (k, v) in vault_env.iter() {
+                let _ = channel.setenv(k, v);
+            }
 
             let mut full_cmd = req.command.clone();
             for arg in req.args {

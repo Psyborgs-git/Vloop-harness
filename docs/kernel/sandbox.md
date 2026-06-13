@@ -28,33 +28,24 @@ An LLM agent or a human operator using the dashboard needs to send exact control
 
 LLMs fail catastrophically when fed raw TTY outputs filled with progress bars and color codes. The token count explodes, and attention mechanisms degrade.
 
-Implement a pure Python middleware class that processes the `stdout` stream *before* it enters the LLM's memory window.
-
-1. **ANSI Stripper:** Use a compiled regex to destroy all terminal color and formatting codes.
-* `re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')`
-
-
-2. **Carriage Return Squashing (The Loading Bar Fix):** CLIs (like `npm install`) use `\r` to overwrite the current line to animate progress bars.
-* **Rule:** If the middleware detects `\r` without a `\n`, it overwrites the buffer's current line. The LLM only sees the final, settled state of the progress bar, saving thousands of tokens.
-
-
-3. **Truncation Heuristics:** If a command dumps a 10,000-line stack trace, cut it. Keep the first 50 lines (context) and the last 100 lines (the actual error), replacing the middle with `\n...[8,850 lines truncated]...\n`.
+**Note on Domain Boundary:** Context cleaning, ANSI stripping, and truncation heuristics are strictly **Layer 1 (Python) responsibilities**. The Rust Kernel does not introspect payloads for AI-specific logic; it only transports raw TTY bytes. The Python backend is solely responsible for squashing carriage returns and stripping hex codes before context injection.
 
 ### Phase 4: Autonomous Rust Kernel (Gating & Native UI)
 
-The Rust kernel must act as an immovable object, completely independent of the React/Python layers.
+The Rust kernel acts as an immovable native hypervisor, completely independent of the React/Python layers and oblivious to application-level logic.
 
 1. **Network Fencing (Whitelisting):**
 * The whitelisting logic happens at the container/VM boundary, not the application layer.
 * When Rust provisions a Docker sandbox, it drops all external network access (`--network none` equivalent) and explicitly attaches a proxy container or configures iptables/nftables to only resolve and route traffic to the whitelisted domains (e.g., `github.com`, `registry.npmjs.org`).
 
 
-2. **Configuration Persistence:** * Settings (whitelists, port allocations, policy limits) are stored in the Rust-managed SQLite database. The kernel reads this on boot to enforce rules instantly.
-3. **The Failsafe Native UI:**
+2. **Vault and Process Startup:** * The kernel securely holds secrets in a memory vault. When spawning a new managed process or sandbox, the kernel injects these vault secrets directly into the process environment variables, ensuring they never touch the Python layer.
+3. **Data Logging and Kernel Configs:** * Application configurations are offloaded to the backend. The kernel uses SQLite exclusively to persist raw terminal logs and its own system-level network/proxy rules.
+4. **The Failsafe Native UI:**
 * Since React and FastAPI might crash or be uninstalled, you cannot rely on them for emergency overrides.
 * Compile the Rust kernel with `egui` (an immediate mode GUI for Rust) or a minimal dedicated native Tauri window.
 * **Trigger:** Running the kernel executable with a flag (e.g., `vloop-kernel --ui`) spawns a native OS window (Windows/Mac/Linux) built purely in Rust.
-* **Capabilities:** This window binds directly to the SQLite DB to edit whitelists, force-kill rogue sandboxes, and read the persisted terminal logs without any web technologies in the middle.
+* **Capabilities:** This window binds directly to the SQLite DB to read the persisted terminal logs and can force-kill rogue sandboxes without any web technologies in the middle.
 
 
 ### Phase 5: The Documentation Ledger (`docs/`)

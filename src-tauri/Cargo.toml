@@ -66,3 +66,4 @@ prost = "0.13.4"
 tokio-stream = { version = "0.1.18", features = ["net"] }
 eframe = "0.34.3"
 egui = "0.34.3"
+chrono = "0.4.45"

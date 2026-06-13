@@ -232,3 +232,17 @@ pub fn close_session(session_id: &str) -> Result<(), String> {
         Err(format!("Session {} not found", session_id))
     }
 }
+
+pub fn list_sessions() -> Vec<String> {
+    let sessions = SESSIONS.lock().unwrap();
+    sessions.keys().cloned().collect()
+}
+
+pub fn kill_all_sessions() {
+    let mut sessions = SESSIONS.lock().unwrap();
+    for (_id, session) in sessions.drain() {
+        if let Ok(mut transport) = session.transport.lock() {
+            let _ = transport.kill();
+        }
+    }
+}

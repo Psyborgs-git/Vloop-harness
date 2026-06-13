@@ -59,8 +59,16 @@ graph TD
 The architectural design of Vloop Harness is driven by three core philosophies: **Domain Separation, Secure Sandboxing, and Human-in-the-Loop Control.**
 
 ### 1. Strict Domain Separation
-*   **Layer 0 (Rust/Tauri):** Rust provides speed, memory safety, and low-level system access. It serves as the single source of truth for execution transport (e.g., using `bollard` for Docker and `ssh2` for SSH). It prevents unauthorized system tampering.
-*   **Layer 1 (Python/FastAPI):** Python is the ideal ecosystem for AI engineering, allowing deep integration with DSPy, LiteLLM, and AST-parsing tools like `sqlglot`. It handles the cognitive routing, pipeline generation, and tool decision-making.
+*   **Layer 0 (Rust/Tauri Native Hypervisor):** Rust provides speed, memory safety, and low-level system access. It acts purely as a native hypervisor and system manager. It is responsible for:
+    *   **Process Management:** Spawning, tracking, and terminating isolated execution sandboxes (e.g., Docker, SSH) via `bollard` and `russh`.
+    *   **Secure Vault:** Holding sensitive credentials securely in memory (`Mutex HashMap`).
+    *   **Vault Variable Injection:** Safely injecting vault secrets as environment variables into managed processes at startup.
+    *   **Transport Layer:** Handling gRPC over QUIC/UDP for low-latency streaming between layers.
+    *   **Data Persistence:** Using SQLite exclusively for terminal logging and kernel-level state, offloading all application/AI configurations to the backend.
+    *   **Network Fencing:** Enforcing strict network constraints (e.g., proxy/iptables) on sandboxes.
+    *   **Failsafe UI:** Providing a native `egui` interface for emergency process management.
+    The kernel has absolutely no AI awareness, does no context cleaning (which is strictly enforced at Layer 1), and offloads all business logic configurations to the backend.
+*   **Layer 1 (Python/FastAPI):** Python is the ideal ecosystem for AI engineering, allowing deep integration with DSPy, LiteLLM, and AST-parsing tools like `sqlglot`. It handles the cognitive routing, pipeline generation, and tool decision-making, as well as enforcing AI context cleaning and maintaining application configurations.
 *   **Layer 2 (React/Vite):** The React frontend is isolated from system internals. It dynamically renders AI-generated UI components inside secure iframes, preventing cross-site scripting (XSS) or main-thread blocking by faulty generated code.
 
 ### 2. Gated Security & Vaults
