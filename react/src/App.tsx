@@ -13,8 +13,13 @@ function CatchAllRoute() {
         return <Homepage />;
     }
 
-    // Sanitize path: remove leading slash
+    // Sanitize path: remove leading slash and validate characters to prevent directory traversal
     const path = location.pathname.replace(/^\/+/, '');
+    const isValidPath = /^[a-zA-Z0-9_\-\/]+$/.test(path) && !path.includes('..');
+
+    if (!isValidPath) {
+        return <Homepage />;
+    }
 
     const versions = useRouteStore((state) => state.versions);
     // Use the timestamp from the store, or fallback to an initial baseline timestamp if none is set
