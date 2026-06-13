@@ -26,8 +26,9 @@ from harness.data.models import UserDB
 
 def hash_password(password: str) -> str:
     salt = os.urandom(16)
-    key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
-    return f"pbkdf2_sha256$100000${salt.hex()}${key.hex()}"
+    # OWASP recommends at least 600,000 iterations for PBKDF2-HMAC-SHA256
+    key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 600000)
+    return f"pbkdf2_sha256$600000${salt.hex()}${key.hex()}"
 
 
 def verify_password(password: str, hashed: str) -> bool:
