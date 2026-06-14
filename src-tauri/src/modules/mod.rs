@@ -16,3 +16,6 @@ pub mod settings_protocol;
 pub mod sandbox_grpc;
 pub mod process_manager_grpc;
 pub mod process_manager;
+pub mod vault_grpc;
+pub mod terminal_grpc;
+pub mod system_grpc;

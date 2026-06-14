@@ -1673,7 +1673,7 @@ version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ab8ecd87370524b461f8557c119c405552c396ed91fc0a8eec68679eab26f94a"
 dependencies = [
- "libloading 0.7.4",
+ "libloading 0.8.9",
 ]
 
 [[package]]
@@ -2728,7 +2728,7 @@ dependencies = [
  "log",
  "presser",
  "thiserror 2.0.18",
- "windows 0.61.3",
+ "windows 0.62.2",
 ]
 
 [[package]]
@@ -7174,6 +7174,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "tonic-web"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5299dd20801ad736dccb4a5ea0da7376e59cd98f213bf1c3d478cf53f4834b58"
+dependencies = [
+ "base64 0.22.1",
+ "bytes",
+ "http",
+ "http-body",
+ "http-body-util",
+ "pin-project",
+ "tokio-stream",
+ "tonic",
+ "tower-http 0.5.2",
+ "tower-layer",
+ "tower-service",
+ "tracing",
+]
+
+[[package]]
 name = "tower"
 version = "0.4.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7640,6 +7660,7 @@ dependencies = [
  "tokio-stream",
  "tonic",
  "tonic-build",
+ "tonic-web",
  "tower-http 0.5.2",
  "uuid",
 ]

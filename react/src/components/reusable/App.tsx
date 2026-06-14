@@ -61,6 +61,7 @@ import { TUTORIAL_STORAGE_KEY } from "./tutorialTranslations";
 import type { ContextPanelState, Provider, WorkspaceWindow } from "./types";
 import ViewRegistry from "./ViewRegistry";
 import WorkspaceArea from "./WorkspaceArea";
+import { invoke } from "@tauri-apps/api/core";
 
 // ── MUI dark theme ────────────────────────────────────────────────────────────
 
@@ -431,7 +432,11 @@ function AppContent() {
                                 size="small"
                                 onClick={() => {
                                     analytics.trackAction("settings.open", { data: { surface: "app_bar" } });
-                                    setSettingsOpen(true);
+                                    if ((window as any).__TAURI__) {
+                                        invoke("open_settings_window").catch(console.error);
+                                    } else {
+                                        setSettingsOpen(true);
+                                    }
                                 }}
                                 sx={{ color: "text.secondary" }}
                             >

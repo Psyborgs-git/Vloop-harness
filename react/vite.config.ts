@@ -32,6 +32,7 @@ export default defineConfig({
       input: {
         ...discoverEntries(),
         index: resolve(__dirname, "index.html"),
+        control_pane: resolve(__dirname, "control-pane.html"),
       },
     },
     outDir: "dist",

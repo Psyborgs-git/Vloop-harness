@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vloop Harness - Kernel Settings</title>
+    <title>Kernel Settings</title>
     <style>
         :root {
             --bg-color: #0b0c10;
@@ -89,7 +90,8 @@
             color: #94a3b8;
         }
 
-        input, select {
+        input,
+        select {
             background-color: var(--input-bg);
             border: 1px solid var(--border-color);
             border-radius: 8px;
@@ -101,7 +103,8 @@
             font-family: inherit;
         }
 
-        input:focus, select:focus {
+        input:focus,
+        select:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
         }
@@ -207,25 +210,37 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-4px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-4px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h2>
             <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
             Rust Kernel Settings
         </h2>
-        <div class="subtitle">Manage system-level configurations, AI proxy endpoints, and underlying server environments for Vloop Harness.</div>
+        <div class="subtitle">Manage system-level configurations, AI proxy endpoints, and underlying server environments
+            for Vloop Harness.</div>
 
         <div id="alertSuccess" class="alert alert-success"></div>
         <div id="alertError" class="alert alert-error"></div>
@@ -243,7 +258,8 @@
 
             <div class="form-group">
                 <label for="model">Default Model</label>
-                <input type="text" id="model" name="DSPY_LM_MODEL" placeholder="e.g. llama3.2, claude-3-5-sonnet-20241022">
+                <input type="text" id="model" name="DSPY_LM_MODEL"
+                    placeholder="e.g. llama3.2, claude-3-5-sonnet-20241022">
             </div>
 
             <div id="api_key_group" class="form-group">
@@ -285,7 +301,8 @@
                 <button type="button" id="btnTest" class="btn-secondary">
                     Test LLM Connectivity
                 </button>
-                <button type="button" id="btnRestart" class="btn-secondary" style="color: #fbbf24; border-color: rgba(251, 191, 36, 0.25);">
+                <button type="button" id="btnRestart" class="btn-secondary"
+                    style="color: #fbbf24; border-color: rgba(251, 191, 36, 0.25);">
                     Restart Harness Services
                 </button>
             </div>
@@ -357,7 +374,7 @@
                 const provider = config.DSPY_LM_PROVIDER || 'ollama';
                 document.getElementById('provider_type').value = provider;
                 document.getElementById('model').value = config.DSPY_LM_MODEL || '';
-                
+
                 if (provider === 'anthropic') {
                     document.getElementById('api_key').value = config.ANTHROPIC_API_KEY || '';
                 } else if (provider === 'openai') {
@@ -384,7 +401,7 @@
         document.getElementById('settingsForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             showLoading(true, 'Saving configuration...');
-            
+
             const providerType = document.getElementById('provider_type').value;
             const model = document.getElementById('model').value;
             const apiKey = document.getElementById('api_key').value;
@@ -428,7 +445,7 @@
         // Test connection
         document.getElementById('btnTest').addEventListener('click', async () => {
             showLoading(true, 'Testing connection to provider...');
-            
+
             const providerType = document.getElementById('provider_type').value;
             const model = document.getElementById('model').value;
             const apiKey = document.getElementById('api_key').value;
@@ -473,4 +490,5 @@
         window.addEventListener('DOMContentLoaded', loadConfig);
     </script>
 </body>
+
 </html>

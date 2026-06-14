@@ -1,7 +1,14 @@
 fn main() {
-    tonic_build::compile_protos("../proto/sandbox.proto")
-        .unwrap_or_else(|e| panic!("Failed to compile sandbox.proto: {}", e));
-    tonic_build::compile_protos("../proto/process.proto")
-        .unwrap_or_else(|e| panic!("Failed to compile process.proto: {}", e));
+    let protos = [
+        "../proto/sandbox.proto",
+        "../proto/process.proto",
+        "../proto/vault.proto",
+        "../proto/terminal.proto",
+        "../proto/system.proto",
+    ];
+    for proto in protos {
+        tonic_build::compile_protos(proto)
+            .unwrap_or_else(|e| panic!("Failed to compile {}: {}", proto, e));
+    }
     tauri_build::build()
 }

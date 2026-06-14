@@ -41,6 +41,7 @@ pub struct ServiceManager {
     backend_host: String,
     backend_port: u16,
     vite_port: u16,
+    grpc_port: u16,
     frontend_mode: String,
     rust_completions_url: String,
     processes: Arc<RwLock<HashMap<String, ProcessConfig>>>,
@@ -53,6 +54,7 @@ impl ServiceManager {
         backend_host: String,
         backend_port: u16,
         vite_port: u16,
+        grpc_port: u16,
         frontend_mode: String,
         rust_completions_url: String,
     ) -> Self {
@@ -67,6 +69,7 @@ impl ServiceManager {
             backend_host: backend_host.clone(),
             backend_port,
             vite_port,
+            grpc_port,
             frontend_mode: frontend_mode.clone(),
             rust_completions_url: rust_completions_url.clone(),
             processes: Arc::new(RwLock::new(HashMap::new())),
@@ -115,13 +118,12 @@ fn register_default_processes(&mut self) {
                 py.to_string_lossy().to_string(),
                 "-m".to_string(),
                 "harness.main".to_string(),
-                "run".to_string(),
+                "internal".to_string(),
+                "backend-worker".to_string(),
                 "--host".to_string(),
                 self.backend_host.clone(),
                 "--port".to_string(),
                 self.backend_port.to_string(),
-                "--frontend-mode".to_string(),
-                self.frontend_mode.clone(),
             ]
         } else {
             let has_uv = Command::new("uv")
@@ -137,13 +139,12 @@ fn register_default_processes(&mut self) {
                     "python".to_string(),
                     "-m".to_string(),
                     "harness.main".to_string(),
-                    "run".to_string(),
+                    "internal".to_string(),
+                    "backend-worker".to_string(),
                     "--host".to_string(),
                     self.backend_host.clone(),
                     "--port".to_string(),
                     self.backend_port.to_string(),
-                    "--frontend-mode".to_string(),
-                    self.frontend_mode.clone(),
                 ]
             } else {
                 let python_cmd = if cfg!(windows) { "python" } else { "python3" };
@@ -151,13 +152,12 @@ fn register_default_processes(&mut self) {
                     python_cmd.to_string(),
                     "-m".to_string(),
                     "harness.main".to_string(),
-                    "run".to_string(),
+                    "internal".to_string(),
+                    "backend-worker".to_string(),
                     "--host".to_string(),
                     self.backend_host.clone(),
                     "--port".to_string(),
                     self.backend_port.to_string(),
-                    "--frontend-mode".to_string(),
-                    self.frontend_mode.clone(),
                 ]
             }
         };
@@ -173,9 +173,10 @@ fn register_default_processes(&mut self) {
         envs.insert("LOG_DIR".to_string(), log_dir_str);
         envs.insert("CACHE_DIR".to_string(), cache_dir_str);
         envs.insert("VITE_PORT".to_string(), vite_port_str);
+        envs.insert("HARNESS_DEBUG".to_string(), if self.frontend_mode == "static" { "false".to_string() } else { "true".to_string() });
 
-        let python_orchestrator = ProcessConfig {
-            name: "python_orchestrator".to_string(),
+        let python_backend = ProcessConfig {
+            name: "python_backend".to_string(),
             command: cmd,
             cwd: Some(self.repo_root.to_string_lossy().to_string()),
             env: envs,
@@ -183,7 +184,7 @@ fn register_default_processes(&mut self) {
             check_host: Some(self.backend_host.clone()),
         };
 
-        self.register_process(python_orchestrator);
+        self.register_process(python_backend);
     }
 
     pub fn start(&self, target: &str) -> Vec<ServiceStatus> {
@@ -240,8 +241,20 @@ fn register_default_processes(&mut self) {
     }
 
     pub fn is_backend_running(&self) -> bool {
-        let status = self.status_for("python_orchestrator");
+        let status = self.status_for("python_backend");
         status.running && status.healthy
+    }
+
+    pub fn frontend_mode(&self) -> &str {
+        &self.frontend_mode
+    }
+
+    pub fn vite_port(&self) -> u16 {
+        self.vite_port
+    }
+
+    pub fn grpc_port(&self) -> u16 {
+        self.grpc_port
     }
 
     fn start_process(&self, config: ProcessConfig) -> ServiceStatus {

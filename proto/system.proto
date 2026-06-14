@@ -1,0 +1,51 @@
+syntax = "proto3";
+package system;
+
+service SystemService {
+  rpc GetHealth (GetHealthRequest) returns (HealthReport);
+  rpc GetConfig (GetConfigRequest) returns (ConfigResponse);
+  rpc UpdateConfig (UpdateConfigRequest) returns (ConfigResponse);
+  rpc RestartServices (RestartServicesRequest) returns (RestartServicesResponse);
+}
+
+message GetHealthRequest {}
+
+message HealthReport {
+  bool python_ok = 1;
+  bool node_ok = 2;
+  bool db_accessible = 3;
+  string details = 4;
+}
+
+message GetConfigRequest {}
+
+message ConfigResponse {
+  string dspy_lm_provider = 1;
+  string dspy_lm_model = 2;
+  string anthropic_api_key = 3;
+  string openai_api_key = 4;
+  string ollama_base_url = 5;
+  string harness_port = 6;
+  string vite_port = 7;
+  string state_db_path = 8;
+  string log_dir = 9;
+}
+
+message UpdateConfigRequest {
+  string dspy_lm_provider = 1;
+  string dspy_lm_model = 2;
+  string anthropic_api_key = 3;
+  string openai_api_key = 4;
+  string ollama_base_url = 5;
+  string harness_port = 6;
+  string vite_port = 7;
+  string state_db_path = 8;
+  string log_dir = 9;
+}
+
+message RestartServicesRequest {}
+
+message RestartServicesResponse {
+  bool success = 1;
+  string message = 2;
+}

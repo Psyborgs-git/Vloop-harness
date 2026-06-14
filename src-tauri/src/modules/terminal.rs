@@ -68,7 +68,7 @@ pub async fn start_local_session(
     cwd: PathBuf,
     command: String,
     args: Vec<String>,
-    log_dir: PathBuf,
+    log_file_path: PathBuf,
 ) -> Result<(), String> {
     let pty_system = NativePtySystem::default();
     let pair = pty_system
@@ -100,8 +100,9 @@ pub async fn start_local_session(
     let buffer = Arc::new(Mutex::new(Vec::new()));
     let buffer_clone = buffer.clone();
 
-    let log_file_path = log_dir.join("log.jsonl");
-    std::fs::create_dir_all(&log_dir).unwrap_or_default();
+    if let Some(parent) = log_file_path.parent() {
+        std::fs::create_dir_all(parent).unwrap_or_default();
+    }
 
     // Spawn task to read from PTY and send to channel
     tokio::task::spawn_blocking(move || {

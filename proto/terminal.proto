@@ -1,0 +1,64 @@
+syntax = "proto3";
+package terminal;
+
+service TerminalService {
+  rpc ListSessions (ListSessionsRequest) returns (ListSessionsResponse);
+  rpc StartSession (StartSessionRequest) returns (StartSessionResponse);
+  rpc WriteStdin (WriteStdinRequest) returns (WriteStdinResponse);
+  rpc ReadBuffer (ReadBufferRequest) returns (ReadBufferResponse);
+  rpc CloseSession (CloseSessionRequest) returns (CloseSessionResponse);
+  rpc KillAllSessions (KillAllSessionsRequest) returns (KillAllSessionsResponse);
+}
+
+message ListSessionsRequest {}
+
+message ListSessionsResponse {
+  repeated string session_ids = 1;
+}
+
+message StartSessionRequest {
+  string session_id = 1;
+  string command = 2;
+  repeated string args = 3;
+  string cwd = 4;
+}
+
+message StartSessionResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+message WriteStdinRequest {
+  string session_id = 1;
+  string data = 2;
+}
+
+message WriteStdinResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+message ReadBufferRequest {
+  string session_id = 1;
+}
+
+message ReadBufferResponse {
+  bool success = 1;
+  string data = 2;
+  string error_message = 3;
+}
+
+message CloseSessionRequest {
+  string session_id = 1;
+}
+
+message CloseSessionResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+message KillAllSessionsRequest {}
+
+message KillAllSessionsResponse {
+  bool success = 1;
+}

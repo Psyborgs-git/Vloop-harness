@@ -15,6 +15,7 @@ build: ## Build React production assets and compile the Rust kernel
 	cd src-tauri && cargo build
 
 run: ## Start the Rust kernel (boots the backend and opens Tauri Command Center)
+	cd react && npm run build
 	cd src-tauri && cargo run
 
 run-python: ## Start the Python orchestrator directly (launches backend/frontend and PyWebView app)

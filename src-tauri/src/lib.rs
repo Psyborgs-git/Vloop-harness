@@ -16,6 +16,8 @@ struct HarnessConfig {
     api_url: String,
     #[serde(rename = "ws_url")]
     ws_url: String,
+    #[serde(rename = "grpc_port")]
+    grpc_port: u16,
     #[serde(rename = "initial_state")]
     initial_state: serde_json::Value,
     #[serde(rename = "permissions")]
@@ -36,6 +38,7 @@ fn get_harness_config(service_manager: State<ServiceManager>) -> Result<HarnessC
         component_id: "root".to_string(),
         api_url: format!("http://{}:{}/api/root", host, port),
         ws_url: format!("ws://{}:{}/ws/root", host, port),
+        grpc_port: service_manager.grpc_port(),
         initial_state: serde_json::Value::Object(serde_json::Map::new()),
         permissions: vec![],
     })
@@ -203,13 +206,14 @@ fn open_settings_window(app_handle: AppHandle) -> Result<(), String> {
         return Ok(());
     }
 
-    let url = tauri::Url::parse("vloop://settings").unwrap();
-    let _ = WebviewWindowBuilder::new(&app_handle, "settings", WebviewUrl::CustomProtocol(url))
-        .title("Vloop Harness - Kernel Settings")
-        .inner_size(580.0, 720.0)
+    let url = WebviewUrl::App("control-pane.html".into());
+
+    let _ = WebviewWindowBuilder::new(&app_handle, "settings", url)
+        .title("Vloop Command Center")
+        .inner_size(900.0, 720.0)
         .resizable(true)
         .build()
-        .map_err(|e| format!("Failed to open settings window: {}", e))?;
+        .map_err(|e| format!("Failed to open command center window: {}", e))?;
 
     Ok(())
 }
@@ -224,9 +228,7 @@ pub fn run() {
         std::process::exit(1);
     }
 
-    let is_packaged = repo_root.to_string_lossy().contains("VloopHarness.app")
-        || repo_root.to_string_lossy().contains("Resources");
-    let frontend_mode = if is_packaged { "static" } else { "dev" };
+    let frontend_mode = "static";
 
     let repo_root_clone = repo_root.clone();
     let data_dir_clone = data_dir.clone();
@@ -282,9 +284,19 @@ pub fn run() {
                     let process_db_path = data_dir.join("processes.db");
                     let process_service = modules::process_manager_grpc::MyProcessManagerService::new(process_db_path);
 
+                    let vault_service = modules::vault_grpc::MyVaultService::default();
+                    let terminal_service = modules::terminal_grpc::MyTerminalService::default();
+                    let system_service = modules::system_grpc::MySystemService::default();
+
                     let grpc_server = tonic::transport::Server::builder()
+                        .accept_http1(true)
+                        .layer(tower_http::cors::CorsLayer::permissive())
+                        .layer(tonic_web::GrpcWebLayer::new())
                         .add_service(modules::sandbox_grpc::pb::sandbox_service_server::SandboxServiceServer::new(sandbox_service))
                         .add_service(modules::process_manager_grpc::pb::process_manager_service_server::ProcessManagerServiceServer::new(process_service))
+                        .add_service(modules::vault_grpc::pb::vault_service_server::VaultServiceServer::new(vault_service))
+                        .add_service(modules::terminal_grpc::pb::terminal_service_server::TerminalServiceServer::new(terminal_service))
+                        .add_service(modules::system_grpc::pb::system_service_server::SystemServiceServer::new(system_service))
                         .serve(grpc_addr);
                     
                     tokio::spawn(async move {
@@ -300,6 +312,7 @@ pub fn run() {
                         backend_port,
                         ai_port,
                         vite_port,
+                        grpc_port,
                         frontend_mode,
                     )
                     .await
@@ -320,8 +333,7 @@ pub fn run() {
                 std::thread::sleep(std::time::Duration::from_millis(100));
             }
 
-            // Note: We no longer navigate the main window here. 
-            // The rust kernel window remains on vloop://settings as the Command Center.
+
 
             let service_manager = ServiceManager::new(
                 repo_root_clone,
@@ -329,6 +341,7 @@ pub fn run() {
                 "127.0.0.1".to_string(),
                 backend_port,
                 vite_port,
+                grpc_port,
                 frontend_mode_clone,
                 format!("http://127.0.0.1:{}/v1", ai_port),
             );

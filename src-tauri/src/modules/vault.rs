@@ -30,6 +30,12 @@ pub fn set_key(name: &str, value: &str) {
     vault.keys.insert(name.to_string(), value.to_string());
 }
 
+#[allow(dead_code)]
+pub fn delete_key(name: &str) {
+    let mut vault = VAULT.lock().unwrap();
+    vault.keys.remove(name);
+}
+
 #[tauri::command]
 pub fn get_vault_key(name: String) -> Result<String, String> {
     get_key(&name).ok_or_else(|| "Key not found".to_string())
