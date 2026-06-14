@@ -8,7 +8,6 @@ use super::service::ServiceManager;
 use super::permissions::PermissionsGuard;
 use super::tools::ToolsManager;
 use super::completions::AppState;
-use super::config::ProviderConfig;
 
 pub fn get_data_dir(repo_root: &std::path::Path) -> PathBuf {
     let app_harness_dir = repo_root.join(".harness");
@@ -192,7 +191,6 @@ pub async fn run_app_headless(
     let tools = std::sync::Arc::new(ToolsManager::new(repo_root.clone(), data_dir.clone(), permissions.clone()));
 
     let app_state = AppState {
-        provider: std::sync::Arc::new(std::sync::RwLock::new(ProviderConfig::from_env())),
         client: reqwest::Client::new(),
         tools: tools.clone(),
     };

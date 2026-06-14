@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
-  Box, Typography, Button, TextField, Select, MenuItem,
-  FormControl, InputLabel, CircularProgress, Alert, Stack
+  Box, Typography, Button, TextField,
+  CircularProgress, Alert, Stack
 } from '@mui/material';
 
 const invoke = async (cmd: string, args?: Record<string, any>) => {
@@ -14,14 +14,8 @@ const invoke = async (cmd: string, args?: Record<string, any>) => {
 export default function SettingsPanel() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [testing, setTesting] = useState(false);
   const [alert, setAlert] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
-  const [providerType, setProviderType] = useState('ollama');
-  const [model, setModel] = useState('');
-  const [apiKey, setApiKey] = useState('');
-  const [baseUrl, setBaseUrl] = useState('http://localhost:11434');
-  
   const [harnessPort, setHarnessPort] = useState('9100');
   const [vitePort, setVitePort] = useState('9102');
   const [stateDbPath, setStateDbPath] = useState('.harness/state.db');
@@ -36,19 +30,7 @@ export default function SettingsPanel() {
     setAlert(null);
     try {
       const config = await invoke('get_settings_config');
-      const provider = config.DSPY_LM_PROVIDER || 'ollama';
-      setProviderType(provider);
-      setModel(config.DSPY_LM_MODEL || '');
-      
-      if (provider === 'anthropic') {
-        setApiKey(config.ANTHROPIC_API_KEY || '');
-      } else if (provider === 'openai') {
-        setApiKey(config.OPENAI_API_KEY || '');
-      } else {
-        setApiKey('');
-      }
 
-      setBaseUrl(config.OLLAMA_BASE_URL || 'http://localhost:11434');
       setHarnessPort(config.HARNESS_PORT || '9100');
       setVitePort(config.VITE_PORT || '9102');
       setStateDbPath(config.STATE_DB_PATH || '.harness/state.db');
@@ -63,27 +45,13 @@ export default function SettingsPanel() {
   async function handleSave() {
     setSaving(true);
     setAlert(null);
-    
+
     const payload: any = {
-      DSPY_LM_PROVIDER: providerType,
-      DSPY_LM_MODEL: model,
-      OLLAMA_BASE_URL: baseUrl,
       HARNESS_PORT: harnessPort,
       VITE_PORT: vitePort,
       STATE_DB_PATH: stateDbPath,
       LOG_DIR: logDir,
     };
-
-    if (providerType === 'anthropic') {
-      payload.ANTHROPIC_API_KEY = apiKey;
-      payload.OPENAI_API_KEY = '';
-    } else if (providerType === 'openai') {
-      payload.OPENAI_API_KEY = apiKey;
-      payload.ANTHROPIC_API_KEY = '';
-    } else {
-      payload.ANTHROPIC_API_KEY = '';
-      payload.OPENAI_API_KEY = '';
-    }
 
     try {
       await invoke('save_settings_config', { config: payload });
@@ -95,27 +63,6 @@ export default function SettingsPanel() {
     }
   }
 
-  async function handleTestConnection() {
-    setTesting(true);
-    setAlert(null);
-    try {
-      const result: any = await invoke('test_llm_connection', {
-        providerType,
-        model,
-        apiKey,
-        baseUrl
-      });
-      if (result.success) {
-        setAlert({ type: 'success', message: 'Connection test succeeded! ' + result.message });
-      } else {
-        setAlert({ type: 'error', message: 'Connection test failed: ' + result.message });
-      }
-    } catch (e: any) {
-      setAlert({ type: 'error', message: 'Test failed: ' + e.message });
-    } finally {
-      setTesting(false);
-    }
-  }
 
   async function handleRestart() {
     if (!confirm('Are you sure you want to restart all underlying Harness services?')) return;
@@ -130,7 +77,7 @@ export default function SettingsPanel() {
     }
   }
 
-  if (loading && !saving && !testing) {
+  if (loading && !saving) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
         <CircularProgress />
@@ -154,56 +101,6 @@ export default function SettingsPanel() {
       )}
 
       <Stack spacing={3}>
-        {/* AI Provider Config */}
-        <Box>
-          <Typography variant="subtitle1" fontWeight={600} gutterBottom color="primary">
-            AI Provider Config
-          </Typography>
-          <Stack spacing={2}>
-            <FormControl fullWidth size="small">
-              <InputLabel>LM Provider</InputLabel>
-              <Select
-                value={providerType}
-                label="LM Provider"
-                onChange={(e) => setProviderType(e.target.value)}
-              >
-                <MenuItem value="ollama">Ollama (Local)</MenuItem>
-                <MenuItem value="anthropic">Anthropic</MenuItem>
-                <MenuItem value="openai">OpenAI</MenuItem>
-              </Select>
-            </FormControl>
-
-            <TextField
-              label="Default Model"
-              size="small"
-              fullWidth
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              placeholder="e.g. llama3.2, claude-3-5-sonnet-20241022"
-            />
-
-            {providerType === 'ollama' && (
-              <TextField
-                label="Ollama Base URL"
-                size="small"
-                fullWidth
-                value={baseUrl}
-                onChange={(e) => setBaseUrl(e.target.value)}
-              />
-            )}
-
-            {(providerType === 'anthropic' || providerType === 'openai') && (
-              <TextField
-                label={providerType === 'anthropic' ? 'Anthropic API Key' : 'OpenAI API Key'}
-                size="small"
-                type="password"
-                fullWidth
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-              />
-            )}
-          </Stack>
-        </Box>
 
         {/* Harness Ports */}
         <Box>
@@ -262,13 +159,6 @@ export default function SettingsPanel() {
             disabled={saving || loading}
           >
             {saving ? <CircularProgress size={20} color="inherit" /> : 'Save Configuration'}
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={handleTestConnection}
-            disabled={testing || loading}
-          >
-            {testing ? <CircularProgress size={20} color="inherit" /> : 'Test LLM Connectivity'}
           </Button>
           <Button
             variant="outlined"

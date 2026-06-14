@@ -3,6 +3,7 @@ import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
 import { terminalClient } from "../grpcClient";
+import { X } from "lucide-react";
 
 export default function TerminalPage() {
   const [sessions, setSessions] = useState<string[]>([]);
@@ -110,6 +111,20 @@ export default function TerminalPage() {
     }
   };
 
+  const handleCloseSession = async (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm(`Are you sure you want to close session ${sessionId}?`)) return;
+    try {
+      await terminalClient.closeSession({ sessionId });
+      setSessions((prev) => prev.filter((id) => id !== sessionId));
+      if (selectedSession === sessionId) {
+        setSelectedSession(null);
+      }
+    } catch (err) {
+      console.error("Failed to close session", err);
+    }
+  };
+
   return (
     <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
@@ -163,21 +178,52 @@ export default function TerminalPage() {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {sessions.map(id => (
-                <button
+                <div
                   key={id}
                   onClick={() => setSelectedSession(id)}
                   style={{
-                    textAlign: "left",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
                     padding: "12px",
                     borderRadius: "8px",
                     background: selectedSession === id ? "var(--bg-glass-hover)" : "transparent",
                     color: selectedSession === id ? "white" : "var(--text-secondary)",
                     border: "1px solid",
                     borderColor: selectedSession === id ? "var(--border-highlight)" : "transparent",
+                    cursor: "pointer",
+                    width: "100%",
+                    boxSizing: "border-box",
                   }}
                 >
-                  <div style={{ fontSize: "0.875rem", fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis" }}>{id}</div>
-                </button>
+                  <div style={{ fontSize: "0.875rem", fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", marginRight: "8px" }}>{id}</div>
+                  <button
+                    onClick={(e) => handleCloseSession(id, e)}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      color: "var(--text-secondary)",
+                      cursor: "pointer",
+                      padding: "4px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderRadius: "4px",
+                      transition: "background-color 0.2s, color 0.2s"
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(239, 68, 68, 0.2)";
+                      (e.currentTarget as HTMLButtonElement).style.color = "#ef4444";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+                      (e.currentTarget as HTMLButtonElement).style.color = "var(--text-secondary)";
+                    }}
+                    title="Close Session"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
               ))}
             </div>
           )}

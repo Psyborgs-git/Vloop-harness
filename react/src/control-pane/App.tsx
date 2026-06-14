@@ -1,19 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { Routes, Route, Link, useLocation } from "react-router-dom";
-import { Activity, Settings, KeyRound, Terminal, Server } from "lucide-react";
+import { Activity, KeyRound, Terminal, Server } from "lucide-react";
 import { initGrpcClient } from "./grpcClient";
-import DashboardPage from "./pages/Dashboard";
-import ConfigPage from "./pages/Config";
-import VaultPage from "./pages/Vault";
-import ProcessesPage from "./pages/Processes";
-import TerminalPage from "./pages/Terminal";
+
+const DashboardPage = lazy(() => import("./pages/Dashboard"));
+const VaultPage = lazy(() => import("./pages/Vault"));
+const ProcessesPage = lazy(() => import("./pages/Processes"));
+const TerminalPage = lazy(() => import("./pages/Terminal"));
 
 function Sidebar() {
   const location = useLocation();
 
   const links = [
     { to: "/", icon: <Activity size={20} />, label: "Dashboard" },
-    { to: "/config", icon: <Settings size={20} />, label: "AI Config" },
     { to: "/vault", icon: <KeyRound size={20} />, label: "Vault" },
     { to: "/processes", icon: <Server size={20} />, label: "Processes" },
     { to: "/terminal", icon: <Terminal size={20} />, label: "Terminal" },
@@ -84,13 +83,14 @@ export default function App() {
     <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
       <Sidebar />
       <main style={{ flex: 1, overflowY: "auto", padding: "32px" }}>
-        <Routes>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/config" element={<ConfigPage />} />
-          <Route path="/vault" element={<VaultPage />} />
-          <Route path="/processes" element={<ProcessesPage />} />
-          <Route path="/terminal" element={<TerminalPage />} />
-        </Routes>
+        <Suspense fallback={<p style={{ color: "var(--text-secondary)" }}>Loading Page...</p>}>
+          <Routes>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/vault" element={<VaultPage />} />
+            <Route path="/processes" element={<ProcessesPage />} />
+            <Route path="/terminal" element={<TerminalPage />} />
+          </Routes>
+        </Suspense>
       </main>
     </div>
   );

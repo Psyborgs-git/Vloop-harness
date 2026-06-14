@@ -246,31 +246,6 @@
         <div id="alertError" class="alert alert-error"></div>
 
         <form id="settingsForm">
-            <div class="section-title">AI Provider Config</div>
-            <div class="form-group">
-                <label for="provider_type">LM Provider</label>
-                <select id="provider_type" name="DSPY_LM_PROVIDER">
-                    <option value="ollama">Ollama (Local)</option>
-                    <option value="anthropic">Anthropic</option>
-                    <option value="openai">OpenAI</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="model">Default Model</label>
-                <input type="text" id="model" name="DSPY_LM_MODEL"
-                    placeholder="e.g. llama3.2, claude-3-5-sonnet-20241022">
-            </div>
-
-            <div id="api_key_group" class="form-group">
-                <label for="api_key">API Key</label>
-                <input type="password" id="api_key" placeholder="Paste your API key here">
-            </div>
-
-            <div id="base_url_group" class="form-group">
-                <label for="base_url">Ollama Base URL</label>
-                <input type="text" id="base_url" name="OLLAMA_BASE_URL" placeholder="http://localhost:11434">
-            </div>
 
             <div class="section-title">Harness Ports</div>
             <div class="row">
@@ -298,9 +273,6 @@
                 <button type="submit" class="btn-primary">
                     Save Configuration
                 </button>
-                <button type="button" id="btnTest" class="btn-secondary">
-                    Test LLM Connectivity
-                </button>
                 <button type="button" id="btnRestart" class="btn-secondary"
                     style="color: #fbbf24; border-color: rgba(251, 191, 36, 0.25);">
                     Restart Harness Services
@@ -317,29 +289,6 @@
     <script>
         const invoke = window.__TAURI__.core.invoke;
 
-        const providerTypeSelect = document.getElementById('provider_type');
-        const apiKeyGroup = document.getElementById('api_key_group');
-        const baseUrlGroup = document.getElementById('base_url_group');
-        const apiKeyLabel = apiKeyGroup.querySelector('label');
-        const apiKeyInput = document.getElementById('api_key');
-
-        function updateFormVisibilities() {
-            const provider = providerTypeSelect.value;
-            if (provider === 'ollama') {
-                apiKeyGroup.style.display = 'none';
-                baseUrlGroup.style.display = 'flex';
-            } else if (provider === 'anthropic') {
-                apiKeyGroup.style.display = 'flex';
-                baseUrlGroup.style.display = 'none';
-                apiKeyLabel.textContent = 'Anthropic API Key';
-            } else if (provider === 'openai') {
-                apiKeyGroup.style.display = 'flex';
-                baseUrlGroup.style.display = 'none';
-                apiKeyLabel.textContent = 'OpenAI API Key';
-            }
-        }
-
-        providerTypeSelect.addEventListener('change', updateFormVisibilities);
 
         function showMessage(type, text) {
             const successDiv = document.getElementById('alertSuccess');
@@ -371,25 +320,10 @@
                 const config = await invoke('get_settings_config');
                 console.log('Loaded config:', config);
 
-                const provider = config.DSPY_LM_PROVIDER || 'ollama';
-                document.getElementById('provider_type').value = provider;
-                document.getElementById('model').value = config.DSPY_LM_MODEL || '';
-
-                if (provider === 'anthropic') {
-                    document.getElementById('api_key').value = config.ANTHROPIC_API_KEY || '';
-                } else if (provider === 'openai') {
-                    document.getElementById('api_key').value = config.OPENAI_API_KEY || '';
-                } else {
-                    document.getElementById('api_key').value = '';
-                }
-
-                document.getElementById('base_url').value = config.OLLAMA_BASE_URL || '';
                 document.getElementById('harness_port').value = config.HARNESS_PORT || 9100;
                 document.getElementById('vite_port').value = config.VITE_PORT || 9102;
                 document.getElementById('state_db_path').value = config.STATE_DB_PATH || '';
                 document.getElementById('log_dir').value = config.LOG_DIR || '';
-
-                updateFormVisibilities();
             } catch (err) {
                 showMessage('error', 'Failed to load configuration: ' + err);
             } finally {
@@ -402,35 +336,17 @@
             e.preventDefault();
             showLoading(true, 'Saving configuration...');
 
-            const providerType = document.getElementById('provider_type').value;
-            const model = document.getElementById('model').value;
-            const apiKey = document.getElementById('api_key').value;
-            const baseUrl = document.getElementById('base_url').value;
             const harnessPort = parseInt(document.getElementById('harness_port').value, 10);
             const vitePort = parseInt(document.getElementById('vite_port').value, 10);
             const stateDbPath = document.getElementById('state_db_path').value;
             const logDir = document.getElementById('log_dir').value;
 
             const payload = {
-                DSPY_LM_PROVIDER: providerType,
-                DSPY_LM_MODEL: model,
-                OLLAMA_BASE_URL: baseUrl,
                 HARNESS_PORT: harnessPort.toString(),
                 VITE_PORT: vitePort.toString(),
                 STATE_DB_PATH: stateDbPath,
                 LOG_DIR: logDir,
             };
-
-            if (providerType === 'anthropic') {
-                payload.ANTHROPIC_API_KEY = apiKey;
-                payload.OPENAI_API_KEY = '';
-            } else if (providerType === 'openai') {
-                payload.OPENAI_API_KEY = apiKey;
-                payload.ANTHROPIC_API_KEY = '';
-            } else {
-                payload.ANTHROPIC_API_KEY = '';
-                payload.OPENAI_API_KEY = '';
-            }
 
             try {
                 await invoke('save_settings_config', { config: payload });
@@ -442,33 +358,6 @@
             }
         });
 
-        // Test connection
-        document.getElementById('btnTest').addEventListener('click', async () => {
-            showLoading(true, 'Testing connection to provider...');
-
-            const providerType = document.getElementById('provider_type').value;
-            const model = document.getElementById('model').value;
-            const apiKey = document.getElementById('api_key').value;
-            const baseUrl = document.getElementById('base_url').value;
-
-            try {
-                const result = await invoke('test_llm_connection', {
-                    providerType,
-                    model,
-                    apiKey,
-                    baseUrl
-                });
-                if (result.success) {
-                    showMessage('success', 'Connection test succeeded! ' + result.message);
-                } else {
-                    showMessage('error', 'Connection test failed: ' + result.message);
-                }
-            } catch (err) {
-                showMessage('error', 'Connection test failed with error: ' + err);
-            } finally {
-                showLoading(false);
-            }
-        });
 
         // Restart services
         document.getElementById('btnRestart').addEventListener('click', async () => {

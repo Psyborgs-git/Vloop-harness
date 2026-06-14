@@ -1,10 +1,11 @@
 import { Routes, Route, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 
 import DynamicLoader from "./DynamicLoader";
 import { useRouteStore } from "./store";
 import Homepage from "./Homepage";
-import ProcessManager from "./components/ui/ProcessManager";
+
+const ProcessManager = lazy(() => import("./components/ui/ProcessManager"));
 
 function CatchAllRoute() {
     const location = useLocation();
@@ -99,9 +100,11 @@ export default function App() {
     }, [updateVersion]);
 
     return (
-        <Routes>
-            <Route path="/processes" element={<ProcessManager />} />
-            <Route path="*" element={<CatchAllRoute />} />
-        </Routes>
+        <Suspense fallback={<p style={{ color: "var(--text-secondary)" }}>Loading Page...</p>}>
+            <Routes>
+                <Route path="/processes" element={<ProcessManager />} />
+                <Route path="*" element={<CatchAllRoute />} />
+            </Routes>
+        </Suspense>
     );
 }

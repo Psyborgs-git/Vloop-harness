@@ -18,7 +18,7 @@ use pb::{
 pub struct MyProcessManagerService {
     db_path: PathBuf,
     // Add memory map for active process statuses
-    active_processes: Arc<Mutex<std::collections::HashMap<String, String>>>,
+    _active_processes: Arc<Mutex<std::collections::HashMap<String, String>>>,
 }
 
 impl MyProcessManagerService {
@@ -44,7 +44,7 @@ impl MyProcessManagerService {
 
         Self {
             db_path,
-            active_processes: Arc::new(Mutex::new(std::collections::HashMap::new())),
+            _active_processes: Arc::new(Mutex::new(std::collections::HashMap::new())),
         }
     }
 
