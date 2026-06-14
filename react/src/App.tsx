@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import DynamicLoader from "./DynamicLoader";
 import { useRouteStore } from "./store";
 import Homepage from "./Homepage";
+import ProcessManager from "./components/ui/ProcessManager";
 
 function CatchAllRoute() {
     const location = useLocation();
@@ -99,6 +100,7 @@ export default function App() {
 
     return (
         <Routes>
+            <Route path="/processes" element={<ProcessManager />} />
             <Route path="*" element={<CatchAllRoute />} />
         </Routes>
     );

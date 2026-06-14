@@ -244,7 +244,14 @@ pub fn run() {
             save_settings_config,
             test_llm_connection,
             restart_services,
-            open_settings_window
+            open_settings_window,
+            modules::process_manager::list_processes,
+            modules::process_manager::get_process,
+            modules::process_manager::create_process,
+            modules::process_manager::update_process,
+            modules::process_manager::delete_process,
+            modules::process_manager::start_process,
+            modules::process_manager::stop_process
         ])
         .setup(move |app| {
             let health_report = modules::health::check_system_health(&repo_root_clone, &data_dir_clone);
@@ -271,8 +278,13 @@ pub fn run() {
                     // Start gRPC server
                     let grpc_addr = format!("127.0.0.1:{}", grpc_port).parse().unwrap();
                     let sandbox_service = modules::sandbox_grpc::MySandboxService::default();
+                    
+                    let process_db_path = data_dir.join("processes.db");
+                    let process_service = modules::process_manager_grpc::MyProcessManagerService::new(process_db_path);
+
                     let grpc_server = tonic::transport::Server::builder()
                         .add_service(modules::sandbox_grpc::pb::sandbox_service_server::SandboxServiceServer::new(sandbox_service))
+                        .add_service(modules::process_manager_grpc::pb::process_manager_service_server::ProcessManagerServiceServer::new(process_service))
                         .serve(grpc_addr);
                     
                     tokio::spawn(async move {

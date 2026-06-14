@@ -14,3 +14,5 @@ pub mod ui;
 pub mod terminal;
 pub mod settings_protocol;
 pub mod sandbox_grpc;
+pub mod process_manager_grpc;
+pub mod process_manager;

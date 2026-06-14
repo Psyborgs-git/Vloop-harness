@@ -64,11 +64,16 @@ export default function Homepage() {
 
     return (
         <Box sx={{ p: 4, maxWidth: 800, margin: '0 auto' }}>
-            <Typography variant="h4" gutterBottom>
-                Available Views
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h4">
+                    Available Views
+                </Typography>
+                <Button variant="outlined" onClick={() => navigate('/processes')}>
+                    Process Manager
+                </Button>
+            </Box>
             <Typography variant="body1" color="text.secondary" paragraph>
-                Select a view to load dynamically.
+                Select a view to load dynamically, or open the Process Manager to configure AI processes.
             </Typography>
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 4 }}>

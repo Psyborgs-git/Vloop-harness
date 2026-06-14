@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package process;
+
+// Defines the gRPC service for managing AI processes
+service ProcessManagerService {
+  rpc ListProcesses (ListProcessesRequest) returns (ListProcessesResponse);
+  rpc GetProcess (GetProcessRequest) returns (ProcessDetail);
+  rpc CreateProcess (CreateProcessRequest) returns (ProcessDetail);
+  rpc UpdateProcess (UpdateProcessRequest) returns (ProcessDetail);
+  rpc DeleteProcess (DeleteProcessRequest) returns (DeleteProcessResponse);
+  rpc StartProcess (StartProcessRequest) returns (ProcessStatusResponse);
+  rpc StopProcess (StopProcessRequest) returns (ProcessStatusResponse);
+  rpc PullProcess (PullProcessRequest) returns (ProcessDetail);
+}
+
+message ProcessConfig {
+  string command = 1;
+  repeated string args = 2;
+  string env_vars = 3; // JSON encoded string for env vars
+  string cwd = 4;
+}
+
+message ProcessDetail {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  ProcessConfig config = 4;
+  string status = 5;
+  string created_at = 6;
+  string updated_at = 7;
+}
+
+message ListProcessesRequest {}
+
+message ListProcessesResponse {
+  repeated ProcessDetail processes = 1;
+}
+
+message GetProcessRequest {
+  string id = 1;
+}
+
+message CreateProcessRequest {
+  string name = 1;
+  string description = 2;
+  ProcessConfig config = 3;
+}
+
+message UpdateProcessRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  ProcessConfig config = 4;
+}
+
+message DeleteProcessRequest {
+  string id = 1;
+}
+
+message DeleteProcessResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+message StartProcessRequest {
+  string id = 1;
+}
+
+message StopProcessRequest {
+  string id = 1;
+}
+
+message ProcessStatusResponse {
+  bool success = 1;
+  string status = 2;
+  string error_message = 3;
+}
+
+message PullProcessRequest {
+  string source_url = 1;
+}
