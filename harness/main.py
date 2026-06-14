@@ -103,7 +103,7 @@ def run(
         else:
             _print_service_status(manager.status())
 
-        root_url = f"http://{host}:{port}/ui/root"
+        root_url = f"http://{host}:{port}/"
         if not no_window:
             window = RootWindow(url=root_url)
             typer.echo(f"Opening root window → {root_url}")

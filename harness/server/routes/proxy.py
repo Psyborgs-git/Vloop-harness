@@ -106,58 +106,6 @@ def _inject_html_from_dist(
     return HTMLResponse(content=html, status_code=200)
 
 
-# ── Root dashboard (special-cased — not a legacy component) ──────────────────
-
-@router.get("/ui/root")
-@router.get("/ui/root/{path:path}")
-async def serve_root_ui(request: Request, path: str = "") -> Response:
-    """Serve the main VLoop Harness dashboard from react/index.html."""
-    settings = request.app.state.settings
-    if not settings.harness_debug:
-        dist_dir = _dist_root(request)
-        _ensure_dist_available(dist_dir)
-
-        if path:
-            static_file = _safe_dist_file(dist_dir, path)
-            if static_file is not None:
-                return FileResponse(static_file)
-
-        return _inject_html_from_dist(
-            request=request,
-            entry_file="index.html",
-            component_id="root",
-            initial_state={},
-            permissions=[],
-        )
-
-    vite_url = f"http://{settings.vite_host}:{settings.vite_port}"
-
-    # Non-HTML sub-paths (e.g. HMR WebSocket upgrade requests) go straight to Vite.
-    if path:
-        return await _proxy_to_vite(path, vite_url)
-
-    async with httpx.AsyncClient() as client:
-        try:
-            resp = await client.get(f"{vite_url}/", follow_redirects=True, timeout=10)
-        except httpx.ConnectError as exc:
-            raise HTTPException(status_code=503, detail="Vite dev server unreachable") from exc
-
-    api_base = f"http://{settings.harness_host}:{settings.harness_port}"
-    ws_base = f"ws://{settings.harness_host}:{settings.harness_port}"
-
-    html = inject_harness_vars(
-        html=resp.text,
-        config=HarnessConfigInjector(
-            component_id="root",
-            api_base=api_base,
-            ws_base=ws_base,
-            initial_state={},
-            permissions=[],
-        ),
-    )
-    return HTMLResponse(content=html, status_code=resp.status_code)
-
-
 # ── Vite asset pass-through ───────────────────────────────────────────────────
 # The injected HTML has module scripts with src="/src/…" and Vite-internal
 # paths like "/@vite/client" and "/@react-refresh".  The browser resolves
@@ -258,6 +206,58 @@ async def serve_component_ui(
             ws_base=ws_base,
             initial_state=comp.state,
             permissions=perms,
+        ),
+    )
+    return HTMLResponse(content=html, status_code=resp.status_code)
+
+
+# ── Root dashboard (special-cased — not a legacy component) ──────────────────
+
+@router.get("/")
+@router.get("/{path:path}")
+async def serve_root_ui(request: Request, path: str = "") -> Response:
+    """Serve the main VLoop Harness dashboard from react/index.html."""
+    settings = request.app.state.settings
+    if not settings.harness_debug:
+        dist_dir = _dist_root(request)
+        _ensure_dist_available(dist_dir)
+
+        if path:
+            static_file = _safe_dist_file(dist_dir, path)
+            if static_file is not None:
+                return FileResponse(static_file)
+
+        return _inject_html_from_dist(
+            request=request,
+            entry_file="index.html",
+            component_id="root",
+            initial_state={},
+            permissions=[],
+        )
+
+    vite_url = f"http://{settings.vite_host}:{settings.vite_port}"
+
+    # Non-HTML sub-paths (e.g. HMR WebSocket upgrade requests) go straight to Vite.
+    if path:
+        return await _proxy_to_vite(path, vite_url)
+
+    async with httpx.AsyncClient() as client:
+        try:
+            resp = await client.get(f"{vite_url}/", follow_redirects=True, timeout=10)
+        except httpx.ConnectError as exc:
+            raise HTTPException(status_code=503, detail="Vite dev server unreachable") from exc
+
+    api_base = f"http://{settings.harness_host}:{settings.harness_port}"
+    ws_base = f"ws://{settings.harness_host}:{settings.harness_port}"
+
+    html = inject_harness_vars(
+        html=resp.text,
+        config=HarnessConfigInjector(
+            component_id="root",
+            api_base=api_base,
+            ws_base=ws_base,
+            initial_state={},
+            permissions=[],
         ),
     )
     return HTMLResponse(content=html, status_code=resp.status_code)

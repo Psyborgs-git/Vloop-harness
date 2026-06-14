@@ -249,8 +249,8 @@ def create_app(main_process: MainProcess, settings: HarnessSettings) -> FastAPI:
     app.include_router(cron_router)
     app.include_router(proxy.router)  # catch-all last
 
-    @app.get("/")
-    async def root() -> dict[str, str]:
+    @app.get("/api/health")
+    async def health() -> dict[str, str]:
         return {"status": "ok", "service": "vloop-harness", "version": "0.2.0"}
 
     return app
