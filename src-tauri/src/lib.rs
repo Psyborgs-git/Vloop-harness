@@ -336,16 +336,17 @@ pub fn run() {
 
             Ok(())
         })
-        .on_window_event(|window, event| {
-            if let tauri::WindowEvent::CloseRequested { .. } = event {
-                println!("Window closed. Shutting down services...");
-                let manager = window.state::<ServiceManager>();
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            if let tauri::RunEvent::Exit = event {
+                println!("App exiting. Shutting down services...");
+                use tauri::Manager;
+                let manager = app_handle.state::<ServiceManager>();
                 let stop_statuses = manager.stop("all");
                 for s in stop_statuses {
                     println!("{:?} - {}", s.name, s.detail);
                 }
             }
-        })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        });
 }
