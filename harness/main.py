@@ -63,18 +63,14 @@ def _print_service_status(statuses: list[ServiceStatus]) -> None:
         marker = "healthy" if status.healthy else ("running" if status.running else "stopped")
         pid_part = f"pid={status.pid}" if status.pid else "pid=-"
         detail = f" ({status.detail})" if status.detail else ""
-        typer.echo(
-            f"{status.name:<8} {marker:<8} {pid_part:<12} log={status.log_path}{detail}"
-        )
+        typer.echo(f"{status.name:<8} {marker:<8} {pid_part:<12} log={status.log_path}{detail}")
 
 
 @app.command()
 def run(
     host: str = typer.Option("localhost", envvar="HARNESS_HOST"),
     port: int = typer.Option(9100, envvar="HARNESS_PORT"),
-    no_window: bool = typer.Option(
-        False, help="Skip opening the native window (headless mode)"
-    ),
+    no_window: bool = typer.Option(False, help="Skip opening the native window (headless mode)"),
     frontend_mode: Literal["dev", "static"] = typer.Option(
         "dev", help="Frontend mode. 'static' skips Vite dev server process."
     ),

@@ -1,7 +1,5 @@
 """Tests for app generator."""
 
-import pytest
-
 from harness.engine.app_generator import (
     AppGenerator,
     AppSpec,
@@ -69,13 +67,15 @@ def test_app_generator_form_view():
         description="Test",
         backend_type="component",
         backend_logic="def process(): return 'hello'",
-        frontend_views=[{
-            "name": "MainView",
-            "type": "form",
-            "fields": [
-                {"name": "query", "label": "Query", "type": "text"},
-            ],
-        }],
+        frontend_views=[
+            {
+                "name": "MainView",
+                "type": "form",
+                "fields": [
+                    {"name": "query", "label": "Query", "type": "text"},
+                ],
+            }
+        ],
     )
 
     result = generator.generate_from_spec(spec)
@@ -92,10 +92,12 @@ def test_app_generator_list_view():
         description="Test",
         backend_type="component",
         backend_logic="def process(): return 'hello'",
-        frontend_views=[{
-            "name": "ListView",
-            "type": "list",
-        }],
+        frontend_views=[
+            {
+                "name": "ListView",
+                "type": "list",
+            }
+        ],
     )
 
     result = generator.generate_from_spec(spec)

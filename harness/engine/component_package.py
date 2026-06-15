@@ -187,14 +187,19 @@ class ComponentPackage:
 
     def _calculate_checksum(self) -> str:
         """Calculate SHA256 checksum of the package."""
-        content = json.dumps({
-            "metadata": self.metadata.to_dict(),
-            "signature": self.signature.to_dict(),
-            "dependencies": self.dependencies.to_dict(),
-            "tests": self.tests.to_dict(),
-            "source_code": self.source_code,
-            "optimizer_config": self.optimizer_config.to_dict() if self.optimizer_config else None,
-        }, sort_keys=True)
+        content = json.dumps(
+            {
+                "metadata": self.metadata.to_dict(),
+                "signature": self.signature.to_dict(),
+                "dependencies": self.dependencies.to_dict(),
+                "tests": self.tests.to_dict(),
+                "source_code": self.source_code,
+                "optimizer_config": self.optimizer_config.to_dict()
+                if self.optimizer_config
+                else None,
+            },
+            sort_keys=True,
+        )
         return hashlib.sha256(content.encode()).hexdigest()
 
     def to_dict(self) -> dict[str, Any]:
@@ -220,7 +225,9 @@ class ComponentPackage:
             dependencies=ComponentDependencies.from_dict(data["dependencies"]),
             tests=ComponentTests.from_dict(data["tests"]),
             source_code=data["source_code"],
-            optimizer_config=OptimizerConfig.from_dict(data["optimizer_config"]) if data.get("optimizer_config") else None,
+            optimizer_config=OptimizerConfig.from_dict(data["optimizer_config"])
+            if data.get("optimizer_config")
+            else None,
             checksum=data.get("checksum", ""),
         )
 

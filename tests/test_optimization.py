@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import pytest
-
 import dspy
+import pytest
 
 from harness.engine.optimization.evaluator import Evaluator
 from harness.engine.optimization.feedback import FeedbackCollector
@@ -25,7 +24,9 @@ class TestEvaluator:
                 return dspy.Prediction(answer=answers.get(question, ""))
 
         dataset = [
-            dspy.Example(question="Where is the Eiffel Tower?", answer="Paris").with_inputs("question"),
+            dspy.Example(question="Where is the Eiffel Tower?", answer="Paris").with_inputs(
+                "question"
+            ),
             dspy.Example(question="2+2?", answer="4").with_inputs("question"),
         ]
         result = await evaluator.evaluate(Stub(), dataset, metric_name="exact_match")

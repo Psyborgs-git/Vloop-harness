@@ -10,10 +10,12 @@ def get_scheduler() -> BaseScheduler:
     """Instantiate the configured scheduler adapter."""
     settings = HarnessSettings()  # type: ignore[call-arg]
 
-    if settings.cron_scheduler_backend == "celery":
-        from harness.cron.celery_scheduler import CeleryScheduler
-        return CeleryScheduler()
+    if settings.cron_scheduler_backend == "arq":
+        from harness.cron.arq_scheduler import ArqScheduler
+
+        return ArqScheduler()
 
     # Default to asyncio
     from harness.cron.asyncio_scheduler import AsyncioScheduler
+
     return AsyncioScheduler()

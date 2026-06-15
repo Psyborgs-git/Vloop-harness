@@ -45,7 +45,9 @@ async def test_record_client_events_dual_writes_jsonl(client: AsyncClient, test_
     )
     assert resp.status_code == 200
 
-    telemetry_file = test_app.state.vloop_storage.project_dir / "telemetry" / f"{date.today().isoformat()}.jsonl"
+    telemetry_file = (
+        test_app.state.vloop_storage.project_dir / "telemetry" / f"{date.today().isoformat()}.jsonl"
+    )
     rows = [json.loads(line) for line in telemetry_file.read_text().splitlines()]
     assert rows[-1]["type"] == "action_click"
     assert rows[-1]["data"]["action_id"] == "chat.view.new"

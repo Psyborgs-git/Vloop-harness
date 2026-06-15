@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import pytest
-
 import dspy
+import pytest
 
 from harness.engine.pipelines.base import (
     Condition,
@@ -13,11 +12,10 @@ from harness.engine.pipelines.base import (
 )
 from harness.engine.pipelines.executor import PipelineExecutor
 from harness.engine.pipelines.templates import (
-    RAGPipeline,
     MapReducePipeline,
+    RAGPipeline,
     ReflectionPipeline,
     SequentialPipeline,
-    run_pipeline,
 )
 
 
@@ -48,7 +46,10 @@ class TestPipelineGraph:
         b = graph.add_node(NodeType.COMPONENT, name="b")
         out = graph.add_node(NodeType.OUTPUT)
         graph.add_edge(inp, cond)
-        graph.branch(cond, [(a, Condition("true", lambda ctx: True)), (b, Condition("false", lambda ctx: False))])
+        graph.branch(
+            cond,
+            [(a, Condition("true", lambda ctx: True)), (b, Condition("false", lambda ctx: False))],
+        )
         graph.add_edge(a, out)
         graph.add_edge(b, out)
         errors = graph.validate()
@@ -67,7 +68,11 @@ class TestSequentialPipeline:
         graph = pipeline.build()
         executor = PipelineExecutor(graph)
         ctx = await executor.run({"x": 5})
-        assert any("result" in s.outputs and s.outputs["result"] == 10 for s in ctx.step_results if s.success)
+        assert any(
+            "result" in s.outputs and s.outputs["result"] == 10
+            for s in ctx.step_results
+            if s.success
+        )
 
 
 class TestRAGPipeline:

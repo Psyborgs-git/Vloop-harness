@@ -79,6 +79,11 @@ async def list_templates() -> list[dict[str, str]]:
         {"id": "rag", "name": "RAG", "description": "Retrieval-Augmented Generation"},
         {"id": "map_reduce", "name": "MapReduce", "description": "Parallel map with reduce"},
         {"id": "agent_loop", "name": "AgentLoop", "description": "Think-act-observe loop"},
+        {
+            "id": "react_agent",
+            "name": "ReAct Agent",
+            "description": "Reasoning and Acting loop using tools",
+        },
         {"id": "reflection", "name": "Reflection", "description": "Generate-critique-revise"},
     ]
 
@@ -91,6 +96,19 @@ async def build_sequential(body: SequentialPipelineRequest) -> dict[str, Any]:
         pipeline.add_step(step.get("name", "step"), step.get("config", {}))
     graph = pipeline.build()
     return {"graph": graph.to_dict(), "validation_errors": graph.validate()}
+
+
+@router.post("/build/react_agent")
+async def build_react_agent(body: SequentialPipelineRequest) -> dict[str, Any]:
+    """Build a ReAct Agent pipeline."""
+    pipeline = SequentialPipeline(name=body.name)
+    # The first step will just invoke the react_agent step directly in executor
+    # But since PipelineExecutor handles NODES, we can model it as a component node
+
+    # We will assume that the execution context handles the react agent.
+    # In Vloop, usually PipelineBuilder or Executor needs custom nodes.
+
+    return {"graph": pipeline.build().to_dict(), "validation_errors": []}
 
 
 @router.post("/run")

@@ -18,10 +18,10 @@ from harness.engine.model_registry import ModelCapability, ModelRegistry
 
 
 class RoutingStrategy(StrEnum):
-    EXACT = "exact"           # Use the requested model_id exactly
+    EXACT = "exact"  # Use the requested model_id exactly
     CAPABILITY = "capability"  # Pick cheapest model with required capabilities
-    PROVIDER = "provider"      # Pick largest context model for a provider
-    FASTEST = "fastest"        # Pick model with lowest observed latency
+    PROVIDER = "provider"  # Pick largest context model for a provider
+    FASTEST = "fastest"  # Pick model with lowest observed latency
 
 
 @dataclass
@@ -128,17 +128,21 @@ class ModelRouter:
                     base_url=cfg.get("base_url", "") if cfg else "",
                     api_key=cfg.get("api_key", "") if cfg else "",
                     reasoning=f"Exact match for {model_id}",
-                    estimated_cost_per_1k=info.pricing_prompt_per_1k + info.pricing_completion_per_1k,
+                    estimated_cost_per_1k=info.pricing_prompt_per_1k
+                    + info.pricing_completion_per_1k,
                 )
 
         # 2. Capability-based (cheapest)
         if strategy == RoutingStrategy.CAPABILITY:
             candidates = [
-                m for m in self.registry.list_all()
+                m
+                for m in self.registry.list_all()
                 if cap_set.issubset(m.capabilities) and self._health.is_healthy(m.provider_type)
             ]
             if candidates:
-                best = min(candidates, key=lambda m: m.pricing_prompt_per_1k + m.pricing_completion_per_1k)
+                best = min(
+                    candidates, key=lambda m: m.pricing_prompt_per_1k + m.pricing_completion_per_1k
+                )
                 cfg = self._find_provider_config(best.provider_type, provider_configs)
                 return RoutingDecision(
                     provider_type=best.provider_type,
@@ -146,7 +150,8 @@ class ModelRouter:
                     base_url=cfg.get("base_url", "") if cfg else "",
                     api_key=cfg.get("api_key", "") if cfg else "",
                     reasoning=f"Cheapest model with capabilities {cap_set}",
-                    estimated_cost_per_1k=best.pricing_prompt_per_1k + best.pricing_completion_per_1k,
+                    estimated_cost_per_1k=best.pricing_prompt_per_1k
+                    + best.pricing_completion_per_1k,
                 )
 
         # 3. Provider-based (largest context)
@@ -160,12 +165,15 @@ class ModelRouter:
                     base_url=cfg.get("base_url", "") if cfg else "",
                     api_key=cfg.get("api_key", "") if cfg else "",
                     reasoning=f"Largest context model for {preferred_provider}",
-                    estimated_cost_per_1k=best.pricing_prompt_per_1k + best.pricing_completion_per_1k,
+                    estimated_cost_per_1k=best.pricing_prompt_per_1k
+                    + best.pricing_completion_per_1k,
                 )
 
         # 4. Fastest (lowest observed latency)
         if strategy == RoutingStrategy.FASTEST:
-            healthy = [m for m in self.registry.list_all() if self._health.is_healthy(m.provider_type)]
+            healthy = [
+                m for m in self.registry.list_all() if self._health.is_healthy(m.provider_type)
+            ]
             if healthy:
                 best = min(healthy, key=lambda m: self._health.avg_latency(m.provider_type))
                 cfg = self._find_provider_config(best.provider_type, provider_configs)
@@ -175,7 +183,8 @@ class ModelRouter:
                     base_url=cfg.get("base_url", "") if cfg else "",
                     api_key=cfg.get("api_key", "") if cfg else "",
                     reasoning=f"Fastest healthy provider ({best.provider_type})",
-                    estimated_cost_per_1k=best.pricing_prompt_per_1k + best.pricing_completion_per_1k,
+                    estimated_cost_per_1k=best.pricing_prompt_per_1k
+                    + best.pricing_completion_per_1k,
                 )
 
         # Fallback: default provider
@@ -212,7 +221,9 @@ class ModelRouter:
 
     # ── Health probes ───────────────────────────────────────────────────────
 
-    async def probe_provider(self, provider_type: str, base_url: str = "", api_key: str = "") -> bool:
+    async def probe_provider(
+        self, provider_type: str, base_url: str = "", api_key: str = ""
+    ) -> bool:
         """Quick health check for a provider."""
         if provider_type == "ollama":
             url = base_url or "http://localhost:11434"
@@ -244,7 +255,9 @@ class ModelRouter:
     def health_summary(self) -> dict[str, dict[str, Any]]:
         """Return health stats for all observed providers."""
         summary: dict[str, dict[str, Any]] = {}
-        all_providers = set(list(self._health._latencies.keys()) + list(self._health._errors.keys()))
+        all_providers = set(
+            list(self._health._latencies.keys()) + list(self._health._errors.keys())
+        )
         for p in all_providers:
             summary[p] = {
                 "avg_latency_ms": round(self._health.avg_latency(p), 2),

@@ -88,22 +88,26 @@ class Evaluator:
                 if is_pass:
                     passed += 1
 
-                details.append({
-                    "inputs": {k: example[k] for k in example.inputs()},
-                    "expected": example.get(output_key, "")
-                    if hasattr(example, "__getitem__")
-                    else getattr(example, output_key, ""),
-                    "predicted": str(getattr(prediction, output_key, prediction)),
-                    "score": score,
-                    "passed": is_pass,
-                })
+                details.append(
+                    {
+                        "inputs": {k: example[k] for k in example.inputs()},
+                        "expected": example.get(output_key, "")
+                        if hasattr(example, "__getitem__")
+                        else getattr(example, output_key, ""),
+                        "predicted": str(getattr(prediction, output_key, prediction)),
+                        "score": score,
+                        "passed": is_pass,
+                    }
+                )
             except Exception as exc:
-                details.append({
-                    "inputs": {k: example[k] for k in example.inputs()},
-                    "error": str(exc),
-                    "score": 0.0,
-                    "passed": False,
-                })
+                details.append(
+                    {
+                        "inputs": {k: example[k] for k in example.inputs()},
+                        "error": str(exc),
+                        "score": 0.0,
+                        "passed": False,
+                    }
+                )
 
         duration_ms = int((time.time() - t0) * 1000)
         total = len(dataset)
@@ -139,7 +143,9 @@ class Evaluator:
     # ── Default metrics ─────────────────────────────────────────────────────
 
     @staticmethod
-    def _exact_match(example: dspy.Example, prediction: dspy.Prediction, trace: Any = None) -> float:
+    def _exact_match(
+        example: dspy.Example, prediction: dspy.Prediction, trace: Any = None
+    ) -> float:
         expected = str(example.get("answer", example.get("output", "")))
         predicted = str(getattr(prediction, "answer", getattr(prediction, "output", prediction)))
         return 1.0 if expected.strip().lower() == predicted.strip().lower() else 0.0
@@ -151,7 +157,9 @@ class Evaluator:
         return 1.0 if expected.strip().lower() in predicted.strip().lower() else 0.0
 
     @staticmethod
-    def _length_ratio(example: dspy.Example, prediction: dspy.Prediction, trace: Any = None) -> float:
+    def _length_ratio(
+        example: dspy.Example, prediction: dspy.Prediction, trace: Any = None
+    ) -> float:
         expected = str(example.get("answer", example.get("output", "")))
         predicted = str(getattr(prediction, "answer", getattr(prediction, "output", prediction)))
         exp_len = max(1, len(expected))

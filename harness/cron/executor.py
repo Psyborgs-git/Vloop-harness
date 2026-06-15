@@ -46,5 +46,6 @@ async def execute_cron_job(
             response.raise_for_status()
     except Exception as e:
         import structlog
+
         logger = structlog.get_logger()
         logger.error("cron_job_execution_failed", target_url=target_url, error=str(e))

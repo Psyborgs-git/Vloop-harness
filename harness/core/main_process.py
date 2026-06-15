@@ -55,8 +55,8 @@ class MainProcess:
         policy_engine = PolicyEngine(workspace_root=self.workspace_root)
         confirmations = ConfirmationStore()
         tool_registry = ToolRegistry(self)
-        tool_registry.policy = policy_engine          # type: ignore[attr-defined]
-        tool_registry.confirmations = confirmations    # type: ignore[attr-defined]
+        tool_registry.policy = policy_engine  # type: ignore[attr-defined]
+        tool_registry.confirmations = confirmations  # type: ignore[attr-defined]
         tool_registry.register(TerminalTool(self))
         tool_registry.register(FilesystemTool(self))
 
@@ -86,9 +86,7 @@ class MainProcess:
         permissions: set[Permission] | None = None,
     ) -> None:
         self.component_tree.register(component)
-        self.permissions.register(
-            component.id, permissions or component.default_permissions
-        )
+        self.permissions.register(component.id, permissions or component.default_permissions)
         self.logger.register(component.id)
         component._main_process = self
         await self.process_manager.start(component)

@@ -165,8 +165,7 @@ class SelfImprovementLoop:
             )
 
         trainset = [
-            dspy.Example(**ex["inputs"]).with_inputs(*ex["inputs"].keys())
-            for ex in examples
+            dspy.Example(**ex["inputs"]).with_inputs(*ex["inputs"].keys()) for ex in examples
         ]
         return await self.improve(module, module_name, trainset=trainset)
 

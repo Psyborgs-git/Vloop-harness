@@ -6,6 +6,7 @@ import { useRouteStore } from "./store";
 import Homepage from "./Homepage";
 
 const ProcessManager = lazy(() => import("./components/ui/ProcessManager"));
+const PipelineManager = lazy(() => import("./components/workflows/PipelineManager"));
 
 function CatchAllRoute() {
     const location = useLocation();
@@ -103,6 +104,7 @@ export default function App() {
         <Suspense fallback={<p style={{ color: "var(--text-secondary)" }}>Loading Page...</p>}>
             <Routes>
                 <Route path="/processes" element={<ProcessManager />} />
+                <Route path="/workflows" element={<PipelineManager />} />
                 <Route path="*" element={<CatchAllRoute />} />
             </Routes>
         </Suspense>

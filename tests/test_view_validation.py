@@ -18,7 +18,6 @@ from harness.server.routes.view_validation import (
     write_view_stub,
 )
 
-
 # ── validate_component_name ────────────────────────────────────────────────────
 
 
@@ -81,7 +80,9 @@ class TestValidateComponentName:
 
 class TestValidateReactCode:
     def test_clean_code_passes(self) -> None:
-        code = 'import React from "react";\nexport default function Hello() { return <div>Hi</div>; }'
+        code = (
+            'import React from "react";\nexport default function Hello() { return <div>Hi</div>; }'
+        )
         validate_react_code(code)  # must not raise
 
     def test_eval_blocked(self) -> None:
@@ -138,7 +139,7 @@ class TestValidateReactCode:
 
 class TestWriteViewStub:
     def test_creates_app_tsx(self, tmp_path: Path) -> None:
-        code = 'export default function Hello() { return <div>hi</div>; }'
+        code = "export default function Hello() { return <div>hi</div>; }"
         result = write_view_stub(tmp_path, "HelloWorld", code)
         assert result is not None
         app_file = tmp_path / "HelloWorld" / "App.tsx"
@@ -146,7 +147,7 @@ class TestWriteViewStub:
         assert app_file.read_text() == code
 
     def test_creates_main_tsx(self, tmp_path: Path) -> None:
-        code = 'export default function Foo() { return null; }'
+        code = "export default function Foo() { return null; }"
         write_view_stub(tmp_path, "FooBar", code)
         main_file = tmp_path / "FooBar" / "main.tsx"
         assert main_file.exists()

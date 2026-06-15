@@ -9,7 +9,9 @@ class SummariseSignature(dspy.Signature):
     """Produce a structured summary of the given text."""
 
     text: str = dspy.InputField(desc="The text to summarise")
-    max_words: int = dspy.InputField(desc="Approximate maximum word count for the summary", default=100)
+    max_words: int = dspy.InputField(
+        desc="Approximate maximum word count for the summary", default=100
+    )
     summary: str = dspy.OutputField(desc="Concise summary within the word limit")
     key_points: str = dspy.OutputField(desc="Bullet-point list of the most important facts")
 

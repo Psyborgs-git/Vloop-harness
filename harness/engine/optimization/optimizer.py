@@ -86,7 +86,9 @@ class DSpyOptimizer:
         if hasattr(module, "save"):
             module.save(path)
         else:
-            Path(path).write_text(json.dumps({"_type": "dspy_module", "module": str(module)}), encoding="utf-8")
+            Path(path).write_text(
+                json.dumps({"_type": "dspy_module", "module": str(module)}), encoding="utf-8"
+            )
 
     def load(self, path: str | Path, module_class: type[dspy.Module]) -> dspy.Module | None:
         """Load optimized module from disk."""

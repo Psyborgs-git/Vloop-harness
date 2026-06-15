@@ -179,6 +179,4 @@ async def compare_versions(
             testset = ds.examples
 
     metric = evaluator.get_metric("contains")
-    return ai.self_improvement.optimizer.compare_versions(
-        baseline, optimized, testset, metric
-    )
+    return ai.self_improvement.optimizer.compare_versions(baseline, optimized, testset, metric)

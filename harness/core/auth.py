@@ -11,7 +11,7 @@ import hmac
 import json
 import os
 import time
-from datetime import datetime, UTC
+from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel
@@ -20,14 +20,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from harness.data.models import UserDB
 
-
 # ── Password Hashing ──────────────────────────────────────────────────────────
 
 
 def hash_password(password: str) -> str:
     salt = os.urandom(16)
     # OWASP recommends at least 600,000 iterations for PBKDF2-HMAC-SHA256
-    key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 600000)
+    key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 600000)
     return f"pbkdf2_sha256$600000${salt.hex()}${key.hex()}"
 
 
@@ -39,7 +38,7 @@ def verify_password(password: str, hashed: str) -> bool:
         iterations = int(parts[1])
         salt = bytes.fromhex(parts[2])
         key = bytes.fromhex(parts[3])
-        new_key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, iterations)
+        new_key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iterations)
         return hmac.compare_digest(key, new_key)
     except Exception:
         return False
@@ -61,11 +60,11 @@ def create_jwt(payload: dict[str, Any], secret: str) -> str:
     header = {"alg": "HS256", "typ": "JWT"}
     header_b64 = base64url_encode(json.dumps(header).encode("utf-8"))
     payload_b64 = base64url_encode(json.dumps(payload).encode("utf-8"))
-    
-    signing_input = f"{header_b64}.{payload_b64}".encode("utf-8")
+
+    signing_input = f"{header_b64}.{payload_b64}".encode()
     signature = hmac.new(secret.encode("utf-8"), signing_input, hashlib.sha256).digest()
     signature_b64 = base64url_encode(signature)
-    
+
     return f"{header_b64}.{payload_b64}.{signature_b64}"
 
 
@@ -75,18 +74,20 @@ def verify_jwt(token: str, secret: str) -> dict[str, Any] | None:
         if len(parts) != 3:
             return None
         header_b64, payload_b64, signature_b64 = parts
-        
-        signing_input = f"{header_b64}.{payload_b64}".encode("utf-8")
-        expected_signature = hmac.new(secret.encode("utf-8"), signing_input, hashlib.sha256).digest()
+
+        signing_input = f"{header_b64}.{payload_b64}".encode()
+        expected_signature = hmac.new(
+            secret.encode("utf-8"), signing_input, hashlib.sha256
+        ).digest()
         expected_signature_b64 = base64url_encode(expected_signature)
-        
+
         if not hmac.compare_digest(signature_b64, expected_signature_b64):
             return None
-            
+
         payload = json.loads(base64url_decode(payload_b64).decode("utf-8"))
         if "exp" in payload and payload["exp"] < time.time():
             return None
-            
+
         return payload
     except Exception:
         return None
@@ -141,20 +142,16 @@ class AuthManager:
         payload = verify_jwt(token, self.secret_key)
         if not payload:
             return None
-        
+
         user_id = payload.get("sub")
         role = payload.get("role", "user")
         if not user_id:
             return None
-            
+
         return TokenData(user_id=user_id, role=role)
 
     def create_token(self, user: UserDB, expires_delta_seconds: int = 86400) -> Token:
-        payload = {
-            "sub": user.id,
-            "role": user.role,
-            "exp": time.time() + expires_delta_seconds
-        }
+        payload = {"sub": user.id, "role": user.role, "exp": time.time() + expires_delta_seconds}
         token_str = create_jwt(payload, self.secret_key)
         return Token(access_token=token_str)
 
@@ -224,6 +221,7 @@ def get_auth_manager() -> AuthManager:
     global _auth_manager
     if _auth_manager is None:
         from os import getenv
+
         secret = getenv("JWT_SECRET", "vloop-super-secret-key-change-in-production")
         _auth_manager = AuthManager(secret)
     return _auth_manager

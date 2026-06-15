@@ -87,7 +87,7 @@ async def list_alert_rules() -> list[dict[str, Any]]:
 async def create_alert_rule(body: AlertRuleCreateRequest) -> dict[str, Any]:
     """Create a new alert rule."""
     manager = get_alert_manager()
-    
+
     rule = AlertRule(
         metric_name=body.metric_name,
         threshold=body.threshold,
@@ -98,7 +98,7 @@ async def create_alert_rule(body: AlertRuleCreateRequest) -> dict[str, Any]:
         enabled=body.enabled,
         tags=body.tags,
     )
-    
+
     manager.add_rule(rule)
     return _rule_to_dict(rule)
 
@@ -111,10 +111,10 @@ async def update_alert_rule(
     """Update an alert rule."""
     manager = get_alert_manager()
     rule = manager.get_rule(metric_name)
-    
+
     if not rule:
         raise HTTPException(status_code=404, detail="Alert rule not found")
-    
+
     if body.threshold is not None:
         rule.threshold = body.threshold
     if body.severity is not None:
@@ -129,7 +129,7 @@ async def update_alert_rule(
         rule.enabled = body.enabled
     if body.tags is not None:
         rule.tags = body.tags
-    
+
     return _rule_to_dict(rule)
 
 
@@ -155,4 +155,6 @@ async def list_alerts_by_severity(severity: str, limit: int = 50) -> list[dict[s
     """List alerts by severity level."""
     manager = get_alert_manager()
     alert_severity = _severity_from_string(severity)
-    return [_alert_to_dict(alert) for alert in manager.get_alerts_by_severity(alert_severity, limit)]
+    return [
+        _alert_to_dict(alert) for alert in manager.get_alerts_by_severity(alert_severity, limit)
+    ]

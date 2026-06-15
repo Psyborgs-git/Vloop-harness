@@ -1,28 +1,27 @@
 import grpc
-import asyncio
-from typing import AsyncGenerator, Optional
 import structlog
 
+from .middleware.context_cleaner import ContextCleaner
 from .sandbox_pb2 import ProvisionRequest, SandboxConfig, TeardownRequest
 from .sandbox_pb2_grpc import SandboxServiceStub
-from .middleware.context_cleaner import ContextCleaner
 
 logger = structlog.get_logger()
 
 # Key mapping matrix for Phase 2
 KEY_MATRIX = {
-    "Ctrl+C": b'\x03',
-    "Ctrl+D": b'\x04',
-    "Ctrl+Z": b'\x1A',
-    "Esc": b'\x1B',
-    "Up Arrow": b'\x1B[A',
+    "Ctrl+C": b"\x03",
+    "Ctrl+D": b"\x04",
+    "Ctrl+Z": b"\x1a",
+    "Esc": b"\x1b",
+    "Up Arrow": b"\x1b[A",
 }
+
 
 class SandboxClient:
     def __init__(self, target: str = "127.0.0.1:9102"):
         self.target = target
-        self.channel: Optional[grpc.aio.Channel] = None
-        self.stub: Optional[SandboxServiceStub] = None
+        self.channel: grpc.aio.Channel | None = None
+        self.stub: SandboxServiceStub | None = None
         self.cleaner = ContextCleaner()
 
     async def connect(self):
@@ -36,7 +35,9 @@ class SandboxClient:
             self.channel = None
             self.stub = None
 
-    async def provision(self, session_id: str, sandbox_type: SandboxConfig.Type, command: str, args: list[str]) -> bool:
+    async def provision(
+        self, session_id: str, sandbox_type: SandboxConfig.Type, command: str, args: list[str]
+    ) -> bool:
         await self.connect()
         config = SandboxConfig(
             type=sandbox_type,
@@ -60,5 +61,3 @@ class SandboxClient:
         except grpc.RpcError as e:
             logger.error("Teardown failed", error=str(e))
             return False
-
-

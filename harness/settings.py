@@ -39,7 +39,9 @@ class HarnessSettings(BaseSettings):
 
     # Vector store
     vector_store_dimensions: int = Field(768, alias="VECTOR_STORE_DIMENSIONS")
-    vector_store_backend: str = Field("sqlite-vec", alias="VECTOR_STORE_BACKEND")  # sqlite-vec | memory
+    vector_store_backend: str = Field(
+        "sqlite-vec", alias="VECTOR_STORE_BACKEND"
+    )  # sqlite-vec | memory
     embedding_provider: str = Field("ollama", alias="EMBEDDING_PROVIDER")  # ollama | openai | local
     embedding_model: str = Field("nomic-embed-text", alias="EMBEDDING_MODEL")
 

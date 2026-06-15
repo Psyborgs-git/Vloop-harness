@@ -59,15 +59,16 @@ class ToolRegistry:
                             "session_id": session_id,
                             "params": params or {},
                         },
-                        timeout=60.0
+                        timeout=60.0,
                     )
                     if res.status_code == 202:
                         from harness.tools.exceptions import ConfirmationRequired
+
                         data = res.json()
                         raise ConfirmationRequired(
                             token=data["token"],
                             description=data["description"],
-                            risk_level=data["risk_level"]
+                            risk_level=data["risk_level"],
                         )
                     elif res.status_code == 200:
                         data = res.json()
@@ -76,17 +77,16 @@ class ToolRegistry:
                             output=data.get("output"),
                             error=data.get("error"),
                             exit_code=data.get("exit_code"),
-                            metadata=data.get("metadata", {})
+                            metadata=data.get("metadata", {}),
                         )
                     else:
                         return ToolResult(
                             success=False,
-                            error=f"Rust host returned status code {res.status_code}: {res.text}"
+                            error=f"Rust host returned status code {res.status_code}: {res.text}",
                         )
                 except httpx.HTTPError as exc:
                     return ToolResult(
-                        success=False,
-                        error=f"Error communicating with Rust host: {exc}"
+                        success=False, error=f"Error communicating with Rust host: {exc}"
                     )
 
         tool = self._tools.get(tool_name)
@@ -127,7 +127,7 @@ class ToolRegistry:
             error_result = ToolResult(
                 success=False,
                 error=str(exc),
-                metadata={"duration_ms": duration_ms, "risk_level": tool.risk_level}
+                metadata={"duration_ms": duration_ms, "risk_level": tool.risk_level},
             )
 
             # Record metrics for failure

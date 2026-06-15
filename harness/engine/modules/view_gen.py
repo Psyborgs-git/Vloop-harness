@@ -31,9 +31,7 @@ class ViewGeneratorSignature(dspy.Signature):
          does and what props / data it expects.
     """
 
-    ui_description: str = dspy.InputField(
-        desc="Natural-language description of the UI to build"
-    )
+    ui_description: str = dspy.InputField(desc="Natural-language description of the UI to build")
     available_components: str = dspy.InputField(
         desc="JSON array of existing DSPy components [{id, name, description}] for context"
     )

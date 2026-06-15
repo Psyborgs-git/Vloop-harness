@@ -88,6 +88,7 @@ class FeedbackCollector:
             return {"count": 0, "avg_rating": 0.0, "common_tags": []}
         ratings = [e.rating for e in entries]
         from collections import Counter
+
         tag_counts = Counter(tag for e in entries for tag in e.tags)
         return {
             "count": len(entries),

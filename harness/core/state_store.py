@@ -64,9 +64,7 @@ class StateStore:
     async def flush(self, component_id: str) -> None:
         self._memory.pop(component_id, None)
         if self._db:
-            await self._db.execute(
-                "DELETE FROM state WHERE component_id = ?", (component_id,)
-            )
+            await self._db.execute("DELETE FROM state WHERE component_id = ?", (component_id,))
             await self._db.commit()
 
     # ── Bulk ops ──────────────────────────────────────────────────────────────

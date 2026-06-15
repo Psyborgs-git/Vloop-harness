@@ -33,6 +33,7 @@ from harness.engine.modules.chat import DashboardChat
 from harness.engine.modules.code_gen import CodeGenerator
 from harness.engine.modules.component_spec import ComponentSpecGenerator
 from harness.engine.modules.qa import QuestionAnswerer
+from harness.engine.modules.react_agent import ReActAgent
 from harness.engine.modules.reasoning import ChainOfThoughtReasoner
 from harness.engine.modules.summarise import Summariser
 from harness.engine.modules.view_gen import ViewGenerator
@@ -76,6 +77,7 @@ class DSPyEngine:
         self._view_gen: ViewGenerator | None = None
         self._component_spec: ComponentSpecGenerator | None = None
         self._agent_planner: AgentPlanner | None = None
+        self._react_agent: Any = None
 
     # ── Bootstrap ─────────────────────────────────────────────────────────────
 
@@ -84,6 +86,7 @@ class DSPyEngine:
         cfg = self.config
 
         import os
+
         rust_base_url = os.getenv("RUST_BASE_AI_URL")
         if rust_base_url:
             self._lm = dspy.LM(
@@ -107,15 +110,14 @@ class DSPyEngine:
             self._view_gen = ViewGenerator()
             self._component_spec = ComponentSpecGenerator()
             self._agent_planner = AgentPlanner()
+            self._react_agent = ReActAgent()
             return
 
         provider = cfg.dspy_lm_provider.lower()
 
         if provider == "anthropic":
             if not cfg.anthropic_api_key:
-                raise RuntimeError(
-                    "ANTHROPIC_API_KEY is required when DSPY_LM_PROVIDER=anthropic"
-                )
+                raise RuntimeError("ANTHROPIC_API_KEY is required when DSPY_LM_PROVIDER=anthropic")
             self._lm = dspy.LM(
                 model=f"anthropic/{cfg.dspy_lm_model}",
                 api_key=cfg.anthropic_api_key,
@@ -126,9 +128,7 @@ class DSPyEngine:
 
         elif provider == "openai":
             if not cfg.openai_api_key:
-                raise RuntimeError(
-                    "OPENAI_API_KEY is required when DSPY_LM_PROVIDER=openai"
-                )
+                raise RuntimeError("OPENAI_API_KEY is required when DSPY_LM_PROVIDER=openai")
             self._lm = dspy.LM(
                 model=f"openai/{cfg.dspy_lm_model}",
                 api_key=cfg.openai_api_key,
@@ -163,6 +163,7 @@ class DSPyEngine:
         self._view_gen = ViewGenerator()
         self._component_spec = ComponentSpecGenerator()
         self._agent_planner = AgentPlanner()
+        self._react_agent = ReActAgent()
 
     def reconfigure(self, new_config: EngineConfig) -> None:
         """Replace the active LM with a new configuration (provider switch)."""
@@ -275,6 +276,21 @@ class DSPyEngine:
             available_pipelines=available_pipelines,
             available_tools=available_tools,
             context=context,
+        )
+
+    async def run_react_agent(
+        self,
+        task: str,
+        available_tools: str,
+        tool_registry: Any,
+    ) -> dspy.Prediction:
+        """Run the ReAct agent to solve a task."""
+        assert self._react_agent, "Engine not configured — call configure() first"
+        return await self.run(
+            self._react_agent,
+            task=task,
+            available_tools=available_tools,
+            tool_registry=tool_registry,
         )
 
     # ── Direct LM access (escape hatch) ──────────────────────────────────────

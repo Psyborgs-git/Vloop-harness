@@ -39,6 +39,7 @@ class FilesystemTool(AbstractTool):
     def __init__(self, main_process: MainProcess) -> None:
         super().__init__(main_process)
         from harness.core.rollback import RollbackManager
+
         self._rollback = RollbackManager()
 
     # ── Dispatch ──────────────────────────────────────────────────────────────
@@ -66,8 +67,7 @@ class FilesystemTool(AbstractTool):
         if handler is None:
             return ToolResult(
                 success=False,
-                error=f"Unknown filesystem operation: {operation!r}. "
-                      f"Valid: {list(op_map)!r}",
+                error=f"Unknown filesystem operation: {operation!r}. Valid: {list(op_map)!r}",
             )
         return await handler(component_id, params)
 
@@ -93,9 +93,7 @@ class FilesystemTool(AbstractTool):
         if cid == "root":
             return
         if not self._mp.permissions.has(cid, Permission.FILESYSTEM_WRITE):
-            raise PermissionDenied(
-                f"Component {cid!r} does not have FILESYSTEM_WRITE permission."
-            )
+            raise PermissionDenied(f"Component {cid!r} does not have FILESYSTEM_WRITE permission.")
 
     # ── Operations ────────────────────────────────────────────────────────────
 
@@ -253,7 +251,12 @@ class FilesystemTool(AbstractTool):
                     description=f"Overwrite existing file: {rel_path} ({summary['total_changes']} lines changed)",
                     risk_level="caution",
                     action_name="write",
-                    action_params={**params, "_diff_preview": diff, "_diff_summary": summary, "_backup_info": backup_info},
+                    action_params={
+                        **params,
+                        "_diff_preview": diff,
+                        "_diff_summary": summary,
+                        "_backup_info": backup_info,
+                    },
                 )
                 raise ConfirmationRequired(
                     token=pending.token,

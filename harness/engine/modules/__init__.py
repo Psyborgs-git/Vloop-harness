@@ -2,6 +2,7 @@
 
 from harness.engine.modules.code_gen import CodeGenerator
 from harness.engine.modules.qa import QuestionAnswerer
+from harness.engine.modules.react_agent import ReActAgent
 from harness.engine.modules.reasoning import ChainOfThoughtReasoner
 from harness.engine.modules.summarise import Summariser
 
@@ -10,4 +11,5 @@ __all__ = [
     "CodeGenerator",
     "QuestionAnswerer",
     "Summariser",
+    "ReActAgent",
 ]

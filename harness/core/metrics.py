@@ -250,7 +250,9 @@ def time_operation(metric_name: str, tags: dict[str, str] | None = None) -> Time
 # ── Predefined metrics ────────────────────────────────────────────────────────
 
 
-def record_tool_execution(tool_name: str, duration_ms: float, success: bool, component_id: str | None = None) -> None:
+def record_tool_execution(
+    tool_name: str, duration_ms: float, success: bool, component_id: str | None = None
+) -> None:
     """Record a tool execution metric."""
     tags = {"tool": tool_name}
     if component_id:
@@ -265,6 +267,7 @@ def record_tool_execution(tool_name: str, duration_ms: float, success: bool, com
 
     # Check for alerts
     from harness.core.alerting import get_alert_manager
+
     alert_manager = get_alert_manager()
     counter = _registry.counter("tool_executions_error", tags)
     alert_manager.check_metric("tool_executions_error", counter.value)
@@ -282,7 +285,9 @@ def record_component_execution(component_id: str, duration_ms: float, success: b
         increment_counter("component_executions_error", tags)
 
 
-def record_agent_run(run_id: str, duration_ms: float, steps_completed: int, steps_failed: int) -> None:
+def record_agent_run(
+    run_id: str, duration_ms: float, steps_completed: int, steps_failed: int
+) -> None:
     """Record an agent run metric."""
     tags = {"run_id": run_id}
 

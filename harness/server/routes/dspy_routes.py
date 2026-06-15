@@ -271,9 +271,7 @@ async def run_component(
 
     loop = asyncio.get_running_loop()
     try:
-        prediction = await loop.run_in_executor(
-            None, functools.partial(module, **body.inputs)
-        )
+        prediction = await loop.run_in_executor(None, functools.partial(module, **body.inputs))
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Component run failed: {exc}") from exc
 

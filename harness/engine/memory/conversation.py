@@ -70,10 +70,12 @@ class ConversationMemory:
         """Return raw message dicts (for chat APIs)."""
         messages = []
         if self._summary:
-            messages.append({
-                "role": "system",
-                "content": f"Earlier conversation summary: {self._summary}",
-            })
+            messages.append(
+                {
+                    "role": "system",
+                    "content": f"Earlier conversation summary: {self._summary}",
+                }
+            )
         for msg in self._messages:
             messages.append(msg.to_dict())
         return messages
@@ -83,10 +85,13 @@ class ConversationMemory:
         self._summary = ""
 
     def to_json(self) -> str:
-        return json.dumps({
-            "summary": self._summary,
-            "messages": [m.to_dict() for m in self._messages],
-        }, ensure_ascii=False)
+        return json.dumps(
+            {
+                "summary": self._summary,
+                "messages": [m.to_dict() for m in self._messages],
+            },
+            ensure_ascii=False,
+        )
 
     @classmethod
     def from_json(cls, raw: str) -> ConversationMemory:

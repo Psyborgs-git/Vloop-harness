@@ -7,18 +7,28 @@ from __future__ import annotations
 
 import asyncio
 import uuid
-from typing import Sequence
 from datetime import datetime
 
-from harness.modules.chat.domain.entities import Channel, ChannelMember, Message, User, MessageSentEvent
-from harness.modules.chat.ports.outbound import ChatRepositoryPort, EventPublisherPort, AIParticipantPort
+from harness.modules.chat.domain.entities import (
+    Channel,
+    ChannelMember,
+    Message,
+    MessageSentEvent,
+)
+from harness.modules.chat.ports.outbound import (
+    AIParticipantPort,
+    ChatRepositoryPort,
+    EventPublisherPort,
+)
 
 
 class CreateChannelUseCase:
     def __init__(self, repo: ChatRepositoryPort) -> None:
         self.repo = repo
 
-    async def execute(self, name: str, description: str, is_private: bool, created_by: str) -> Channel:
+    async def execute(
+        self, name: str, description: str, is_private: bool, created_by: str
+    ) -> Channel:
         existing = await self.repo.get_channel_by_name(name)
         if existing:
             raise ValueError(f"Channel with name '{name}' already exists")
@@ -32,9 +42,9 @@ class CreateChannelUseCase:
             created_by=created_by,
             created_at=datetime.utcnow(),
         )
-        
+
         await self.repo.save_channel(channel)
-        
+
         # Auto-join the creator as owner
         member = ChannelMember(
             id=str(uuid.uuid4()),
@@ -44,7 +54,7 @@ class CreateChannelUseCase:
             joined_at=datetime.utcnow(),
         )
         await self.repo.save_member(member)
-        
+
         return channel
 
 
@@ -133,17 +143,21 @@ class SendMessageUseCase:
             # Conditions: channel is public OR direct DM OR bot is mentioned (e.g. '@ai' or '/ai')
             # Let's say: if content starts with "@ai" or contains "/ai" or starts with "/ai" or the channel is named "ai-chat"
             content_lower = message.content.strip().lower()
-            is_ai_channel = "ai" in channel.name.lower() or channel.description.lower().startswith("ai")
-            bot_mentioned = "@ai" in content_lower or "/ai" in content_lower or "ai bot" in content_lower
+            is_ai_channel = "ai" in channel.name.lower() or channel.description.lower().startswith(
+                "ai"
+            )
+            bot_mentioned = (
+                "@ai" in content_lower or "/ai" in content_lower or "ai bot" in content_lower
+            )
 
             # Force participation on public AI channels or when mentioned anywhere
             if is_ai_channel or bot_mentioned or not channel.is_private:
                 # Retrieve recent message history for context
                 history = await self.repo.get_messages(channel.id, limit=20)
-                
+
                 # Call AI Participant Port to generate response
                 ai_reply = await self.ai_participant.generate_response(channel, message, history)
-                
+
                 if ai_reply and ai_reply.strip():
                     # Post AI reply by executing this use case
                     await self.execute(
@@ -157,4 +171,5 @@ class SendMessageUseCase:
             # Prevent background thread crash, log the error
             print(f"Error in SendMessageUseCase background AI trigger: {e}")
             import traceback
+
             traceback.print_exc()

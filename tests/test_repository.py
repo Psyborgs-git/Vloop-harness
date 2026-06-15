@@ -13,7 +13,6 @@ Covers:
 
 from __future__ import annotations
 
-import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -25,7 +24,6 @@ from harness.data.models import (
     ProviderConfigDB,
 )
 from harness.data.repository import Repository
-
 
 # ── Shared async session fixture ───────────────────────────────────────────────
 
@@ -109,7 +107,9 @@ class TestChatMessage:
 
     async def test_add_message_with_meta(self, repo: Repository) -> None:
         s = await repo.create_session()
-        m = await repo.add_message(s.id, "assistant", "code here", meta={"saved_component_id": "c1"})
+        m = await repo.add_message(
+            s.id, "assistant", "code here", meta={"saved_component_id": "c1"}
+        )
         assert m.meta["saved_component_id"] == "c1"
 
     async def test_get_messages_ordered_by_created_at(self, repo: Repository) -> None:

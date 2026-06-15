@@ -21,7 +21,9 @@ class RootWindow:
     so that headless / dev environments still work.
     """
 
-    def __init__(self, url: str, title: str = "Vloop Harness", width: int = 1280, height: int = 800) -> None:
+    def __init__(
+        self, url: str, title: str = "Vloop Harness", width: int = 1280, height: int = 800
+    ) -> None:
         self.url = url
         self.title = title
         self.width = width
@@ -54,11 +56,13 @@ class RootWindow:
             # macOS: activate the app so the window comes to front
             try:
                 from AppKit import NSApplication  # type: ignore[import-untyped]
+
                 NSApplication.sharedApplication().activateIgnoringOtherApps_(True)
             except ImportError:
                 pass
         else:
             import webbrowser
+
             webbrowser.open(self.url)
 
     def open_nonblocking(self) -> threading.Thread:

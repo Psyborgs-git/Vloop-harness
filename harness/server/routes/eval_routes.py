@@ -321,21 +321,21 @@ async def evaluate_component(
 
         try:
             module = registry.instantiate(component_id)
-            prediction = await loop.run_in_executor(
-                None, functools.partial(module, **inputs)
-            )
+            prediction = await loop.run_in_executor(None, functools.partial(module, **inputs))
         except Exception as exc:
             logging.getLogger(__name__).warning(
                 "Component %s failed on example %d: %s", component_id, idx, exc
             )
-            results.append({
-                "index": idx,
-                "passed": False,
-                "error": "Component execution failed",
-                "inputs": inputs,
-                "expected_outputs": expected,
-                "actual_outputs": {},
-            })
+            results.append(
+                {
+                    "index": idx,
+                    "passed": False,
+                    "error": "Component execution failed",
+                    "inputs": inputs,
+                    "expected_outputs": expected,
+                    "actual_outputs": {},
+                }
+            )
             failed += 1
             continue
 
@@ -360,14 +360,16 @@ async def evaluate_component(
         else:
             failed += 1
 
-        results.append({
-            "index": idx,
-            "passed": example_passed,
-            "inputs": inputs,
-            "expected_outputs": expected,
-            "actual_outputs": actual,
-            "field_results": field_results,
-        })
+        results.append(
+            {
+                "index": idx,
+                "passed": example_passed,
+                "inputs": inputs,
+                "expected_outputs": expected,
+                "actual_outputs": actual,
+                "field_results": field_results,
+            }
+        )
 
     return {
         "component_id": component_id,
@@ -398,14 +400,17 @@ async def list_view_versions(
     """List all versions of a view."""
     repo = Repository(db)
     versions = await repo.list_view_versions(view_id)
-    return [{
-        "id": v.id,
-        "view_id": v.view_id,
-        "version_number": v.version_number,
-        "file_path": v.file_path,
-        "change_summary": v.change_summary,
-        "created_at": v.created_at.isoformat(),
-    } for v in versions]
+    return [
+        {
+            "id": v.id,
+            "view_id": v.view_id,
+            "version_number": v.version_number,
+            "file_path": v.file_path,
+            "change_summary": v.change_summary,
+            "created_at": v.created_at.isoformat(),
+        }
+        for v in versions
+    ]
 
 
 @router.post("/views/{view_id}/snapshot")

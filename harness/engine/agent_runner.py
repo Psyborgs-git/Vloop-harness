@@ -133,9 +133,7 @@ class AgentOrchestrator:
                     error=f"Waiting for confirmation: {exc.token}",
                 )
             except Exception as exc:
-                await repo.update_agent_run(
-                    run_id, status="failed", error=str(exc)
-                )
+                await repo.update_agent_run(run_id, status="failed", error=str(exc))
 
     async def _plan(
         self,
@@ -169,9 +167,7 @@ class AgentOrchestrator:
         available_pipelines: str = "[]"
         available_tools: str = "[]"
         try:
-            comp_catalog = [
-                t.catalog_entry() for t in self._mp.tools.list_tools()
-            ]
+            comp_catalog = [t.catalog_entry() for t in self._mp.tools.list_tools()]
             available_tools = json.dumps(comp_catalog)
         except Exception:
             pass
@@ -376,6 +372,32 @@ class AgentOrchestrator:
             )
             return result.to_dict()
 
+        if step_type == "react_agent":
+            # Invoke the ReAct Agent loop
+            ai = self._mp.ai
+            if not ai.is_ready:
+                return {"error": "AI engine not ready"}
+
+            task = params.get("task", "")
+
+            # Extract tools catalog as JSON string
+            import json
+
+            try:
+                catalog = self._mp.tools.catalog()
+                available_tools = json.dumps(catalog)
+            except Exception:
+                available_tools = "[]"
+
+            prediction = await ai.run_react_agent(
+                task=task, available_tools=available_tools, tool_registry=self._mp.tools
+            )
+            return {
+                "prediction": str(prediction.answer),
+                "history": getattr(prediction, "history", ""),
+                "iterations": getattr(prediction, "iterations", 0),
+            }
+
         if step_type == "dspy_call":
             module_name: str = params.get("module", "reason")
             call_params = {k: v for k, v in params.items() if k != "module"}
@@ -391,9 +413,7 @@ class AgentOrchestrator:
         # message or unknown — just record the description
         return {"message": step.get("description", "")}
 
-    async def _resume_from_pause(
-        self, run_id: str, confirmed_token: str | None
-    ) -> None:
+    async def _resume_from_pause(self, run_id: str, confirmed_token: str | None) -> None:
         """Re-execute remaining steps after a confirmation."""
         from harness.data.db import get_session_factory
         from harness.data.repository import Repository
@@ -416,10 +436,7 @@ class AgentOrchestrator:
                 for step in (run.steps or [])
                 if step.status == "completed" and step.input_data
             }
-            pending_steps = [
-                (i, s) for i, s in enumerate(plan_steps)
-                if i not in completed_indices
-            ]
+            pending_steps = [(i, s) for i, s in enumerate(plan_steps) if i not in completed_indices]
 
             try:
                 results: dict[str, Any] = {}
@@ -460,9 +477,7 @@ class AgentOrchestrator:
                     error=f"Waiting for confirmation: {exc.token}",
                 )
             except Exception as exc:
-                await repo.update_agent_run(
-                    run_id, status="failed", error=str(exc)
-                )
+                await repo.update_agent_run(run_id, status="failed", error=str(exc))
 
 
 class _RunPausedError(Exception):

@@ -5,25 +5,37 @@ Exposes REST APIs, WebSockets, and External Webhooks (Telegram).
 
 from __future__ import annotations
 
-from typing import Any, List
+from typing import Any
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Request,
+    WebSocket,
+    WebSocketDisconnect,
+    status,
+)
 from pydantic import BaseModel
-from fastapi import APIRouter, Depends, HTTPException, Request, status, WebSocket, WebSocketDisconnect
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from harness.data.db import get_session
-from harness.server.routes.auth_routes import get_current_user
 from harness.core.auth import User as AuthUser
-
-# Hexagonal Core Domain & Ports
-from harness.modules.chat.domain.entities import Channel, Message, ChannelMember
-from harness.modules.chat.ports.outbound import ChatRepositoryPort
-from harness.modules.chat.ports.inbound import CreateChannelUseCase, JoinChannelUseCase, SendMessageUseCase
+from harness.data.db import get_session
+from harness.modules.chat.adapters.ai_adapter import AIEngineAdapter
 
 # Hexagonal Adapters
 from harness.modules.chat.adapters.db_repository import SQLAlchemyChatRepository
-from harness.modules.chat.adapters.ai_adapter import AIEngineAdapter
-from harness.modules.chat.adapters.websocket_publisher import get_chat_ws_publisher
 from harness.modules.chat.adapters.telegram_adapter import TelegramAdapter
+from harness.modules.chat.adapters.websocket_publisher import get_chat_ws_publisher
+
+# Hexagonal Core Domain & Ports
+from harness.modules.chat.ports.inbound import (
+    CreateChannelUseCase,
+    JoinChannelUseCase,
+    SendMessageUseCase,
+)
+from harness.modules.chat.ports.outbound import ChatRepositoryPort
+from harness.server.routes.auth_routes import get_current_user
 
 router = APIRouter(prefix="/api/channels", tags=["channels"])
 
@@ -85,19 +97,19 @@ async def get_telegram_adapter(
 ) -> TelegramAdapter:
     adapter = TelegramAdapter(repo, send_msg, create_chan, join_chan)
     publisher = get_chat_ws_publisher()
-    
+
     # Wire up the outbound Telegram forwarding listener once
     if not hasattr(publisher, "_telegram_registered"):
         publisher.register_forwarder(adapter.forward_to_telegram)
         publisher._telegram_registered = True
-        
+
     return adapter
 
 
 # ── REST Endpoints ────────────────────────────────────────────────────────────
 
 
-@router.get("", response_model=List[Any])
+@router.get("", response_model=list[Any])
 async def list_channels(
     current_user: AuthUser = Depends(get_current_user),
     repo: ChatRepositoryPort = Depends(get_chat_repo),
@@ -162,7 +174,7 @@ async def join_channel(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
-@router.get("/{channel_id}/messages", response_model=List[Any])
+@router.get("/{channel_id}/messages", response_model=list[Any])
 async def list_channel_messages(
     channel_id: str,
     limit: int = 100,
@@ -174,7 +186,7 @@ async def list_channel_messages(
     channel = await repo.get_channel(channel_id)
     if not channel:
         raise HTTPException(status_code=404, detail="Channel not found")
-        
+
     if channel.is_private:
         member = await repo.get_member(channel_id, current_user.id)
         if not member:
@@ -255,12 +267,13 @@ async def ws_channel_subscription(
     """Real-time bi-directional connection to stream messages for a specific channel."""
     # Verify token
     from harness.core.auth import get_auth_manager
+
     auth_manager = get_auth_manager()
-    
+
     if not token:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Token is missing")
         return
-        
+
     token_data = auth_manager.verify_token(token)
     if not token_data:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid auth token")

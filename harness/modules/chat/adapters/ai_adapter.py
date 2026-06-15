@@ -5,7 +5,8 @@ Implements AIParticipantPort and links to VLoop's DSPy AI brain.
 
 from __future__ import annotations
 
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 from harness.modules.chat.domain.entities import Channel, Message
 from harness.modules.chat.ports.outbound import AIParticipantPort

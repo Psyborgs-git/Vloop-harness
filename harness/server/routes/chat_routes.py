@@ -248,9 +248,11 @@ async def send_message(
                         command = cfg.get("command", "")
                         if tool_name == "terminal" and command:
                             import shlex
+
                             policy.check_shell_injection(command)
                             # Strip placeholder interpolations before parsing
                             import re as _re
+
                             stripped = _re.sub(r"\{[^}]+\}", "placeholder", command)
                             argv = shlex.split(stripped)
                             if argv:
@@ -299,7 +301,11 @@ async def send_message(
                 spec=view_spec,
             )
             react_code_v = getattr(prediction_view, "react_code", "") or ""
-            raw_name_v = view_comp_name_raw or getattr(prediction_view, "component_name", "") or "GeneratedView"
+            raw_name_v = (
+                view_comp_name_raw
+                or getattr(prediction_view, "component_name", "")
+                or "GeneratedView"
+            )
             view_spec_v = getattr(prediction_view, "view_spec", "") or ""
 
             comp_name_v = validate_component_name(raw_name_v)
@@ -336,31 +342,35 @@ async def send_message(
     if saved_view_id:
         meta["saved_view_id"] = saved_view_id
 
-    ai_msg = await repo.add_message(
-        session_id, "assistant", ai_response_text, meta=meta or None
-    )
+    ai_msg = await repo.add_message(session_id, "assistant", ai_response_text, meta=meta or None)
 
     # Dual-write both messages to JSONL transcript (canonical text source)
     try:
         storage = request.app.state.vloop_storage
-        storage.append_chat_message(session_id, {
-            "id": user_msg.id,
-            "session_id": session_id,
-            "role": "user",
-            "content": body.content,
-            "meta": {},
-            "created_at": user_msg.created_at.isoformat(),
-            "v": 1,
-        })
-        storage.append_chat_message(session_id, {
-            "id": ai_msg.id,
-            "session_id": session_id,
-            "role": "assistant",
-            "content": ai_response_text,
-            "meta": meta,
-            "created_at": ai_msg.created_at.isoformat(),
-            "v": 1,
-        })
+        storage.append_chat_message(
+            session_id,
+            {
+                "id": user_msg.id,
+                "session_id": session_id,
+                "role": "user",
+                "content": body.content,
+                "meta": {},
+                "created_at": user_msg.created_at.isoformat(),
+                "v": 1,
+            },
+        )
+        storage.append_chat_message(
+            session_id,
+            {
+                "id": ai_msg.id,
+                "session_id": session_id,
+                "role": "assistant",
+                "content": ai_response_text,
+                "meta": meta,
+                "created_at": ai_msg.created_at.isoformat(),
+                "v": 1,
+            },
+        )
     except Exception:
         pass  # JSONL write failure must not fail the request
 

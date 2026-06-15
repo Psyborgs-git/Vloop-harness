@@ -5,10 +5,12 @@ Implements EventPublisherPort interface and manages active WebSocket connections
 
 from __future__ import annotations
 
-from typing import Callable, Any
+from collections.abc import Callable
+from typing import Any
+
 from fastapi import WebSocket
 
-from harness.modules.chat.domain.entities import MessageSentEvent, Message
+from harness.modules.chat.domain.entities import Message, MessageSentEvent
 from harness.modules.chat.ports.outbound import EventPublisherPort
 
 
@@ -39,7 +41,7 @@ class WebSocketChatPublisher(EventPublisherPort):
         """Broadcast message sent event to all connected WebSockets in the channel."""
         msg = event.message
         channel_id = msg.channel_id
-        
+
         # 1. Broadcast via WebSockets
         if channel_id in self._active_connections:
             payload = {
@@ -51,8 +53,8 @@ class WebSocketChatPublisher(EventPublisherPort):
                     "sender_name": msg.sender_name,
                     "sender_type": msg.sender_type,
                     "content": msg.content,
-                    "created_at": msg.created_at.isoformat()
-                }
+                    "created_at": msg.created_at.isoformat(),
+                },
             }
 
             dead_sockets = set()
@@ -69,6 +71,7 @@ class WebSocketChatPublisher(EventPublisherPort):
         # 2. Forward to external adapters (e.g., Telegram, WhatsApp)
         # Prevent forwarding messages that already originated from that platform
         import asyncio
+
         for forwarder in self._external_forwarders:
             try:
                 if asyncio.iscoroutinefunction(forwarder):

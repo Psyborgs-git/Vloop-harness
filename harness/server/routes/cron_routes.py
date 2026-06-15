@@ -28,8 +28,6 @@ router = APIRouter(prefix="/api/cron", tags=["cron"])
 # ── Request / Response models ─────────────────────────────────────────────────
 
 
-
-
 class CronJobCreate(BaseModel):
     name: str
     cron_expression: str = Field(..., description="Cron format e.g. '* * * * *'")
@@ -44,6 +42,7 @@ class CronJobCreate(BaseModel):
         if not croniter.is_valid(v):
             raise ValueError("Invalid cron expression")
         return v
+
 
 class CronJobUpdate(BaseModel):
     name: str | None = None

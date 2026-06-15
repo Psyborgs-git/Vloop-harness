@@ -12,10 +12,10 @@ from typing import Any
 @dataclass
 class CacheEntry:
     """Cache entry with expiration."""
-    
+
     value: Any
     expires_at: float | None = None
-    
+
     def is_expired(self) -> bool:
         """Check if the entry has expired."""
         if self.expires_at is None:
@@ -25,10 +25,10 @@ class CacheEntry:
 
 class Cache:
     """Simple in-memory cache with TTL support."""
-    
+
     def __init__(self):
         self._store: dict[str, CacheEntry] = {}
-    
+
     def get(self, key: str) -> Any | None:
         """Get a value from the cache."""
         entry = self._store.get(key)
@@ -38,26 +38,26 @@ class Cache:
             del self._store[key]
             return None
         return entry.value
-    
+
     def set(self, key: str, value: Any, ttl_seconds: int | None = None) -> None:
         """Set a value in the cache with optional TTL."""
         expires_at = None
         if ttl_seconds is not None:
             expires_at = time.time() + ttl_seconds
-        
+
         self._store[key] = CacheEntry(value=value, expires_at=expires_at)
-    
+
     def delete(self, key: str) -> bool:
         """Delete a value from the cache."""
         if key in self._store:
             del self._store[key]
             return True
         return False
-    
+
     def clear(self) -> None:
         """Clear all cache entries."""
         self._store.clear()
-    
+
     def get_many(self, keys: list[str]) -> dict[str, Any]:
         """Get multiple values from the cache."""
         result = {}
@@ -66,12 +66,12 @@ class Cache:
             if value is not None:
                 result[key] = value
         return result
-    
+
     def set_many(self, mapping: dict[str, Any], ttl_seconds: int | None = None) -> None:
         """Set multiple values in the cache."""
         for key, value in mapping.items():
             self.set(key, value, ttl_seconds)
-    
+
     def delete_many(self, keys: list[str]) -> int:
         """Delete multiple values from the cache."""
         deleted = 0
@@ -79,18 +79,19 @@ class Cache:
             if self.delete(key):
                 deleted += 1
         return deleted
-    
+
     def cleanup_expired(self) -> int:
         """Remove all expired entries."""
         now = time.time()
         expired_keys = [
-            key for key, entry in self._store.items()
+            key
+            for key, entry in self._store.items()
             if entry.expires_at is not None and entry.expires_at < now
         ]
         for key in expired_keys:
             del self._store[key]
         return len(expired_keys)
-    
+
     def stats(self) -> dict[str, Any]:
         """Get cache statistics."""
         total = len(self._store)
@@ -104,32 +105,29 @@ class Cache:
 
 class CacheManager:
     """Manages multiple cache namespaces."""
-    
+
     def __init__(self):
         self._caches: dict[str, Cache] = {}
-    
+
     def get_cache(self, namespace: str) -> Cache:
         """Get or create a cache for a namespace."""
         if namespace not in self._caches:
             self._caches[namespace] = Cache()
         return self._caches[namespace]
-    
+
     def clear_namespace(self, namespace: str) -> None:
         """Clear all entries in a namespace."""
         if namespace in self._caches:
             self._caches[namespace].clear()
-    
+
     def clear_all(self) -> None:
         """Clear all namespaces."""
         for cache in self._caches.values():
             cache.clear()
-    
+
     def get_stats(self) -> dict[str, dict[str, Any]]:
         """Get statistics for all namespaces."""
-        return {
-            namespace: cache.stats()
-            for namespace, cache in self._caches.items()
-        }
+        return {namespace: cache.stats() for namespace, cache in self._caches.items()}
 
 
 # Global cache manager instance

@@ -112,7 +112,9 @@ class TerminalTool(AbstractTool):
         except Exception as exc:
             return ToolResult(success=False, error=str(exc))
 
-        timeout = timeout_override if timeout_override is not None else dir_policy.max_runtime_seconds
+        timeout = (
+            timeout_override if timeout_override is not None else dir_policy.max_runtime_seconds
+        )
         max_bytes = dir_policy.max_output_bytes
 
         # 8. Strip environment

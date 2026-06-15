@@ -71,6 +71,9 @@ export default function Homepage() {
                 <Button variant="outlined" onClick={() => navigate('/processes')}>
                     Process Manager
                 </Button>
+                <Button variant="outlined" onClick={() => navigate('/workflows')} sx={{ ml: 2 }}>
+                    Workflow Manager
+                </Button>
             </Box>
             <Typography variant="body1" color="text.secondary" paragraph>
                 Select a view to load dynamically, or open the Process Manager to configure AI processes.

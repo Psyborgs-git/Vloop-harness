@@ -7,9 +7,11 @@ from pydantic import BaseModel
 router = APIRouter(prefix="/ipc", tags=["ipc"])
 logger = logging.getLogger(__name__)
 
+
 class RustPushPayload(BaseModel):
     channel: str
     payload: dict
+
 
 @router.post("/rust_push")
 async def rust_push(req: RustPushPayload):
@@ -17,6 +19,7 @@ async def rust_push(req: RustPushPayload):
     # The rust push sends things here (like HITL approvals from the kernel if needed, or system updates)
     logger.info(f"Received IPC push from Rust on channel {req.channel}: {req.payload}")
     return {"success": True}
+
 
 @router.websocket("/rust_ws")
 async def rust_ipc_ws(websocket: WebSocket):
