@@ -87,30 +87,21 @@ class ReActAgent(dspy.Module):
 
                 import asyncio
 
-                loop = asyncio.get_event_loop()
-                # Run the async execute method synchronously in this wrapper loop context
-                # Assuming this module runs within an event loop already. If we are already in an async func,
-                # we shouldn't use run_until_complete. Since forward is synchronous in DSPy, we must wait.
-
-                # DSPy standard forward is synchronous, but we need to call an async tool_registry.
-                # Since dspy_engine.run handles this in a threadpool, we need a new loop or to call a blocking wrapper.
-                import nest_asyncio
-
-                nest_asyncio.apply()
-
-                # Use current loop or create new if not present
                 try:
                     loop = asyncio.get_running_loop()
-                except RuntimeError:
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-
-                # Execute tool
-                tool_result_obj = loop.run_until_complete(
-                    tool_registry.execute(
-                        tool_name=action, component_id=None, session_id=None, params=params
+                    import nest_asyncio
+                    nest_asyncio.apply()
+                    tool_result_obj = loop.run_until_complete(
+                        tool_registry.execute(
+                            tool_name=action, component_id=None, session_id=None, params=params
+                        )
                     )
-                )
+                except RuntimeError:
+                    tool_result_obj = asyncio.run(
+                        tool_registry.execute(
+                            tool_name=action, component_id=None, session_id=None, params=params
+                        )
+                    )
 
                 if hasattr(tool_result_obj, "to_dict"):
                     observation = json.dumps(tool_result_obj.to_dict())
