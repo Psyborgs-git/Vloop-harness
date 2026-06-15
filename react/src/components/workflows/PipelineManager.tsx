@@ -38,11 +38,23 @@ export default function PipelineManager() {
   const [showEditor, setShowEditor] = useState(false);
 
   useEffect(() => {
-    // Load workflows from API
-    fetch(import.meta.env.VITE_API_URL + "/api/pipelines/templates").then(res => res.json()).then(data => setPipelines(data)).catch(console.error);
-    setPipelines([
-      { id: '1', name: 'Sample Workflow', description: 'Test', status: 'ready' }
-    ]);
+    const apiUrl = import.meta.env.VITE_API_URL || "";
+    fetch(`${apiUrl}/api/pipelines/templates`)
+      .then(res => {
+        if (!res.ok) throw new Error("Network response was not ok");
+        return res.json();
+      })
+      .then(data => {
+        if (Array.isArray(data)) {
+          setPipelines(data);
+        }
+      })
+      .catch(error => {
+        console.error("Failed to fetch pipelines:", error);
+        setPipelines([
+          { id: '1', name: 'Sample Workflow', description: 'Test', status: 'ready' }
+        ]);
+      });
   }, []);
 
   if (showEditor) {
