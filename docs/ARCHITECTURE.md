@@ -36,17 +36,21 @@ graph TD
 
   %% Layer 0
   subgraph Layer 0: Orchestrator Kernel
-    Tauri[Rust Tauri App]
+    Tauri[Rust Tauri Singleton App]
     Vault[Secure Vault\nMutex HashMap]
-    Sandbox[Execution Sandbox\nDocker/SSH]
+    Sandbox[Execution Sandbox\nDocker/SSH/Local]
+    ProcManager[Process Manager\nSQLite DB]
 
     Tauri <--> Vault
     Tauri <--> Sandbox
+    Tauri <--> ProcManager
   end
 
   %% Connections
+  ProcManager -.->|Spawns & Logs| FastAPI
+  ProcManager -.->|Spawns & Logs| UI
   UI <-->|HTTP / WS| FastAPI
-  FastAPI <-->|IPC / Secure WS| Tauri
+  FastAPI <-->|gRPC / HTTP| Tauri
   DSPy <-->|HTTP API| LLM
 
   %% Styling
@@ -60,7 +64,8 @@ The architectural design of Vloop Harness is driven by three core philosophies: 
 
 ### 1. Strict Domain Separation
 *   **Layer 0 (Rust/Tauri Native Hypervisor):** Rust provides speed, memory safety, and low-level system access. It acts purely as a native hypervisor and system manager. It is responsible for:
-    *   **Process Management:** Spawning, tracking, and terminating isolated execution sandboxes (e.g., Docker, SSH) via `bollard` and `russh`.
+    *   **Singleton Kernel:** Guarantees only one orchestrator instance runs at a time, preventing port conflicts and database locks.
+    *   **Process Management:** Spawning, tracking, and terminating isolated execution sandboxes (e.g., Docker, SSH, Local). It orchestrates the lifecycle of Layer 1 (Python) and Layer 2 (Node/React) core services natively, continuously piping stdout/stderr to persistent file logs.
     *   **Secure Vault:** Holding sensitive credentials securely in memory (`Mutex HashMap`).
     *   **Vault Variable Injection:** Safely injecting vault secrets as environment variables into managed processes at startup.
     *   **Transport Layer:** Handling gRPC over QUIC/UDP for low-latency streaming between layers.

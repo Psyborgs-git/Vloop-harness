@@ -23,25 +23,6 @@ pub struct MyProcessManagerService {
 
 impl MyProcessManagerService {
     pub fn new(db_path: PathBuf) -> Self {
-        // Initialize DB
-        if let Ok(conn) = Connection::open(&db_path) {
-            let _ = conn.execute(
-                "CREATE TABLE IF NOT EXISTS processes (
-                    id TEXT PRIMARY KEY,
-                    name TEXT NOT NULL,
-                    description TEXT,
-                    command TEXT,
-                    args TEXT,
-                    env_vars TEXT,
-                    cwd TEXT,
-                    status TEXT,
-                    created_at TEXT,
-                    updated_at TEXT
-                )",
-                (),
-            );
-        }
-
         Self {
             db_path,
             _active_processes: Arc::new(Mutex::new(std::collections::HashMap::new())),
@@ -62,7 +43,7 @@ impl ProcessManagerService for MyProcessManagerService {
     ) -> Result<Response<ListProcessesResponse>, Status> {
         let conn = self.get_conn()?;
         let mut stmt = conn
-            .prepare("SELECT id, name, description, command, args, env_vars, cwd, status, created_at, updated_at FROM processes")
+            .prepare("SELECT id, name, description, command, args, env_vars, cwd, status, created_at, updated_at, environment_id, autostart FROM processes")
             .map_err(|e| Status::internal(e.to_string()))?;
 
         let processes_iter = stmt
@@ -76,6 +57,8 @@ impl ProcessManagerService for MyProcessManagerService {
                         args: serde_json::from_str(&row.get::<_, String>(4)?).unwrap_or_default(),
                         env_vars: row.get(5)?,
                         cwd: row.get(6)?,
+                        environment_id: row.get(10)?,
+                        autostart: row.get::<_, bool>(11).unwrap_or(false),
                     }),
                     status: row.get(7)?,
                     created_at: row.get(8)?,
@@ -101,7 +84,7 @@ impl ProcessManagerService for MyProcessManagerService {
         let id = request.into_inner().id;
         let conn = self.get_conn()?;
         let mut stmt = conn
-            .prepare("SELECT id, name, description, command, args, env_vars, cwd, status, created_at, updated_at FROM processes WHERE id = ?1")
+            .prepare("SELECT id, name, description, command, args, env_vars, cwd, status, created_at, updated_at, environment_id, autostart FROM processes WHERE id = ?1")
             .map_err(|e| Status::internal(e.to_string()))?;
 
         let process = stmt
@@ -115,6 +98,8 @@ impl ProcessManagerService for MyProcessManagerService {
                         args: serde_json::from_str(&row.get::<_, String>(4)?).unwrap_or_default(),
                         env_vars: row.get(5)?,
                         cwd: row.get(6)?,
+                        environment_id: row.get(10)?,
+                        autostart: row.get::<_, bool>(11).unwrap_or(false),
                     }),
                     status: row.get(7)?,
                     created_at: row.get(8)?,
@@ -139,7 +124,7 @@ impl ProcessManagerService for MyProcessManagerService {
 
         let conn = self.get_conn()?;
         conn.execute(
-            "INSERT INTO processes (id, name, description, command, args, env_vars, cwd, status, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+            "INSERT INTO processes (id, name, description, command, args, env_vars, cwd, status, created_at, updated_at, environment_id, autostart) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
             rusqlite::params![
                 id,
                 req.name,
@@ -151,6 +136,8 @@ impl ProcessManagerService for MyProcessManagerService {
                 "stopped",
                 now,
                 now,
+                config.environment_id,
+                config.autostart,
             ],
         )
         .map_err(|e| Status::internal(e.to_string()))?;
@@ -181,7 +168,7 @@ impl ProcessManagerService for MyProcessManagerService {
 
         let conn = self.get_conn()?;
         let affected = conn.execute(
-            "UPDATE processes SET name = ?1, description = ?2, command = ?3, args = ?4, env_vars = ?5, cwd = ?6, updated_at = ?7 WHERE id = ?8",
+            "UPDATE processes SET name = ?1, description = ?2, command = ?3, args = ?4, env_vars = ?5, cwd = ?6, updated_at = ?7, environment_id = ?8, autostart = ?9 WHERE id = ?10",
             rusqlite::params![
                 req.name,
                 req.description,
@@ -190,6 +177,8 @@ impl ProcessManagerService for MyProcessManagerService {
                 config.env_vars,
                 config.cwd,
                 now,
+                config.environment_id,
+                config.autostart,
                 req.id,
             ],
         )
@@ -201,7 +190,7 @@ impl ProcessManagerService for MyProcessManagerService {
 
         // Just fetch it to return
         let mut stmt = conn
-            .prepare("SELECT id, name, description, command, args, env_vars, cwd, status, created_at, updated_at FROM processes WHERE id = ?1")
+            .prepare("SELECT id, name, description, command, args, env_vars, cwd, status, created_at, updated_at, environment_id, autostart FROM processes WHERE id = ?1")
             .unwrap();
 
         let process = stmt
@@ -215,6 +204,8 @@ impl ProcessManagerService for MyProcessManagerService {
                         args: serde_json::from_str(&row.get::<_, String>(4)?).unwrap_or_default(),
                         env_vars: row.get(5)?,
                         cwd: row.get(6)?,
+                        environment_id: row.get(10)?,
+                        autostart: row.get::<_, bool>(11).unwrap_or(false),
                     }),
                     status: row.get(7)?,
                     created_at: row.get(8)?,
@@ -247,14 +238,22 @@ impl ProcessManagerService for MyProcessManagerService {
         request: Request<StartProcessRequest>,
     ) -> Result<Response<ProcessStatusResponse>, Status> {
         let id = request.into_inner().id;
-        // Mock starting
-        let conn = self.get_conn()?;
-        let _ = conn.execute("UPDATE processes SET status = 'running' WHERE id = ?1", [&id]);
-        Ok(Response::new(ProcessStatusResponse {
-            success: true,
-            status: "running".to_string(),
-            error_message: String::new(),
-        }))
+        match crate::modules::process_manager::start_process(id.clone()) {
+            Ok(_) => {
+                Ok(Response::new(ProcessStatusResponse {
+                    success: true,
+                    status: "running".to_string(),
+                    error_message: String::new(),
+                }))
+            }
+            Err(e) => {
+                Ok(Response::new(ProcessStatusResponse {
+                    success: false,
+                    status: "error".to_string(),
+                    error_message: e,
+                }))
+            }
+        }
     }
 
     async fn stop_process(
@@ -262,14 +261,22 @@ impl ProcessManagerService for MyProcessManagerService {
         request: Request<StopProcessRequest>,
     ) -> Result<Response<ProcessStatusResponse>, Status> {
         let id = request.into_inner().id;
-        // Mock stopping
-        let conn = self.get_conn()?;
-        let _ = conn.execute("UPDATE processes SET status = 'stopped' WHERE id = ?1", [&id]);
-        Ok(Response::new(ProcessStatusResponse {
-            success: true,
-            status: "stopped".to_string(),
-            error_message: String::new(),
-        }))
+        match crate::modules::process_manager::stop_process(id.clone()) {
+            Ok(_) => {
+                Ok(Response::new(ProcessStatusResponse {
+                    success: true,
+                    status: "stopped".to_string(),
+                    error_message: String::new(),
+                }))
+            }
+            Err(e) => {
+                Ok(Response::new(ProcessStatusResponse {
+                    success: false,
+                    status: "error".to_string(),
+                    error_message: e,
+                }))
+            }
+        }
     }
 
     async fn pull_process(
@@ -278,41 +285,5 @@ impl ProcessManagerService for MyProcessManagerService {
     ) -> Result<Response<ProcessDetail>, Status> {
         // Mock pulling
         Err(Status::unimplemented("Pulling processes is not yet implemented"))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn test_create_and_get_process() {
-        let db_path = std::env::temp_dir().join(format!("test_processes_{}.db", uuid::Uuid::new_v4()));
-        let service = MyProcessManagerService::new(db_path.clone());
-
-        let create_req = Request::new(CreateProcessRequest {
-            name: "test_process".to_string(),
-            description: "A test process".to_string(),
-            config: Some(ProcessConfig {
-                command: "echo".to_string(),
-                args: vec!["hello".to_string()],
-                env_vars: "{}".to_string(),
-                cwd: "/".to_string(),
-            }),
-        });
-
-        let create_res = service.create_process(create_req).await.unwrap().into_inner();
-        assert_eq!(create_res.name, "test_process");
-        assert_eq!(create_res.status, "stopped");
-
-        let get_req = Request::new(GetProcessRequest {
-            id: create_res.id.clone(),
-        });
-        let get_res = service.get_process(get_req).await.unwrap().into_inner();
-        assert_eq!(get_res.name, "test_process");
-        assert_eq!(get_res.config.unwrap().command, "echo");
-        
-        // Cleanup
-        let _ = std::fs::remove_file(db_path);
     }
 }

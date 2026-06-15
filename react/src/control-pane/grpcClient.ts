@@ -5,6 +5,7 @@ import { VaultService } from "../gen/vault_connect";
 import { TerminalService } from "../gen/terminal_connect";
 import { SandboxService } from "../gen/sandbox_connect";
 import { ProcessManagerService } from "../gen/process_connect";
+import { EnvironmentManagerService } from "../gen/environment_connect";
 import { invoke } from "@tauri-apps/api/core";
 
 export let systemClient: any = null;
@@ -12,6 +13,7 @@ export let vaultClient: any = null;
 export let terminalClient: any = null;
 export let sandboxClient: any = null;
 export let processClient: any = null;
+export let environmentClient: any = null;
 
 export async function initGrpcClient() {
   let grpcPort = 9102; // Fallback
@@ -37,4 +39,5 @@ export async function initGrpcClient() {
   terminalClient = createPromiseClient(TerminalService, transport);
   sandboxClient = createPromiseClient(SandboxService, transport);
   processClient = createPromiseClient(ProcessManagerService, transport);
+  environmentClient = createPromiseClient(EnvironmentManagerService, transport);
 }

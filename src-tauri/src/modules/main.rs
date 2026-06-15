@@ -4,7 +4,6 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
-use super::service::ServiceManager;
 use super::permissions::PermissionsGuard;
 use super::tools::ToolsManager;
 use super::completions::AppState;
@@ -169,17 +168,7 @@ pub async fn run_app_headless(
     frontend_mode: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let rust_completions_url = format!("http://127.0.0.1:{}/v1", ai_port);
-    let manager = ServiceManager::new(
-        repo_root.clone(),
-        data_dir.clone(),
-        host.clone(),
-        port,
-        vite_port,
-        grpc_port,
-        frontend_mode.clone(),
-        rust_completions_url,
-    );
-
+    
     println!("Starting Vloop Harness (Tauri Backend)");
 
     // 1. Start AI Engine (Axum Server) in background
@@ -205,23 +194,9 @@ pub async fn run_app_headless(
         }
     });
 
-    // 2. Start Python backend and frontend
-    let statuses = manager.start("all");
-    for s in statuses {
-        println!("{:?} - running: {}", s.name, s.running);
-    }
+    // Run forever in this async block instead of using ctrlc
+    let pending: std::future::Pending<()> = std::future::pending();
+    pending.await;
 
-    // Wait for termination signal
-    let (tx, rx) = std::sync::mpsc::channel();
-    ctrlc::set_handler(move || {
-        let _ = tx.send(());
-    })?;
-
-    let _ = rx.recv();
-    println!("\nShutting down services...");
-    let stop_statuses = manager.stop("all");
-    for s in stop_statuses {
-        println!("{:?} - {}", s.name, s.detail);
-    }
     Ok(())
 }

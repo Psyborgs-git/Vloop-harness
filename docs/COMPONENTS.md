@@ -4,24 +4,44 @@ This document details the primary components of the Vloop Harness, broken down b
 
 ## Layer 0: Orchestrator Kernel (Rust / Tauri)
 
-### `Tauri App & IPC Router`
-*   **Purpose:** The main executable and system entry point. It handles secure boot, application lifecycle, and routes IPC requests from Layer 1.
-*   **Dependencies:** Tauri core libraries, Tokio async runtime.
+### `Tauri App (Singleton) & IPC Router`
+*   **Purpose:** The main executable and system entry point. It guarantees a single instance lock, handles secure boot, application lifecycle, and routes IPC/gRPC requests.
+*   **Dependencies:** Tauri core, Tokio async runtime, `tauri-plugin-single-instance`.
 *   **Internal Flow:**
 ```mermaid
 sequenceDiagram
     participant OS as Operating System
-    participant Tauri as Tauri Main
-    participant Network as Network Service
-    participant API as Python API
+    participant Tauri as Tauri Singleton
+    participant DB as SQLite DB
+    participant ProcMgr as Process Manager
+    participant Python as Python Backend
 
     OS->>Tauri: Launch application
-    Tauri->>Network: Scan for available ports
-    Network-->>Tauri: Port 9100, 9102 available
-    Tauri->>API: Boot FastAPI via HTTP POST payload
-    API-->>Tauri: Server Started
+    Tauri->>Tauri: Acquire Lock (Exit if duplicate)
+    Tauri->>DB: Ensure core services exist
+    Tauri->>ProcMgr: Start autostart processes
+    ProcMgr->>Python: Spawn Process & Pipe logs
 ```
-*   **Edge Cases & Error Handling:** Port collisions during boot trigger a fallback UI. Unrecognized IPC payloads are rejected and logged.
+*   **Edge Cases & Error Handling:** If a second instance is launched, it instructs the primary instance to focus its window and gracefully exits. Port collisions or DB locks trigger a fallback UI.
+
+### `Process Manager`
+*   **Purpose:** Manages the lifecycle (start, stop, delete, restart) of all configured processes (including the Core Python and Node services). It supports multiple execution environments.
+*   **Dependencies:** `std::process::Command`, SQLite.
+*   **Internal Flow:**
+```mermaid
+sequenceDiagram
+    participant UI as React UI
+    participant ProcMgr as Process Manager
+    participant Log as process.log
+
+    UI->>ProcMgr: Request 'Start'
+    ProcMgr->>ProcMgr: Resolve Environment (Local/Docker/SSH)
+    ProcMgr->>ProcMgr: Spawn Child Process
+    ProcMgr->>Log: Redirect Stdout & Stderr continuously
+    UI->>ProcMgr: Request Logs via IPC
+    ProcMgr-->>UI: Return tail of process.log
+```
+*   **Edge Cases & Error Handling:** Handles orphaned processes by tracking PIDs in a global mutex map (`ACTIVE_PROCESSES`). Logs are truncated when read to prevent massive payloads.
 
 ### `Secure Vault`
 *   **Purpose:** Stores sensitive credentials in memory securely so they do not live in Python or React state.

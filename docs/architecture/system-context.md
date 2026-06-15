@@ -9,7 +9,7 @@
    The intelligence engine. Handles LLM orchestration, agent workflows, tool calling, and MCP integrations. Communicates with the Rust execution layer via QUIC/gRPC.
 
 3. **Execution Plane (Rust Native Hypervisor / Docker / SSH)**
-   The immovable object. The Rust kernel acts as a native hypervisor that provisions and manages isolated sandboxes and processes. It manages the Secure Vault and injects vault variables as environment variables directly into processes upon startup. It enforces network fencing, handles raw PTY input/output via gRPC/QUIC, and persists terminal logs and kernel-level network rules to SQLite. The kernel is completely devoid of AI awareness or application-level configurations, strictly offloading these to the Cognitive Plane.
+   The immovable object. The Rust kernel acts as a native **singleton** hypervisor that provisions and manages isolated sandboxes and long-running processes (like the Cognitive Plane itself). It manages the Secure Vault and injects vault variables as environment variables directly into processes upon startup. It orchestrates background execution via the `ProcessManager`, continuously piping output to persistent log files (`.harness/processes/...`). It enforces network fencing, handles raw PTY input/output via gRPC/QUIC, and persists terminal logs and kernel-level network rules to SQLite. The kernel is completely devoid of AI awareness or application-level configurations, strictly offloading these to the Cognitive Plane.
 
 ## Boundary Interaction
 * The Cognitive Plane requests sandboxes and sends `stdin` via gRPC.

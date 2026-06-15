@@ -5,6 +5,7 @@ fn main() {
         "../proto/vault.proto",
         "../proto/terminal.proto",
         "../proto/system.proto",
+        "../proto/environment.proto",
     ];
     for proto in protos {
         tonic_build::compile_protos(proto)

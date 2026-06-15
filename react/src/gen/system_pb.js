@@ -40,15 +40,10 @@ export const GetConfigRequest = /*@__PURE__*/ proto3.makeMessageType(
 export const ConfigResponse = /*@__PURE__*/ proto3.makeMessageType(
   "system.ConfigResponse",
   () => [
-    { no: 1, name: "dspy_lm_provider", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "dspy_lm_model", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: "anthropic_api_key", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: "openai_api_key", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 5, name: "ollama_base_url", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 6, name: "harness_port", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 7, name: "vite_port", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 8, name: "state_db_path", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 9, name: "log_dir", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: "harness_port", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "vite_port", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "state_db_path", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "log_dir", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ],
 );
 
@@ -58,15 +53,10 @@ export const ConfigResponse = /*@__PURE__*/ proto3.makeMessageType(
 export const UpdateConfigRequest = /*@__PURE__*/ proto3.makeMessageType(
   "system.UpdateConfigRequest",
   () => [
-    { no: 1, name: "dspy_lm_provider", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "dspy_lm_model", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: "anthropic_api_key", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: "openai_api_key", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 5, name: "ollama_base_url", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 6, name: "harness_port", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 7, name: "vite_port", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 8, name: "state_db_path", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 9, name: "log_dir", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: "harness_port", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "vite_port", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "state_db_path", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "log_dir", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ],
 );
 

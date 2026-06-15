@@ -19,6 +19,8 @@ message ProcessConfig {
   repeated string args = 2;
   string env_vars = 3; // JSON encoded string for env vars
   string cwd = 4;
+  optional string environment_id = 5; // Reference to the execution environment
+  bool autostart = 6; // Whether to auto-start this process on boot
 }
 
 message ProcessDetail {

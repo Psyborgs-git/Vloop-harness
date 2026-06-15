@@ -1,12 +1,13 @@
 import { useEffect, useState, lazy, Suspense } from "react";
 import { Routes, Route, Link, useLocation } from "react-router-dom";
-import { Activity, KeyRound, Terminal, Server } from "lucide-react";
+import { Activity, KeyRound, Terminal, Server, Globe } from "lucide-react";
 import { initGrpcClient } from "./grpcClient";
 
 const DashboardPage = lazy(() => import("./pages/Dashboard"));
 const VaultPage = lazy(() => import("./pages/Vault"));
 const ProcessesPage = lazy(() => import("./pages/Processes"));
 const TerminalPage = lazy(() => import("./pages/Terminal"));
+const EnvironmentsPage = lazy(() => import("./pages/Environments"));
 
 function Sidebar() {
   const location = useLocation();
@@ -14,6 +15,7 @@ function Sidebar() {
   const links = [
     { to: "/", icon: <Activity size={20} />, label: "Dashboard" },
     { to: "/vault", icon: <KeyRound size={20} />, label: "Vault" },
+    { to: "/environments", icon: <Globe size={20} />, label: "Environments" },
     { to: "/processes", icon: <Server size={20} />, label: "Processes" },
     { to: "/terminal", icon: <Terminal size={20} />, label: "Terminal" },
   ];
@@ -87,6 +89,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/vault" element={<VaultPage />} />
+            <Route path="/environments" element={<EnvironmentsPage />} />
             <Route path="/processes" element={<ProcessesPage />} />
             <Route path="/terminal" element={<TerminalPage />} />
           </Routes>

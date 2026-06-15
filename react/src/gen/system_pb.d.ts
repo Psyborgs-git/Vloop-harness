@@ -88,47 +88,22 @@ export declare class GetConfigRequest extends Message<GetConfigRequest> {
  */
 export declare class ConfigResponse extends Message<ConfigResponse> {
   /**
-   * @generated from field: string dspy_lm_provider = 1;
-   */
-  dspyLmProvider: string;
-
-  /**
-   * @generated from field: string dspy_lm_model = 2;
-   */
-  dspyLmModel: string;
-
-  /**
-   * @generated from field: string anthropic_api_key = 3;
-   */
-  anthropicApiKey: string;
-
-  /**
-   * @generated from field: string openai_api_key = 4;
-   */
-  openaiApiKey: string;
-
-  /**
-   * @generated from field: string ollama_base_url = 5;
-   */
-  ollamaBaseUrl: string;
-
-  /**
-   * @generated from field: string harness_port = 6;
+   * @generated from field: string harness_port = 1;
    */
   harnessPort: string;
 
   /**
-   * @generated from field: string vite_port = 7;
+   * @generated from field: string vite_port = 2;
    */
   vitePort: string;
 
   /**
-   * @generated from field: string state_db_path = 8;
+   * @generated from field: string state_db_path = 3;
    */
   stateDbPath: string;
 
   /**
-   * @generated from field: string log_dir = 9;
+   * @generated from field: string log_dir = 4;
    */
   logDir: string;
 
@@ -152,47 +127,22 @@ export declare class ConfigResponse extends Message<ConfigResponse> {
  */
 export declare class UpdateConfigRequest extends Message<UpdateConfigRequest> {
   /**
-   * @generated from field: string dspy_lm_provider = 1;
-   */
-  dspyLmProvider: string;
-
-  /**
-   * @generated from field: string dspy_lm_model = 2;
-   */
-  dspyLmModel: string;
-
-  /**
-   * @generated from field: string anthropic_api_key = 3;
-   */
-  anthropicApiKey: string;
-
-  /**
-   * @generated from field: string openai_api_key = 4;
-   */
-  openaiApiKey: string;
-
-  /**
-   * @generated from field: string ollama_base_url = 5;
-   */
-  ollamaBaseUrl: string;
-
-  /**
-   * @generated from field: string harness_port = 6;
+   * @generated from field: string harness_port = 1;
    */
   harnessPort: string;
 
   /**
-   * @generated from field: string vite_port = 7;
+   * @generated from field: string vite_port = 2;
    */
   vitePort: string;
 
   /**
-   * @generated from field: string state_db_path = 8;
+   * @generated from field: string state_db_path = 3;
    */
   stateDbPath: string;
 
   /**
-   * @generated from field: string log_dir = 9;
+   * @generated from field: string log_dir = 4;
    */
   logDir: string;
 
