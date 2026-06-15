@@ -23,7 +23,13 @@ class ArqScheduler(BaseScheduler):
 
     def __init__(self) -> None:
         self.settings = HarnessSettings()  # type: ignore[call-arg]
-        self.redis_settings = RedisSettings()
+        import os
+        redis_host = getattr(self.settings, "redis_host", os.getenv("REDIS_HOST", "localhost"))
+        try:
+            redis_port = int(getattr(self.settings, "redis_port", os.getenv("REDIS_PORT", 6379)))
+        except (ValueError, TypeError):
+            redis_port = 6379
+        self.redis_settings = RedisSettings(host=redis_host, port=redis_port)
         self.redis_pool: Any = None
 
     async def start(self) -> None:
