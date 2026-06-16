@@ -15,6 +15,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import {
     Box,
+    CircularProgress,
     Drawer,
     IconButton,
     Tab,
@@ -26,17 +27,18 @@ import {
 } from "@mui/material";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 
 import * as api from "./api";
-import AgentRunPanel from "./AgentRunPanel";
-import AgentRunTimeline from "./AgentRunTimeline";
-import AppManifestPanel from "./AppManifestPanel";
-import DSPyPanel from "./DSPyPanel";
-import EvalPanel from "./EvalPanel";
-import PipelinePanel from "./PipelinePanel";
-import ToolsPanel from "./ToolsPanel";
 import type { ContextPanelType, GeneratedView } from "./types";
+
+const AgentRunPanel = lazy(() => import("./AgentRunPanel"));
+const AgentRunTimeline = lazy(() => import("./AgentRunTimeline"));
+const AppManifestPanel = lazy(() => import("./AppManifestPanel"));
+const DSPyPanel = lazy(() => import("./DSPyPanel"));
+const EvalPanel = lazy(() => import("./EvalPanel"));
+const PipelinePanel = lazy(() => import("./PipelinePanel"));
+const ToolsPanel = lazy(() => import("./ToolsPanel"));
 
 interface Props {
     open: boolean;
@@ -107,26 +109,35 @@ export default function ContextualPanel({ open, panelType, panelId, onClose }: P
 
             {/* Content */}
             <Box sx={{ flexGrow: 1, overflow: "hidden" }}>
-                {panelType === "dspy" && (
-                    <DSPyPanel focusComponentId={panelId} onFocused={() => { }} />
-                )}
-                {panelType === "pipelines" && (
-                    <PipelinePanel focusPipelineId={panelId} onFocused={() => { }} />
-                )}
-                {panelType === "tools" && <ToolsPanel />}
-                {panelType === "view" && panelId && (
-                    <ViewPreview viewId={panelId} />
-                )}
-                {panelType === "agents" && (
-                    <AgentRunPanel focusRunId={panelId} onFocused={() => { }} />
-                )}
-                {panelType === "timeline" && panelId && (
-                    <AgentRunTimeline runId={panelId} onClose={onClose} />
-                )}
-                {panelType === "manifests" && (
-                    <AppManifestPanel focusManifestId={panelId} onFocused={() => { }} />
-                )}
-                {panelType === "eval" && <EvalPanel componentId={panelId} />}
+                <Suspense
+                    fallback={
+                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", gap: 1.5, color: "text.secondary" }}>
+                            <CircularProgress size={20} />
+                            <Typography variant="body2">Loading panel...</Typography>
+                        </Box>
+                    }
+                >
+                    {panelType === "dspy" && (
+                        <DSPyPanel focusComponentId={panelId} onFocused={() => { }} />
+                    )}
+                    {panelType === "pipelines" && (
+                        <PipelinePanel focusPipelineId={panelId} onFocused={() => { }} />
+                    )}
+                    {panelType === "tools" && <ToolsPanel />}
+                    {panelType === "view" && panelId && (
+                        <ViewPreview viewId={panelId} />
+                    )}
+                    {panelType === "agents" && (
+                        <AgentRunPanel focusRunId={panelId} onFocused={() => { }} />
+                    )}
+                    {panelType === "timeline" && panelId && (
+                        <AgentRunTimeline runId={panelId} onClose={onClose} />
+                    )}
+                    {panelType === "manifests" && (
+                        <AppManifestPanel focusManifestId={panelId} onFocused={() => { }} />
+                    )}
+                    {panelType === "eval" && <EvalPanel componentId={panelId} />}
+                </Suspense>
             </Box>
         </Drawer>
     );

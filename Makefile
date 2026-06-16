@@ -6,16 +6,16 @@ help:  ## Show this help menu
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
 install: ## Set up Python virtual environment and install node dependencies
-	cd react && npm install
+	cd react && pnpm install
 	uv venv || true
 	. .venv/bin/activate && uv pip install -e .[dev]
 
 build: ## Build React production assets and compile the Rust kernel
-	cd react && npm run build
+	cd react && ([ -d node_modules ] || pnpm install) && pnpm run build
 	cd src-tauri && cargo build
 
 run: ## Start the Rust kernel (boots the backend and opens Tauri Command Center)
-	cd react && npm run build
+	cd react && ([ -d node_modules ] || pnpm install) && pnpm run build
 	cd src-tauri && cargo run
 
 run-python: ## Start the Python orchestrator directly (launches backend/frontend and PyWebView app)

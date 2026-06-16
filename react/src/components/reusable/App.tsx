@@ -32,6 +32,7 @@ import {
     Badge,
     Box,
     Chip,
+    CircularProgress,
     CssBaseline,
     Dialog,
     DialogContent,
@@ -45,23 +46,24 @@ import {
     createTheme,
     useMediaQuery,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 
 import { useHarness } from "@harness/useHarness";
 import * as api from "./api";
 import { AnalyticsProvider, useAnalytics } from "./analytics";
-import ChatPanel from "./ChatPanel";
-import ChannelsPanel from "./ChannelsPanel";
-import CommandPalette from "./CommandPalette";
 import type { PaletteNavType } from "./CommandPalette";
-import ContextualPanel from "./ContextualPanel";
-import SettingsPanel from "./SettingsPanel";
-import TabbarTutorial from "./TabbarTutorial";
 import { TUTORIAL_STORAGE_KEY } from "./tutorialTranslations";
 import type { ContextPanelState, Provider, WorkspaceWindow } from "./types";
-import ViewRegistry from "./ViewRegistry";
-import WorkspaceArea from "./WorkspaceArea";
 import { invoke } from "@tauri-apps/api/core";
+
+const ChatPanel = lazy(() => import("./ChatPanel"));
+const ChannelsPanel = lazy(() => import("./ChannelsPanel"));
+const CommandPalette = lazy(() => import("./CommandPalette"));
+const ContextualPanel = lazy(() => import("./ContextualPanel"));
+const SettingsPanel = lazy(() => import("./SettingsPanel"));
+const TabbarTutorial = lazy(() => import("./TabbarTutorial"));
+const ViewRegistry = lazy(() => import("./ViewRegistry"));
+const WorkspaceArea = lazy(() => import("./WorkspaceArea"));
 
 // ── MUI dark theme ────────────────────────────────────────────────────────────
 
@@ -139,7 +141,13 @@ const WORKSPACE_STORAGE_KEY = "vloop_workspace_windows";
 export default function App() {
     return (
         <AnalyticsProvider>
-            <AppContent />
+            <Suspense fallback={
+                <Box sx={{ display: "flex", height: "100vh", alignItems: "center", justifyContent: "center" }}>
+                    <CircularProgress />
+                </Box>
+            }>
+                <AppContent />
+            </Suspense>
         </AnalyticsProvider>
     );
 }

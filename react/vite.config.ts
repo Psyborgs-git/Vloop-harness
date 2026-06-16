@@ -56,8 +56,27 @@ export default defineConfig({
             if (packageName.startsWith("@mui") || packageName.startsWith("@emotion")) {
               return "vendor-mui";
             }
-            if (packageName === "react-syntax-highlighter") {
-              return "vendor-syntax-highlighter";
+            if (
+              packageName === "react-syntax-highlighter" ||
+              packageName.startsWith("prismjs") ||
+              packageName.startsWith("react-markdown") ||
+              packageName.startsWith("mdast-util") ||
+              packageName.startsWith("micromark") ||
+              packageName.startsWith("unist-util") ||
+              packageName.startsWith("decode-named-character-reference") ||
+              packageName.startsWith("character-entities") ||
+              packageName.startsWith("vfile") ||
+              packageName.startsWith("property-information") ||
+              packageName.startsWith("space-separated-tokens") ||
+              packageName.startsWith("comma-separated-tokens") ||
+              packageName.startsWith("hast-util") ||
+              packageName.startsWith("trough") ||
+              packageName.startsWith("bail") ||
+              packageName.startsWith("is-plain-obj") ||
+              packageName.startsWith("unified") ||
+              packageName.startsWith("remark")
+            ) {
+              return "vendor-markdown";
             }
             if (packageName === "lucide-react") {
               return "vendor-icons";
@@ -68,6 +87,9 @@ export default defineConfig({
             if (packageName.startsWith("@xterm")) {
               return "vendor-xterm";
             }
+            if (packageName.startsWith("reactflow") || packageName.startsWith("@xyflow")) {
+              return "vendor-flow";
+            }
             if (
               packageName === "react" ||
               packageName === "react-dom" ||
@@ -77,7 +99,6 @@ export default defineConfig({
             ) {
               return "vendor-react-core";
             }
-            return "vendor-others";
           }
         }
       }
