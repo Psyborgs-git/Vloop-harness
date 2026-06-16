@@ -3,7 +3,6 @@
 
 pub mod modules;
 
-use modules::service::ServiceManager;
 use serde::Serialize;
 use std::collections::HashMap;
 use tauri::{AppHandle, Manager, State, WebviewUrl, WebviewWindowBuilder};
@@ -25,20 +24,19 @@ struct HarnessConfig {
 }
 
 #[tauri::command]
-fn get_harness_config(service_manager: State<ServiceManager>) -> Result<HarnessConfig, String> {
-    // Check service health before returning configuration
-    if !service_manager.is_backend_running() {
-        return Err("Backend service is not running or unhealthy".to_string());
-    }
-
-    let host = service_manager.backend_host();
-    let port = service_manager.backend_port();
+fn get_harness_config() -> Result<HarnessConfig, String> {
+    // Return base configuration
+    let host = "127.0.0.1".to_string();
+    let port = 9100;
+    
+    // Attempt to guess dynamic grpc_port, or fallback
+    let grpc_port = port + 2;
 
     Ok(HarnessConfig {
         component_id: "root".to_string(),
         api_url: format!("http://{}:{}/api/root", host, port),
         ws_url: format!("ws://{}:{}/ws/root", host, port),
-        grpc_port: service_manager.grpc_port(),
+        grpc_port,
         initial_state: serde_json::Value::Object(serde_json::Map::new()),
         permissions: vec![],
     })
@@ -63,12 +61,15 @@ fn save_settings_config(config: HashMap<String, String>) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn restart_services(service_manager: State<ServiceManager>) -> Result<(), String> {
+fn restart_services() -> Result<(), String> {
     println!("Restart requested for Harness services...");
-    let _ = service_manager.stop("all");
-    let statuses = service_manager.start("all");
-    for s in statuses {
-        println!("{:?} - running: {}", s.name, s.running);
+    if let Ok(processes) = crate::modules::process_manager::list_processes() {
+        for p in processes {
+            if p.status == "running" {
+                let _ = crate::modules::process_manager::stop_process(p.id.clone());
+                let _ = crate::modules::process_manager::start_process(p.id);
+            }
+        }
     }
     Ok(())
 }
@@ -109,6 +110,11 @@ pub fn run() {
     let frontend_mode_clone = frontend_mode.to_string();
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            let _ = app.get_webview_window("settings").map(|w| {
+                let _ = w.set_focus();
+            });
+        }))
         .plugin(tauri_plugin_log::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
         .register_uri_scheme_protocol("vloop", modules::settings_protocol::handle_vloop_protocol)
@@ -126,7 +132,13 @@ pub fn run() {
             modules::process_manager::update_process,
             modules::process_manager::delete_process,
             modules::process_manager::start_process,
-            modules::process_manager::stop_process
+            modules::process_manager::stop_process,
+            modules::process_manager::read_process_logs,
+            modules::environment::list_environments,
+            modules::environment::get_environment,
+            modules::environment::create_environment,
+            modules::environment::update_environment,
+            modules::environment::delete_environment
         ])
         .setup(move |app| {
             let health_report = modules::health::check_system_health(&repo_root_clone, &data_dir_clone);
@@ -147,6 +159,26 @@ pub fn run() {
             let frontend_mode = frontend_mode_clone.clone();
             let app_handle = app.handle().clone();
 
+            // 1. Initialize databases and core services
+            if let Err(e) = crate::modules::environment::init_db() {
+                eprintln!("Failed to initialize environments DB: {}", e);
+            }
+            if let Err(e) = crate::modules::process_manager::ensure_core_services(&data_dir) {
+                eprintln!("Failed to ensure core services: {}", e);
+            }
+
+            // 2. Start any process marked as autostart
+            if let Ok(processes) = crate::modules::process_manager::list_processes() {
+                for p in processes {
+                    if p.config.autostart {
+                        println!("Auto-starting process: {}", p.name);
+                        if let Err(e) = crate::modules::process_manager::start_process(p.id.clone()) {
+                            eprintln!("Failed to auto-start {}: {}", p.name, e);
+                        }
+                    }
+                }
+            }
+
             std::thread::spawn(move || {
                 let rt = tokio::runtime::Runtime::new().unwrap();
                 rt.block_on(async {
@@ -155,7 +187,8 @@ pub fn run() {
                     let sandbox_service = modules::sandbox_grpc::MySandboxService::default();
                     
                     let process_db_path = data_dir.join("processes.db");
-                    let process_service = modules::process_manager_grpc::MyProcessManagerService::new(process_db_path);
+                    let process_service = modules::process_manager_grpc::MyProcessManagerService::new(process_db_path.clone());
+                    let environment_service = modules::environment_grpc::MyEnvironmentManagerService::new(process_db_path.clone());
 
                     let vault_service = modules::vault_grpc::MyVaultService::default();
                     let terminal_service = modules::terminal_grpc::MyTerminalService::default();
@@ -167,6 +200,7 @@ pub fn run() {
                         .layer(tonic_web::GrpcWebLayer::new())
                         .add_service(modules::sandbox_grpc::pb::sandbox_service_server::SandboxServiceServer::new(sandbox_service))
                         .add_service(modules::process_manager_grpc::pb::process_manager_service_server::ProcessManagerServiceServer::new(process_service))
+                        .add_service(modules::environment_grpc::pb::environment_manager_service_server::EnvironmentManagerServiceServer::new(environment_service))
                         .add_service(modules::vault_grpc::pb::vault_service_server::VaultServiceServer::new(vault_service))
                         .add_service(modules::terminal_grpc::pb::terminal_service_server::TerminalServiceServer::new(terminal_service))
                         .add_service(modules::system_grpc::pb::system_service_server::SystemServiceServer::new(system_service))
@@ -206,32 +240,19 @@ pub fn run() {
                 std::thread::sleep(std::time::Duration::from_millis(100));
             }
 
-
-
-            let service_manager = ServiceManager::new(
-                repo_root_clone,
-                data_dir_clone,
-                "127.0.0.1".to_string(),
-                backend_port,
-                vite_port,
-                grpc_port,
-                frontend_mode_clone,
-                format!("http://127.0.0.1:{}/v1", ai_port),
-            );
-            app.manage(service_manager);
-
             Ok(())
         })
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
-        .run(|app_handle, event| {
+        .run(|_app_handle, event| {
             if let tauri::RunEvent::Exit = event {
                 println!("App exiting. Shutting down services...");
-                use tauri::Manager;
-                let manager = app_handle.state::<ServiceManager>();
-                let stop_statuses = manager.stop("all");
-                for s in stop_statuses {
-                    println!("{:?} - {}", s.name, s.detail);
+                if let Ok(processes) = crate::modules::process_manager::list_processes() {
+                    for p in processes {
+                        if p.status == "running" {
+                            let _ = crate::modules::process_manager::stop_process(p.id);
+                        }
+                    }
                 }
             }
         });

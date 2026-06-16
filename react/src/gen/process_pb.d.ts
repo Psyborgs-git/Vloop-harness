@@ -32,6 +32,13 @@ export declare class ProcessConfig extends Message<ProcessConfig> {
    */
   cwd: string;
 
+  /**
+   * Reference to the execution environment
+   *
+   * @generated from field: optional string environment_id = 5;
+   */
+  environmentId?: string;
+
   constructor(data?: PartialMessage<ProcessConfig>);
 
   static readonly runtime: typeof proto3;

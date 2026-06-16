@@ -15,6 +15,7 @@ export const ProcessConfig = /*@__PURE__*/ proto3.makeMessageType(
     { no: 2, name: "args", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
     { no: 3, name: "env_vars", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 4, name: "cwd", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: "environment_id", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
   ],
 );
 
