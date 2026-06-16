@@ -7654,6 +7654,7 @@ dependencies = [
  "futures",
  "headless_chrome",
  "lazy_static",
+ "libc",
  "log",
  "once_cell",
  "port_scanner",

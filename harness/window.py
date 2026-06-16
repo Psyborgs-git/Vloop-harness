@@ -33,18 +33,39 @@ class RootWindow:
     def open(self) -> None:
         if not _WEBVIEW_AVAILABLE:
             import webbrowser
+            import time
 
+            print(f"pywebview is not installed. Opening browser -> {self.url}")
             webbrowser.open(self.url)
+            print("Press Ctrl+C to stop.")
+            try:
+                while True:
+                    time.sleep(1)
+            except KeyboardInterrupt:
+                pass
             return
 
-        self._window = webview.create_window(
-            title=self.title,
-            url=self.url,
-            width=self.width,
-            height=self.height,
-            resizable=True,
-        )
-        webview.start(debug=False)
+        try:
+            self._window = webview.create_window(
+                title=self.title,
+                url=self.url,
+                width=self.width,
+                height=self.height,
+                resizable=True,
+            )
+            webview.start(debug=False)
+        except Exception as e:
+            import webbrowser
+            import time
+
+            print(f"Failed to open native WebView window: {e}. Falling back to default browser -> {self.url}")
+            webbrowser.open(self.url)
+            print("Press Ctrl+C to stop.")
+            try:
+                while True:
+                    time.sleep(1)
+            except KeyboardInterrupt:
+                pass
 
     def focus(self) -> None:
         """Bring the window to the front.  Called from the global hotkey thread."""

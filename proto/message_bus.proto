@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package message_bus;
+
+// MessageBusService — kernel-level inter-process message routing.
+//
+// Any process managed by the kernel can:
+//   1. Subscribe to its own process_id to receive inbound messages.
+//   2. Call SendMessage to route a message to another process_id.
+//
+// Flow:  process_A → SendMessage(to=B) → kernel routes → stream → process_B
+service MessageBusService {
+  // Send a message to another process. The kernel routes it to the
+  // subscriber for `to_process_id`. If no subscriber is active the message
+  // is queued until that process subscribes (offline delivery).
+  rpc SendMessage (SendMessageRequest) returns (SendMessageResponse);
+
+  // Subscribe to receive messages addressed to this process_id.
+  // Server-streaming: the kernel pushes messages as they arrive.
+  // The stream stays open until the client disconnects or the kernel shuts down.
+  rpc Subscribe (SubscribeRequest) returns (stream Message);
+
+  // List process_ids that currently have an active Subscribe stream.
+  rpc ListSubscribers (ListSubscribersRequest) returns (ListSubscribersResponse);
+
+  // Broadcast a message to ALL currently subscribed processes (except sender).
+  rpc Broadcast (BroadcastRequest) returns (BroadcastResponse);
+}
+
+// A message routed through the kernel bus.
+message Message {
+  string id             = 1; // unique message ID (uuid v4)
+  string from_process_id = 2; // sender's process_id
+  string to_process_id  = 3; // recipient's process_id (empty for broadcasts)
+  string topic          = 4; // optional event/type label (e.g. "log", "result")
+  bytes  payload        = 5; // arbitrary bytes — JSON, protobuf, or plain text
+  string timestamp      = 6; // RFC3339 timestamp set by the kernel on receipt
+}
+
+message SendMessageRequest {
+  string from_process_id = 1;
+  string to_process_id   = 2;
+  string topic           = 3;
+  bytes  payload         = 4;
+}
+
+message SendMessageResponse {
+  bool   delivered   = 1; // true if an active subscriber received it immediately
+  bool   queued      = 2; // true if stored for later delivery (subscriber offline)
+  string message_id  = 3; // the ID assigned to this message by the kernel
+  string error       = 4; // non-empty if routing failed
+}
+
+message SubscribeRequest {
+  string            process_id = 1;
+  repeated string   topics     = 2; // optional allow-list; empty means all topics
+}
+
+message ListSubscribersRequest {}
+
+message ListSubscribersResponse {
+  repeated string process_ids = 1;
+}
+
+message BroadcastRequest {
+  string from_process_id = 1;
+  string topic           = 2;
+  bytes  payload         = 3;
+}
+
+message BroadcastResponse {
+  uint32 delivered_count = 1; // number of active subscribers that received the msg
+  string message_id      = 2;
+}

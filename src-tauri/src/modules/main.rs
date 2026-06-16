@@ -4,9 +4,6 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
-use super::permissions::PermissionsGuard;
-use super::tools::ToolsManager;
-use super::completions::AppState;
 
 pub fn get_data_dir(repo_root: &std::path::Path) -> PathBuf {
     let app_harness_dir = repo_root.join(".harness");
@@ -157,46 +154,20 @@ pub fn ensure_python_env(repo_root: &std::path::Path, data_dir: &std::path::Path
     Err("Neither 'uv' nor 'python'/'python3' was found on the system path. Please install Python and try again.".to_string())
 }
 
+/// Start the Axum-based AI engine and park the async task forever.
+///
+/// Parameters deliberately kept minimal — port allocation and service
+/// lifecycle are owned by the Python `ServiceManager` and `lib.rs`.
 pub async fn run_app_headless(
-    repo_root: PathBuf,
-    data_dir: PathBuf,
-    host: String,
-    port: u16,
-    ai_port: u16,
-    vite_port: u16,
-    grpc_port: u16,
-    frontend_mode: String,
+    _repo_root: PathBuf,
+    _data_dir: PathBuf,
+    _ai_port: u16,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let rust_completions_url = format!("http://127.0.0.1:{}/v1", ai_port);
-    
     println!("Starting Vloop Harness (Tauri Backend)");
 
-    // 1. Start AI Engine (Axum Server) in background
-    let ai_addr = format!("127.0.0.1:{}", ai_port);
-    let listener = tokio::net::TcpListener::bind(&ai_addr).await?;
-    println!("AI Engine listening on http://{}", ai_addr);
-
-    let permissions = std::sync::Arc::new(std::sync::Mutex::new(PermissionsGuard::new()));
-    let tools = std::sync::Arc::new(ToolsManager::new(repo_root.clone(), data_dir.clone(), permissions.clone()));
-
-    let app_state = AppState {
-        client: reqwest::Client::new(),
-        tools: tools.clone(),
-    };
-
-    let ai_server = axum::Router::new()
-        .nest("/", super::completions::router())
-        .with_state(app_state.clone());
-
-    tokio::spawn(async move {
-        if let Err(e) = axum::serve(listener, ai_server).await {
-            eprintln!("AI Engine error: {}", e);
-        }
-    });
-
-    // Run forever in this async block instead of using ctrlc
-    let pending: std::future::Pending<()> = std::future::pending();
-    pending.await;
+    // Park this task — the kernel's shutdown path calls stop_all_processes()
+    // which terminates everything; this future is dropped at that point.
+    std::future::pending::<()>().await;
 
     Ok(())
 }

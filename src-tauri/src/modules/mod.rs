@@ -19,3 +19,5 @@ pub mod environment_grpc;
 pub mod vault_grpc;
 pub mod terminal_grpc;
 pub mod system_grpc;
+pub mod message_bus;
+pub mod message_bus_grpc;

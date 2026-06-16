@@ -12,6 +12,22 @@ service ProcessManagerService {
   rpc StartProcess (StartProcessRequest) returns (ProcessStatusResponse);
   rpc StopProcess (StopProcessRequest) returns (ProcessStatusResponse);
   rpc PullProcess (PullProcessRequest) returns (ProcessDetail);
+  rpc GetProcessPorts (GetProcessPortsRequest) returns (GetProcessPortsResponse);
+  rpc AssignPort (AssignPortRequest) returns (AssignPortResponse);
+}
+
+enum ProcessType {
+  PROCESS_TYPE_UNSPECIFIED = 0;
+  APP = 1;
+  TUI = 2;
+  SERVICE = 3;
+  WORKER = 4;
+}
+
+message PortBinding {
+  string name = 1;
+  uint32 port = 2;
+  string protocol = 3;
 }
 
 message ProcessConfig {
@@ -21,6 +37,8 @@ message ProcessConfig {
   string cwd = 4;
   optional string environment_id = 5; // Reference to the execution environment
   bool autostart = 6; // Whether to auto-start this process on boot
+  ProcessType process_type = 7;
+  repeated PortBinding ports = 8;
 }
 
 message ProcessDetail {
@@ -81,4 +99,23 @@ message ProcessStatusResponse {
 
 message PullProcessRequest {
   string source_url = 1;
+}
+
+message GetProcessPortsRequest {
+  string process_id = 1;
+}
+
+message GetProcessPortsResponse {
+  repeated PortBinding ports = 1;
+}
+
+message AssignPortRequest {
+  string process_id = 1;
+  string port_name = 2;
+  optional uint32 port = 3;
+  optional string protocol = 4;
+}
+
+message AssignPortResponse {
+  PortBinding port_binding = 1;
 }

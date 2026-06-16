@@ -15,6 +15,7 @@ enum EnvironmentType {
   LOCAL = 0;
   DOCKER = 1;
   SSH = 2;
+  PYTHON = 3;
 }
 
 message EnvironmentConfig {
@@ -24,6 +25,9 @@ message EnvironmentConfig {
   string user = 4; // For SSH
   // Extra config encoded as JSON string (e.g. env variables, keys)
   string extra_config = 5;
+  string path = 6; // Optional path/directory
+  string python_path = 7; // Optional python virtual environment path
+  string ssh_key = 8; // Optional SSH private key (write-only / masked when returned)
 }
 
 message EnvironmentDetail {

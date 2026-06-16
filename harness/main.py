@@ -71,6 +71,7 @@ def run(
     host: str = typer.Option("localhost", envvar="HARNESS_HOST"),
     port: int = typer.Option(9100, envvar="HARNESS_PORT"),
     no_window: bool = typer.Option(False, help="Skip opening the native window (headless mode)"),
+    use_browser: bool = typer.Option(False, "--browser", help="Open UI in default web browser instead of native window"),
     frontend_mode: Literal["dev", "static"] = typer.Option(
         "dev", help="Frontend mode. 'static' skips Vite dev server process."
     ),
@@ -101,10 +102,18 @@ def run(
 
         root_url = f"http://{host}:{port}/"
         if not no_window:
-            window = RootWindow(url=root_url)
-            typer.echo(f"Opening root window → {root_url}")
-            threading.Thread(target=_start_global_hotkey, args=(window,), daemon=True).start()
-            window.open()  # blocks until window is closed
+            if use_browser:
+                import webbrowser
+                typer.echo(f"Opening browser → {root_url}")
+                webbrowser.open(root_url)
+                typer.echo("Press Ctrl+C to stop.")
+                while True:
+                    time.sleep(1)
+            else:
+                window = RootWindow(url=root_url)
+                typer.echo(f"Opening root window → {root_url}")
+                threading.Thread(target=_start_global_hotkey, args=(window,), daemon=True).start()
+                window.open()  # blocks until window is closed
         else:
             typer.echo(f"Headless mode — visit {root_url} in your browser")
             typer.echo("Press Ctrl+C to stop.")
