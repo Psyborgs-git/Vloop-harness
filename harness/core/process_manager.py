@@ -33,9 +33,7 @@ class ProcessManager:
         try:
             await component.on_mount()
         except Exception as exc:
-            self._log.error(
-                f"on_mount failed for {component.id}: {exc}", component=component.id
-            )
+            self._log.error(f"on_mount failed for {component.id}: {exc}", component=component.id)
             raise
 
     async def stop(self, component: BaseComponent) -> None:
@@ -100,9 +98,7 @@ class ProcessManager:
                 if task.done() and not task.cancelled():
                     exc = task.exception()
                     if exc:
-                        self._log.error(
-                            f"Component task {cid} crashed: {exc}", component=cid
-                        )
+                        self._log.error(f"Component task {cid} crashed: {exc}", component=cid)
 
     # ── Queries ───────────────────────────────────────────────────────────────
 

@@ -43,12 +43,11 @@ def validate_react_code(code: str) -> None:
     """Raise ``ValueError`` if ``code`` contains any disallowed patterns."""
     for pattern in _BANNED_PATTERNS:
         if re.search(pattern, code):
-            raise ValueError(
-                f"Generated code contains a disallowed pattern: {pattern!r}"
-            )
+            raise ValueError(f"Generated code contains a disallowed pattern: {pattern!r}")
 
 
 # ── File writing helper ───────────────────────────────────────────────────────
+
 
 def write_view_stub(react_root: Any, component_name: str, react_code: str) -> str | None:  # noqa: F821
     """Write ``App.tsx`` (and a ``main.tsx`` entry) under ``react_root/{component_name}/``.
@@ -73,10 +72,10 @@ def write_view_stub(react_root: Any, component_name: str, react_code: str) -> st
                 f'import ReactDOM from "react-dom/client";\n'
                 f'import {component_name} from "./App";\n\n'
                 f'ReactDOM.createRoot(document.getElementById("root")!).render(\n'
-                f'  <React.StrictMode>\n'
-                f'    <{component_name} />\n'
-                f'  </React.StrictMode>\n'
-                f');\n',
+                f"  <React.StrictMode>\n"
+                f"    <{component_name} />\n"
+                f"  </React.StrictMode>\n"
+                f");\n",
                 encoding="utf-8",
             )
         return str(app_tsx)

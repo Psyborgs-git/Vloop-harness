@@ -15,11 +15,10 @@ Covers
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from pathlib import Path
-from typing import AsyncIterator
 from unittest.mock import MagicMock
 
-import pytest
 import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
@@ -29,7 +28,6 @@ from harness.data.db import Base, get_session
 from harness.data.models import DSPyComponentDef
 from harness.data.repository import Repository
 from harness.vloop.redaction import redact_secrets
-
 
 # ── In-memory DB fixtures ─────────────────────────────────────────────────────
 
@@ -182,9 +180,7 @@ class TestComponentVersionRepository:
     async def test_list_versions_ordered_desc(self, repo: Repository) -> None:
         comp = await _make_component(repo)
         for i in range(3):
-            await repo.create_component_version(
-                component_id=comp.id, name=f"v{i}", code=f"code{i}"
-            )
+            await repo.create_component_version(component_id=comp.id, name=f"v{i}", code=f"code{i}")
         versions = await repo.list_component_versions(comp.id)
         numbers = [v.version_number for v in versions]
         assert numbers == sorted(numbers, reverse=True)
@@ -418,8 +414,16 @@ class TestVersionEndpoints:
         comp = await _create_component_via_api(client)
         await client.post(f"/api/dspy/components/{comp['id']}/snapshot", json={})
         versions = (await client.get(f"/api/dspy/components/{comp['id']}/versions")).json()
-        for key in ("id", "component_id", "version_number", "name", "code", "module_type",
-                    "change_summary", "created_at"):
+        for key in (
+            "id",
+            "component_id",
+            "version_number",
+            "name",
+            "code",
+            "module_type",
+            "change_summary",
+            "created_at",
+        ):
             assert key in versions[0], f"Missing key: {key}"
 
 
@@ -433,10 +437,12 @@ class TestRollbackEndpoint:
         cid = comp["id"]
 
         # Snapshot initial state
-        snap = (await client.post(
-            f"/api/dspy/components/{cid}/snapshot",
-            json={"change_summary": "before update"},
-        )).json()
+        snap = (
+            await client.post(
+                f"/api/dspy/components/{cid}/snapshot",
+                json={"change_summary": "before update"},
+            )
+        ).json()
 
         # Update the component
         await client.put(f"/api/dspy/components/{cid}", json={"name": "UpdatedName"})
@@ -482,9 +488,7 @@ class TestRollbackEndpoint:
         )
         assert resp.status_code == 404
 
-    async def test_rollback_404_version_belongs_to_other_component(
-        self, eval_client
-    ) -> None:
+    async def test_rollback_404_version_belongs_to_other_component(self, eval_client) -> None:
         client, factory, _ = eval_client
         c1 = await _create_component_via_api(client)
 
@@ -528,7 +532,9 @@ class TestEvalDatasetEndpoints:
             json={
                 "name": "QA set",
                 "description": "Basic QA pairs",
-                "examples": [{"inputs": {"question": "Hi"}, "expected_outputs": {"answer": "Hello"}}],
+                "examples": [
+                    {"inputs": {"question": "Hi"}, "expected_outputs": {"answer": "Hello"}}
+                ],
             },
         )
         assert resp.status_code == 201
@@ -552,18 +558,27 @@ class TestEvalDatasetEndpoints:
             json={"name": "DS"},
         )
         data = resp.json()
-        for key in ("id", "component_id", "name", "description", "examples",
-                    "created_at", "updated_at"):
+        for key in (
+            "id",
+            "component_id",
+            "name",
+            "description",
+            "examples",
+            "created_at",
+            "updated_at",
+        ):
             assert key in data, f"Missing key: {key}"
 
     async def test_update_eval_dataset_name(self, eval_client) -> None:
         client, *_ = eval_client
         comp = await _create_component_via_api(client)
         cid = comp["id"]
-        ds = (await client.post(
-            f"/api/dspy/components/{cid}/eval-datasets",
-            json={"name": "Old"},
-        )).json()
+        ds = (
+            await client.post(
+                f"/api/dspy/components/{cid}/eval-datasets",
+                json={"name": "Old"},
+            )
+        ).json()
         resp = await client.put(
             f"/api/dspy/components/{cid}/eval-datasets/{ds['id']}",
             json={"name": "New"},
@@ -575,10 +590,12 @@ class TestEvalDatasetEndpoints:
         client, *_ = eval_client
         comp = await _create_component_via_api(client)
         cid = comp["id"]
-        ds = (await client.post(
-            f"/api/dspy/components/{cid}/eval-datasets",
-            json={"name": "DS", "examples": []},
-        )).json()
+        ds = (
+            await client.post(
+                f"/api/dspy/components/{cid}/eval-datasets",
+                json={"name": "DS", "examples": []},
+            )
+        ).json()
         new_ex = [{"inputs": {"q": "hi"}, "expected_outputs": {"a": "hello"}}]
         resp = await client.put(
             f"/api/dspy/components/{cid}/eval-datasets/{ds['id']}",
@@ -604,10 +621,12 @@ class TestEvalDatasetEndpoints:
             json={"name": "OtherComp", "description": "", "code": _SAMPLE_CODE},
         )
         c2 = resp2.json()
-        ds = (await client.post(
-            f"/api/dspy/components/{c2['id']}/eval-datasets",
-            json={"name": "DS"},
-        )).json()
+        ds = (
+            await client.post(
+                f"/api/dspy/components/{c2['id']}/eval-datasets",
+                json={"name": "DS"},
+            )
+        ).json()
         resp = await client.put(
             f"/api/dspy/components/{c1['id']}/eval-datasets/{ds['id']}",
             json={"name": "Hack"},
@@ -618,13 +637,13 @@ class TestEvalDatasetEndpoints:
         client, *_ = eval_client
         comp = await _create_component_via_api(client)
         cid = comp["id"]
-        ds = (await client.post(
-            f"/api/dspy/components/{cid}/eval-datasets",
-            json={"name": "Del"},
-        )).json()
-        resp = await client.delete(
-            f"/api/dspy/components/{cid}/eval-datasets/{ds['id']}"
-        )
+        ds = (
+            await client.post(
+                f"/api/dspy/components/{cid}/eval-datasets",
+                json={"name": "Del"},
+            )
+        ).json()
+        resp = await client.delete(f"/api/dspy/components/{cid}/eval-datasets/{ds['id']}")
         assert resp.status_code == 204
         resp2 = await client.get(f"/api/dspy/components/{cid}/eval-datasets")
         assert all(d["id"] != ds["id"] for d in resp2.json())
@@ -632,9 +651,7 @@ class TestEvalDatasetEndpoints:
     async def test_delete_eval_dataset_404(self, eval_client) -> None:
         client, *_ = eval_client
         comp = await _create_component_via_api(client)
-        resp = await client.delete(
-            f"/api/dspy/components/{comp['id']}/eval-datasets/ghost"
-        )
+        resp = await client.delete(f"/api/dspy/components/{comp['id']}/eval-datasets/ghost")
         assert resp.status_code == 404
 
 
@@ -676,18 +693,20 @@ class TestEvaluateEndpoint:
         cid = comp["id"]
 
         # Create a dataset with one example
-        ds = (await client.post(
-            f"/api/dspy/components/{cid}/eval-datasets",
-            json={
-                "name": "Test DS",
-                "examples": [
-                    {
-                        "inputs": {"question": "What is 2+2?"},
-                        "expected_outputs": {"answer": "4"},
-                    }
-                ],
-            },
-        )).json()
+        ds = (
+            await client.post(
+                f"/api/dspy/components/{cid}/eval-datasets",
+                json={
+                    "name": "Test DS",
+                    "examples": [
+                        {
+                            "inputs": {"question": "What is 2+2?"},
+                            "expected_outputs": {"answer": "4"},
+                        }
+                    ],
+                },
+            )
+        ).json()
 
         # Mock module: returns prediction with answer == "4"
         pred = MagicMock()
@@ -712,15 +731,17 @@ class TestEvaluateEndpoint:
         comp = await _create_component_via_api(client)
         cid = comp["id"]
 
-        ds = (await client.post(
-            f"/api/dspy/components/{cid}/eval-datasets",
-            json={
-                "name": "DS",
-                "examples": [
-                    {"inputs": {"q": "x"}, "expected_outputs": {"answer": "Hello World"}},
-                ],
-            },
-        )).json()
+        ds = (
+            await client.post(
+                f"/api/dspy/components/{cid}/eval-datasets",
+                json={
+                    "name": "DS",
+                    "examples": [
+                        {"inputs": {"q": "x"}, "expected_outputs": {"answer": "Hello World"}},
+                    ],
+                },
+            )
+        ).json()
 
         pred = MagicMock()
         pred.toDict.return_value = {"answer": "hello world"}  # different case
@@ -737,15 +758,17 @@ class TestEvaluateEndpoint:
         comp = await _create_component_via_api(client)
         cid = comp["id"]
 
-        ds = (await client.post(
-            f"/api/dspy/components/{cid}/eval-datasets",
-            json={
-                "name": "DS",
-                "examples": [
-                    {"inputs": {"q": "x"}, "expected_outputs": {"answer": "correct"}},
-                ],
-            },
-        )).json()
+        ds = (
+            await client.post(
+                f"/api/dspy/components/{cid}/eval-datasets",
+                json={
+                    "name": "DS",
+                    "examples": [
+                        {"inputs": {"q": "x"}, "expected_outputs": {"answer": "correct"}},
+                    ],
+                },
+            )
+        ).json()
 
         pred = MagicMock()
         pred.toDict.return_value = {"answer": "wrong"}
@@ -760,22 +783,20 @@ class TestEvaluateEndpoint:
         assert data["failed"] == 1
         assert data["results"][0]["passed"] is False
 
-    async def test_evaluate_uses_most_recent_dataset_when_no_id(
-        self, eval_client
-    ) -> None:
+    async def test_evaluate_uses_most_recent_dataset_when_no_id(self, eval_client) -> None:
         client, factory, registry = eval_client
         comp = await _create_component_via_api(client)
         cid = comp["id"]
 
-        ds = (await client.post(
-            f"/api/dspy/components/{cid}/eval-datasets",
-            json={
-                "name": "Auto DS",
-                "examples": [
-                    {"inputs": {"q": "hi"}, "expected_outputs": {"answer": "hello"}}
-                ],
-            },
-        )).json()
+        ds = (
+            await client.post(
+                f"/api/dspy/components/{cid}/eval-datasets",
+                json={
+                    "name": "Auto DS",
+                    "examples": [{"inputs": {"q": "hi"}, "expected_outputs": {"answer": "hello"}}],
+                },
+            )
+        ).json()
 
         pred = MagicMock()
         pred.toDict.return_value = {"answer": "hello"}
@@ -793,15 +814,17 @@ class TestEvaluateEndpoint:
         comp = await _create_component_via_api(client)
         cid = comp["id"]
 
-        ds = (await client.post(
-            f"/api/dspy/components/{cid}/eval-datasets",
-            json={
-                "name": "DS",
-                "examples": [
-                    {"inputs": {"q": "1"}, "expected_outputs": {"a": "x", "b": "y"}},
-                ],
-            },
-        )).json()
+        ds = (
+            await client.post(
+                f"/api/dspy/components/{cid}/eval-datasets",
+                json={
+                    "name": "DS",
+                    "examples": [
+                        {"inputs": {"q": "1"}, "expected_outputs": {"a": "x", "b": "y"}},
+                    ],
+                },
+            )
+        ).json()
 
         pred = MagicMock()
         pred.toDict.return_value = {"a": "x", "b": "wrong"}

@@ -6,6 +6,7 @@ from pydantic import BaseModel
 router = APIRouter(prefix="/sandbox", tags=["sandbox"])
 logger = logging.getLogger(__name__)
 
+
 class SandboxRequest(BaseModel):
     sandbox_type: str
     command: str
@@ -13,6 +14,7 @@ class SandboxRequest(BaseModel):
     image: str | None = None
     host: str | None = None
     user: str | None = None
+
 
 @router.post("/execute")
 async def execute_in_sandbox(req: SandboxRequest):
@@ -25,5 +27,5 @@ async def execute_in_sandbox(req: SandboxRequest):
     return {
         "stdout": f"Executed {req.command} via Rust IPC in {req.sandbox_type} sandbox",
         "stderr": "",
-        "success": True
+        "success": True,
     }

@@ -259,7 +259,7 @@ class {self._to_class_name(spec.name)}Module(dspy.Module):
         fields = view_spec.get("fields", [])
         field_code = self._generate_form_fields(fields)
 
-        code = f'''/**
+        code = f"""/**
  * Auto-generated form view: {view_spec.get("name", "View")}
  */
 
@@ -295,7 +295,7 @@ export default function {self._to_class_name(view_spec.get("name", "View"))}View
     </Box>
   );
 }}
-'''
+"""
         return code
 
     def _generate_form_fields(self, fields: list[dict[str, Any]]) -> str:
@@ -313,14 +313,14 @@ export default function {self._to_class_name(view_spec.get("name", "View"))}View
             field_label = field.get("label", field_name)
             field_type = field.get("type", "text")
 
-            code += '      <TextField\n'
+            code += "      <TextField\n"
             code += f'        label="{field_label}"\n'
             code += f'        type="{field_type}"\n'
             code += f'        value={{formData["{field_name}"] || ""}}\n'
             code += f'        onChange={{(e) => setFormData({{ ...formData, "{field_name}": e.target.value }})}}\n'
-            code += '        fullWidth\n'
+            code += "        fullWidth\n"
             code += '        size="small"\n'
-            code += '      />\n'
+            code += "      />\n"
 
         return code
 
@@ -334,7 +334,7 @@ export default function {self._to_class_name(view_spec.get("name", "View"))}View
         Returns:
             React list component code.
         """
-        code = f'''/**
+        code = f"""/**
  * Auto-generated list view: {view_spec.get("name", "View")}
  */
 
@@ -363,7 +363,7 @@ export default function {self._to_class_name(view_spec.get("name", "View"))}View
     </Box>
   );
 }}
-'''
+"""
         return code
 
     def _generate_dashboard_view(self, view_spec: dict[str, Any], spec: AppSpec) -> str:
@@ -376,7 +376,7 @@ export default function {self._to_class_name(view_spec.get("name", "View"))}View
         Returns:
             React dashboard component code.
         """
-        code = f'''/**
+        code = f"""/**
  * Auto-generated dashboard view: {view_spec.get("name", "View")}
  */
 
@@ -407,7 +407,7 @@ export default function {self._to_class_name(view_spec.get("name", "View"))}View
     </Box>
   );
 }}
-'''
+"""
         return code
 
     def _generate_generic_view(self, view_spec: dict[str, Any], spec: AppSpec) -> str:
@@ -420,7 +420,7 @@ export default function {self._to_class_name(view_spec.get("name", "View"))}View
         Returns:
             React component code.
         """
-        code = f'''/**
+        code = f"""/**
  * Auto-generated view: {view_spec.get("name", "View")}
  */
 
@@ -441,7 +441,7 @@ export default function {self._to_class_name(view_spec.get("name", "View"))}View
     </Box>
   );
 }}
-'''
+"""
         return code
 
     def _generate_manifest(self, spec: AppSpec, view_names: list[str]) -> dict[str, Any]:
@@ -475,9 +475,10 @@ export default function {self._to_class_name(view_spec.get("name", "View"))}View
         """
         # Remove special characters and convert to PascalCase
         import re
-        cleaned = re.sub(r'[^a-zA-Z0-9_]', '_', name)
-        parts = cleaned.split('_')
-        return ''.join(part.capitalize() for part in parts)
+
+        cleaned = re.sub(r"[^a-zA-Z0-9_]", "_", name)
+        parts = cleaned.split("_")
+        return "".join(part.capitalize() for part in parts)
 
     def _indent_code(self, code: str, spaces: int) -> str:
         """Indent code by a number of spaces.
@@ -489,5 +490,5 @@ export default function {self._to_class_name(view_spec.get("name", "View"))}View
         Returns:
             Indented code.
         """
-        indent = ' ' * spaces
-        return '\n'.join(indent + line if line.strip() else '' for line in code.split('\n'))
+        indent = " " * spaces
+        return "\n".join(indent + line if line.strip() else "" for line in code.split("\n"))

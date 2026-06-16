@@ -5,7 +5,6 @@ Uses an in-memory SQLite database.
 
 from __future__ import annotations
 
-import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -81,9 +80,7 @@ class TestAgentRun:
         assert await repo.get_agent_run(run.id) is None
 
     async def test_autonomy_mode_stored(self, repo: Repository) -> None:
-        run = await repo.create_agent_run(
-            goal="Autonomous run", autonomy_mode="autonomous"
-        )
+        run = await repo.create_agent_run(goal="Autonomous run", autonomy_mode="autonomous")
         assert run.autonomy_mode == "autonomous"
 
     async def test_session_id_stored(self, repo: Repository) -> None:
@@ -136,9 +133,7 @@ class TestAppManifest:
         assert await repo.get_app_manifest(m.id) is None
 
     async def test_react_views_list(self, repo: Repository) -> None:
-        m = await repo.create_app_manifest(
-            name="Multi-view", react_views=["ViewA", "ViewB"]
-        )
+        m = await repo.create_app_manifest(name="Multi-view", react_views=["ViewA", "ViewB"])
         assert m.react_views == ["ViewA", "ViewB"]
 
 
@@ -168,9 +163,7 @@ class TestToolTrace:
         assert all(t.tool_name == "filesystem" for t in fs_traces)
 
     async def test_filter_by_session(self, repo: Repository) -> None:
-        await repo.record_tool_trace(
-            tool_name="browser", session_id="sess-xyz", success=True
-        )
+        await repo.record_tool_trace(tool_name="browser", session_id="sess-xyz", success=True)
         traces = await repo.list_tool_traces(session_id="sess-xyz")
         assert all(t.session_id == "sess-xyz" for t in traces)
 

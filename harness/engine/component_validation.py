@@ -219,7 +219,9 @@ class ComponentValidator:
                     actual_params = {arg.arg for arg in node.args.args}
                     if not expected_params.issubset(actual_params):
                         missing = expected_params - actual_params
-                        errors.append(f"Function {node.name} missing expected parameters: {missing}")
+                        errors.append(
+                            f"Function {node.name} missing expected parameters: {missing}"
+                        )
             if isinstance(node, ast.ClassDef):
                 has_class = True
 
@@ -269,10 +271,10 @@ class ComponentValidator:
 
         # Check for shell command patterns
         shell_patterns = [
-            r'os\.system\(',
-            r'subprocess\.(call|run|Popen)\(',
-            r'eval\(',
-            r'exec\(',
+            r"os\.system\(",
+            r"subprocess\.(call|run|Popen)\(",
+            r"eval\(",
+            r"exec\(",
         ]
 
         for pattern in shell_patterns:

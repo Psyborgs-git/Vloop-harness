@@ -111,6 +111,7 @@ def _inject_html_from_dist(
 # paths like "/@vite/client" and "/@react-refresh".  The browser resolves
 # these against the FastAPI origin, so we must forward them to Vite.
 
+
 @router.get("/src/{path:path}")
 async def vite_src(path: str, request: Request) -> Response:
     settings = request.app.state.settings
@@ -139,6 +140,7 @@ async def vite_node_modules(path: str, request: Request) -> Response:
 
 
 # ── Legacy component UI ───────────────────────────────────────────────────────
+
 
 @router.get("/ui/{component_id}")
 @router.get("/ui/{component_id}/{path:path}")
@@ -212,6 +214,7 @@ async def serve_component_ui(
 
 
 # ── Root dashboard (special-cased — not a legacy component) ──────────────────
+
 
 @router.get("/")
 @router.get("/{path:path}")

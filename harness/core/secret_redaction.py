@@ -68,48 +68,48 @@ _SECRET_FIELDS = {
 
 def redact_string(text: str) -> str:
     """Redact potential secrets from a string.
-    
+
     Args:
         text: The input string that may contain secrets.
-        
+
     Returns:
         The string with secrets replaced by [REDACTED].
     """
     if not text:
         return text
-    
+
     result = text
     for pattern in _COMPILED_PATTERNS:
         result = pattern.sub("[REDACTED]", result)
-    
+
     return result
 
 
 def redact_dict(data: dict[str, Any], recursive: bool = True) -> dict[str, Any]:
     """Redact secrets from a dictionary.
-    
+
     This function:
     1. Redacts values for known secret field names
     2. Recursively redacts nested dictionaries if recursive=True
     3. Redacts string values that match secret patterns
-    
+
     Args:
         data: The dictionary to sanitize.
         recursive: Whether to recursively process nested structures.
-        
+
     Returns:
         A new dictionary with secrets redacted.
     """
     if not isinstance(data, dict):
         return data
-    
+
     result = {}
     for key, value in data.items():
         # Check if this is a known secret field
         if isinstance(key, str) and key.lower() in _SECRET_FIELDS:
             result[key] = "[REDACTED]"
             continue
-        
+
         # Process the value based on type
         if isinstance(value, str):
             result[key] = redact_string(value)
@@ -119,23 +119,23 @@ def redact_dict(data: dict[str, Any], recursive: bool = True) -> dict[str, Any]:
             result[key] = redact_list(value, recursive)
         else:
             result[key] = value
-    
+
     return result
 
 
 def redact_list(data: list[Any], recursive: bool = True) -> list[Any]:
     """Redact secrets from a list.
-    
+
     Args:
         data: The list to sanitize.
         recursive: Whether to recursively process nested structures.
-        
+
     Returns:
         A new list with secrets redacted.
     """
     if not isinstance(data, list):
         return data
-    
+
     result = []
     for item in data:
         if isinstance(item, str):
@@ -146,19 +146,19 @@ def redact_list(data: list[Any], recursive: bool = True) -> list[Any]:
             result.append(redact_list(item, recursive))
         else:
             result.append(item)
-    
+
     return result
 
 
 def redact_any(data: Any) -> Any:
     """Redact secrets from any data structure.
-    
+
     This is a convenience function that dispatches to the appropriate
     redaction function based on the input type.
-    
+
     Args:
         data: The data to sanitize (str, dict, list, or other).
-        
+
     Returns:
         The sanitized data.
     """
@@ -174,7 +174,7 @@ def redact_any(data: Any) -> Any:
 
 def add_secret_pattern(pattern: str) -> None:
     """Add a custom regex pattern for secret detection.
-    
+
     Args:
         pattern: A regex pattern string that matches secrets.
     """
@@ -184,7 +184,7 @@ def add_secret_pattern(pattern: str) -> None:
 
 def add_secret_field(field_name: str) -> None:
     """Add a custom field name that should be treated as a secret.
-    
+
     Args:
         field_name: The field name (case-insensitive).
     """

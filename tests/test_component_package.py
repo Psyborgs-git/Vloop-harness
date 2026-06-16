@@ -1,7 +1,5 @@
 """Tests for component package format."""
 
-import pytest
-
 from harness.engine.component_package import (
     ComponentDependencies,
     ComponentMetadata,

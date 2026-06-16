@@ -65,3 +65,11 @@ Thumbs.db
 target/
 harness-core/target/
 *.log
+src-tauri/static/
+react/dist/
+.venv/
+node_modules/
+dist/
+build/
+*.pyc
+__pycache__/

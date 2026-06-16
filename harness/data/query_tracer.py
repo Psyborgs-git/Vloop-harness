@@ -119,9 +119,10 @@ class QueryTracer:
         """Normalize a query for pattern matching."""
         # Remove parameter values and normalize whitespace
         import re
+
         normalized = re.sub(r"'[^']*'", "'?'", query)  # Replace string literals
-        normalized = re.sub(r'\b\d+\b', '?', normalized)  # Replace numbers
-        normalized = re.sub(r'\s+', ' ', normalized).strip()  # Normalize whitespace
+        normalized = re.sub(r"\b\d+\b", "?", normalized)  # Replace numbers
+        normalized = re.sub(r"\s+", " ", normalized).strip()  # Normalize whitespace
         return normalized[:200]  # Truncate
 
     def get_recent_traces(self, limit: int = 50) -> list[dict[str, Any]]:

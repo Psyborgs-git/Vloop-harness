@@ -119,9 +119,7 @@ class PolicyConfig:
         return cls(
             permanent_blocklist=data.get("permanent_blocklist", []),
             denylist=data.get("denylist", []),
-            directories=[
-                DirectoryPolicy.from_dict(d) for d in data.get("directories", [])
-            ],
+            directories=[DirectoryPolicy.from_dict(d) for d in data.get("directories", [])],
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -211,8 +209,7 @@ class PolicyEngine:
         # The permanent blocklist in the project file must not remove builtins —
         # strip them from the persisted file to avoid confusion.
         safe_perm = [
-            cmd for cmd in config.permanent_blocklist
-            if cmd not in _BUILTIN_PERMANENT_BLOCKLIST
+            cmd for cmd in config.permanent_blocklist if cmd not in _BUILTIN_PERMANENT_BLOCKLIST
         ]
         data = {
             "permanent_blocklist": safe_perm,
@@ -239,9 +236,7 @@ class PolicyEngine:
     def check_shell_injection(self, raw_command: str) -> None:
         """Raise ValueError if *raw_command* contains shell injection patterns."""
         if _SHELL_INJECTION_RE.search(raw_command):
-            raise ValueError(
-                f"Command contains disallowed shell characters: {raw_command!r}"
-            )
+            raise ValueError(f"Command contains disallowed shell characters: {raw_command!r}")
 
     def check_command(
         self,
@@ -267,16 +262,12 @@ class PolicyEngine:
         # 1. Permanent blocklist (builtins + configured)
         for blocked in self._effective.permanent_blocklist:
             if self._command_matches(blocked, binary_name):
-                raise PermanentlyBlocked(
-                    f"Command {binary_name!r} is permanently blocked."
-                )
+                raise PermanentlyBlocked(f"Command {binary_name!r} is permanently blocked.")
 
         # 2. Denylist
         for denied in self._effective.denylist:
             if self._command_matches(denied, binary_name):
-                raise PolicyBlocked(
-                    f"Command {binary_name!r} is in the denylist."
-                )
+                raise PolicyBlocked(f"Command {binary_name!r} is in the denylist.")
 
         # 3. Per-directory allowlist
         # Find the most-specific matching directory policy (exact or parent match)
@@ -287,10 +278,10 @@ class PolicyEngine:
             policy_dir = Path(dir_policy.directory)
             # An entry matches if the CWD is exactly the policy directory
             # or is a subdirectory of it. The most-specific (longest) match wins.
-            if rel_cwd == policy_dir or (
-                policy_dir != Path(".") and self._path_is_under(rel_cwd, policy_dir)
-            ) or (
-                policy_dir == Path(".") and rel_cwd == Path(".")
+            if (
+                rel_cwd == policy_dir
+                or (policy_dir != Path(".") and self._path_is_under(rel_cwd, policy_dir))
+                or (policy_dir == Path(".") and rel_cwd == Path("."))
             ):
                 if matched_policy is None or len(str(policy_dir)) > len(
                     str(Path(matched_policy.directory))

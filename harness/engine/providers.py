@@ -138,9 +138,7 @@ class ProviderManager:
 
     def _configure_engine(self, provider: ProviderConfigDB) -> None:
         api_key = (
-            self._vault.decrypt(provider.encrypted_api_key)
-            if provider.encrypted_api_key
-            else ""
+            self._vault.decrypt(provider.encrypted_api_key) if provider.encrypted_api_key else ""
         )
         cfg = EngineConfig(
             dspy_lm_provider=provider.provider_type,
@@ -162,6 +160,7 @@ class ProviderManager:
         import os
 
         import httpx
+
         rust_base_url = os.getenv("RUST_BASE_AI_URL")
         if rust_base_url:
             try:
@@ -175,7 +174,7 @@ class ProviderManager:
                         "api_key": api_key,
                         "base_url": provider.base_url or "",
                     },
-                    timeout=2.0
+                    timeout=2.0,
                 )
             except Exception:
                 pass

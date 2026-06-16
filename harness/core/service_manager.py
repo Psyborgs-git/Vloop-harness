@@ -133,8 +133,7 @@ class ServiceManager:
             err = self._read_log_tail("backend")
             self._terminate_pid(proc.pid)
             raise RuntimeError(
-                "Backend failed to start. "
-                f"Log tail from {self._service_log('backend')}:\n{err}"
+                f"Backend failed to start. Log tail from {self._service_log('backend')}:\n{err}"
             )
 
         return self._status_for("backend")
@@ -152,16 +151,16 @@ class ServiceManager:
 
         status = self._status_for("frontend")
         if status.running and status.healthy:
-            status.detail = f"already running on http://{self.settings.vite_host}:{self.settings.vite_port}"
+            status.detail = (
+                f"already running on http://{self.settings.vite_host}:{self.settings.vite_port}"
+            )
             return status
 
         react_dir = self.repo_root / "react"
         if not react_dir.exists():
             raise RuntimeError("Frontend directory 'react/' was not found.")
         if not (react_dir / "node_modules").exists():
-            raise RuntimeError(
-                "Frontend dependencies are missing. Run: cd react && npm install"
-            )
+            raise RuntimeError("Frontend dependencies are missing. Run: cd react && npm install")
         if self._which("npm") is None:
             raise RuntimeError("npm was not found on PATH. Install Node.js and npm first.")
 
@@ -239,7 +238,9 @@ class ServiceManager:
 
     def _health_check(self, name: ServiceName) -> bool:
         if name == "backend":
-            return self._wait_for_port(self.backend_host, self.backend_port, timeout=0.5, interval=0.1)
+            return self._wait_for_port(
+                self.backend_host, self.backend_port, timeout=0.5, interval=0.1
+            )
         return self._wait_for_port(
             self.settings.vite_host,
             self.settings.vite_port,

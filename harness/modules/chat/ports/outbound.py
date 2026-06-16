@@ -6,9 +6,9 @@ These are abstract interfaces defining the capabilities required from secondary 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Sequence
+from collections.abc import Sequence
 
-from harness.modules.chat.domain.entities import Channel, ChannelMember, Message, User, DomainEvent
+from harness.modules.chat.domain.entities import Channel, ChannelMember, Message, User
 
 
 class ChatRepositoryPort(ABC):
@@ -71,6 +71,8 @@ class EventPublisherPort(ABC):
 
 class AIParticipantPort(ABC):
     @abstractmethod
-    async def generate_response(self, channel: Channel, message: Message, history: Sequence[Message]) -> str | None:
+    async def generate_response(
+        self, channel: Channel, message: Message, history: Sequence[Message]
+    ) -> str | None:
         """Call the AI engine to generate a reply given the channel, triggering message, and chat history."""
         pass

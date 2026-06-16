@@ -154,4 +154,3 @@ def _view_to_dict(v: GeneratedView) -> dict[str, Any]:
         "session_id": v.session_id,
         "created_at": v.created_at.isoformat(),
     }
-

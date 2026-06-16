@@ -56,6 +56,7 @@ class PermissionsGuard:
     def __init__(self) -> None:
         self._sets: dict[str, PermissionSet] = {}
         import os
+
         ai_url = os.environ.get("RUST_BASE_AI_URL", "")
         if ai_url:
             self._rust_url = ai_url.rsplit("/v1", 1)[0]
@@ -68,16 +69,18 @@ class PermissionsGuard:
             import threading
 
             import httpx
+
             def reg():
                 with httpx.Client() as client:
                     for p in initial:
                         try:
                             client.post(
                                 f"{self._rust_url}/harness/permissions/grant",
-                                json={"component_id": component_id, "permission": p.value}
+                                json={"component_id": component_id, "permission": p.value},
                             )
                         except Exception:
                             pass
+
             threading.Thread(target=reg, daemon=True).start()
 
     def unregister(self, component_id: str) -> None:
@@ -90,12 +93,13 @@ class PermissionsGuard:
     def has(self, component_id: str, permission: Permission) -> bool:
         if self._rust_url:
             import httpx
+
             with httpx.Client() as client:
                 try:
                     res = client.post(
                         f"{self._rust_url}/harness/permissions/check",
                         json={"component_id": component_id, "permission": permission.value},
-                        timeout=5.0
+                        timeout=5.0,
                     )
                     if res.status_code == 200:
                         return res.json().get("has_permission", False)
@@ -107,12 +111,13 @@ class PermissionsGuard:
     def grant(self, component_id: str, permission: Permission) -> None:
         if self._rust_url:
             import httpx
+
             with httpx.Client() as client:
                 try:
                     client.post(
                         f"{self._rust_url}/harness/permissions/grant",
                         json={"component_id": component_id, "permission": permission.value},
-                        timeout=5.0
+                        timeout=5.0,
                     )
                 except Exception:
                     pass
@@ -125,12 +130,13 @@ class PermissionsGuard:
     def revoke(self, component_id: str, permission: Permission) -> None:
         if self._rust_url:
             import httpx
+
             with httpx.Client() as client:
                 try:
                     client.post(
                         f"{self._rust_url}/harness/permissions/revoke",
                         json={"component_id": component_id, "permission": permission.value},
-                        timeout=5.0
+                        timeout=5.0,
                     )
                 except Exception:
                     pass

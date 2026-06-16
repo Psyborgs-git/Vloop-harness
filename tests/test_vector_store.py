@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from harness.engine.vector_store.embeddings import LocalEmbeddings, OpenAIEmbeddings, OllamaEmbeddings
-from harness.engine.vector_store.store import Document, InMemoryVecStore
 from harness.engine.vector_store.retriever import ChunkingConfig, VectorRetriever
+from harness.engine.vector_store.store import Document, InMemoryVecStore
 
 
 class TestInMemoryVecStore:

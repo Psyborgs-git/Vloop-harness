@@ -37,8 +37,8 @@ from harness.tools.base_tool import AbstractTool, ToolResult
 if TYPE_CHECKING:
     from harness.core.main_process import MainProcess
 
-_MAX_SCREENSHOT_BYTES = 2 * 1024 * 1024   # 2 MiB
-_MAX_TEXT_BYTES = 512 * 1024               # 512 KiB
+_MAX_SCREENSHOT_BYTES = 2 * 1024 * 1024  # 2 MiB
+_MAX_TEXT_BYTES = 512 * 1024  # 512 KiB
 
 
 class BrowserTool(AbstractTool):
@@ -205,7 +205,9 @@ class BrowserTool(AbstractTool):
         text = await el.inner_text()
         text_bytes = text.encode("utf-8")
         if len(text_bytes) > _MAX_TEXT_BYTES:
-            text = text_bytes[:_MAX_TEXT_BYTES].decode("utf-8", errors="ignore") + "\n... [truncated]"
+            text = (
+                text_bytes[:_MAX_TEXT_BYTES].decode("utf-8", errors="ignore") + "\n... [truncated]"
+            )
         return ToolResult(success=True, output=text, metadata={"selector": selector})
 
     async def _get_html(self, params: dict[str, Any]) -> ToolResult:
@@ -217,7 +219,10 @@ class BrowserTool(AbstractTool):
         html = await el.inner_html()
         html_bytes = html.encode("utf-8")
         if len(html_bytes) > _MAX_TEXT_BYTES:
-            html = html_bytes[:_MAX_TEXT_BYTES].decode("utf-8", errors="ignore") + "\n<!-- truncated -->"
+            html = (
+                html_bytes[:_MAX_TEXT_BYTES].decode("utf-8", errors="ignore")
+                + "\n<!-- truncated -->"
+            )
         return ToolResult(success=True, output=html, metadata={"selector": selector})
 
     async def _click(self, params: dict[str, Any]) -> ToolResult:
@@ -243,9 +248,7 @@ class BrowserTool(AbstractTool):
 
         cid = component_id or "root"
         if cid != "root" and not self._mp.permissions.has(cid, Permission.SHELL_EXEC):
-            raise PermissionDenied(
-                f"eval_js requires {Permission.SHELL_EXEC.value!r} permission"
-            )
+            raise PermissionDenied(f"eval_js requires {Permission.SHELL_EXEC.value!r} permission")
         expression: str = params.get("expression", "")
         if not expression:
             return ToolResult(success=False, error="'expression' parameter is required for eval_js")

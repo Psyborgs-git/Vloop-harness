@@ -73,9 +73,7 @@ class VLoopStorage:
 
     def append_chat_message(self, session_id: str, message: dict[str, Any]) -> None:
         with open(self.chat_session_file(session_id), "a") as f:
-            f.write(
-                json.dumps({**message, "timestamp": _utc_now()}) + "\n"
-            )
+            f.write(json.dumps({**message, "timestamp": _utc_now()}) + "\n")
 
     def read_chat_session(self, session_id: str) -> list[dict[str, Any]]:
         path = self.chat_session_file(session_id)
@@ -121,7 +119,8 @@ class VLoopStorage:
         log_file = self.project_dir / "logs" / f"{date.today().isoformat()}.jsonl"
         with open(log_file, "a") as f:
             f.write(
-                json.dumps({"level": level, "message": message, "timestamp": _utc_now(), **extra}) + "\n"
+                json.dumps({"level": level, "message": message, "timestamp": _utc_now(), **extra})
+                + "\n"
             )
 
     # ── Component/pipeline definition storage ────────────────────────────────

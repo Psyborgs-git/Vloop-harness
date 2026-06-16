@@ -88,7 +88,8 @@ class DSPyComponentDef(Base):
     name: Mapped[str] = mapped_column(String(255))
     description: Mapped[str] = mapped_column(Text, default="")
     signature_fields: Mapped[dict[str, Any]] = mapped_column(
-        JSON, default=dict  # {"inputs": [...], "outputs": [...]}
+        JSON,
+        default=dict,  # {"inputs": [...], "outputs": [...]}
     )
     code: Mapped[str] = mapped_column(Text)
     module_type: Mapped[str] = mapped_column(String(50), default="ChainOfThought")
@@ -241,7 +242,10 @@ class AgentRun(Base):
     )
 
     steps: Mapped[list[AgentRunStep]] = relationship(
-        "AgentRunStep", back_populates="run", cascade="all, delete-orphan", order_by="AgentRunStep.created_at"
+        "AgentRunStep",
+        back_populates="run",
+        cascade="all, delete-orphan",
+        order_by="AgentRunStep.created_at",
     )
 
 
@@ -464,8 +468,12 @@ class ChannelMemberDB(Base):
     __tablename__ = "channel_members"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_new_uuid)
-    channel_id: Mapped[str] = mapped_column(String(36), ForeignKey("channels.id", ondelete="CASCADE"), nullable=False)
-    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    channel_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("channels.id", ondelete="CASCADE"), nullable=False
+    )
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
     role: Mapped[str] = mapped_column(String(50), default="member")  # owner, admin, member
     joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
@@ -474,10 +482,15 @@ class ChannelMessageDB(Base):
     __tablename__ = "channel_messages"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_new_uuid)
-    channel_id: Mapped[str] = mapped_column(String(36), ForeignKey("channels.id", ondelete="CASCADE"), nullable=False)
-    sender_id: Mapped[str] = mapped_column(String(64), nullable=False)  # UserDB.id or 'ai' or external sender id
+    channel_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("channels.id", ondelete="CASCADE"), nullable=False
+    )
+    sender_id: Mapped[str] = mapped_column(
+        String(64), nullable=False
+    )  # UserDB.id or 'ai' or external sender id
     sender_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    sender_type: Mapped[str] = mapped_column(String(50), default="human")  # human, ai, telegram, whatsapp
+    sender_type: Mapped[str] = mapped_column(
+        String(50), default="human"
+    )  # human, ai, telegram, whatsapp
     content: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
-

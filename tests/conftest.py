@@ -7,11 +7,10 @@ DSPy engine — AI calls are mocked via ``app.state.main_process``.
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from pathlib import Path
-from typing import AsyncIterator
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
-import pytest
 import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
@@ -20,15 +19,12 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from harness.data.db import Base, get_session
 from harness.server.routes.analytics_routes import router as analytics_router
 from harness.server.routes.chat_routes import router as chat_router
-from harness.server.routes.views_routes import router as views_router
-
 from harness.server.routes.dspy_routes import router as dspy_router
-from harness.server.routes.settings_routes import router as settings_router
-from harness.server.routes.pipeline_routes import router as pipeline_router
 from harness.server.routes.optimization_routes import router as optimization_router
+from harness.server.routes.pipeline_routes import router as pipeline_router
+from harness.server.routes.settings_routes import router as settings_router
 from harness.server.routes.vector_store_routes import router as vector_store_router
-
-
+from harness.server.routes.views_routes import router as views_router
 
 
 def _make_mock_main_process(ai_ready: bool = False) -> MagicMock:
@@ -37,6 +33,7 @@ def _make_mock_main_process(ai_ready: bool = False) -> MagicMock:
 
     class MockAI:
         is_ready = ai_ready
+
         async def chat(self, *args, **kwargs):
             pred = MagicMock()
             pred.response = "Hello from AI!"
@@ -44,6 +41,7 @@ def _make_mock_main_process(ai_ready: bool = False) -> MagicMock:
             pred.pipeline_config = ""
             pred.view_stub_request = ""
             return pred
+
         async def generate_view(self, *args, **kwargs):
             pred = MagicMock()
             pred.react_code = "const App = () => <div>hello</div>;"
@@ -56,7 +54,6 @@ def _make_mock_main_process(ai_ready: bool = False) -> MagicMock:
     # tools.catalog() returns an empty list by default
     mp.tools.catalog.return_value = []
     return mp
-
 
 
 @pytest_asyncio.fixture
@@ -87,7 +84,6 @@ async def test_app(tmp_path: Path) -> AsyncIterator[FastAPI]:
     async def root() -> dict[str, str]:
         return {"status": "ok", "service": "vloop-harness", "version": "0.2.0"}
 
-
     # Override the DB dependency so routes use our in-memory DB
     async def _override_get_session() -> AsyncIterator[AsyncSession]:
         async with factory() as session:
@@ -97,14 +93,17 @@ async def test_app(tmp_path: Path) -> AsyncIterator[FastAPI]:
     app.state.vloop_storage = storage
 
     from harness.settings import HarnessSettings
+
     app.state.settings = HarnessSettings()
 
     # Provider Manager
     from harness.engine.providers import ProviderManager
+
     # mock vault and engine
     class MockVault:
         def get_key(self, k):
             return "sk-test"
+
     class MockEngine:
         pass
 
@@ -115,15 +114,17 @@ async def test_app(tmp_path: Path) -> AsyncIterator[FastAPI]:
 
     # Configure feedback mock to use real FeedbackCollector
     from harness.engine.optimization.feedback import FeedbackCollector
+
     feedback_collector = FeedbackCollector(storage_dir=str(storage.project_dir / "feedback"))
     app.state.main_process.ai.self_improvement.feedback = feedback_collector
 
     # Mock for Vector Store
     from harness.engine.vector_store.store import InMemoryVecStore
-    from harness.engine.vector_store.embeddings import LocalEmbeddings
+
     class MockEmbedder:
         async def embed(self, texts):
             return [[0.0] * 768 for _ in texts]
+
         def dimensions(self):
             return 768
 
@@ -133,11 +134,11 @@ async def test_app(tmp_path: Path) -> AsyncIterator[FastAPI]:
     # Mock for pipeline builder
     from harness.engine.component_registry import DSPyComponentRegistry
     from harness.engine.pipeline_builder import PipelineBuilder
+
     registry = DSPyComponentRegistry()
     builder = PipelineBuilder(registry)
     app.state.component_registry = registry
     app.state.pipeline_builder = builder
-
 
     yield app
 

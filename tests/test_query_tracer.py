@@ -1,5 +1,7 @@
 """Tests for query tracer."""
 
+from datetime import UTC
+
 import pytest
 
 from harness.data.query_tracer import (
@@ -14,14 +16,14 @@ from harness.data.query_tracer import (
 
 def test_query_trace():
     """Test QueryTrace creation and serialization."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     trace = QueryTrace(
         query="SELECT * FROM users",
         duration_ms=10.5,
         success=True,
         params={"limit": 10},
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
     )
 
     assert trace.query == "SELECT * FROM users"
@@ -35,13 +37,19 @@ def test_query_trace():
 
 def test_query_stats():
     """Test QueryStats functionality."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     stats = QueryStats(pattern="SELECT * FROM users")
 
-    trace1 = QueryTrace(query="SELECT * FROM users", duration_ms=10.0, success=True, timestamp=datetime.now(timezone.utc))
-    trace2 = QueryTrace(query="SELECT * FROM users", duration_ms=20.0, success=True, timestamp=datetime.now(timezone.utc))
-    trace3 = QueryTrace(query="SELECT * FROM users", duration_ms=15.0, success=False, timestamp=datetime.now(timezone.utc))
+    trace1 = QueryTrace(
+        query="SELECT * FROM users", duration_ms=10.0, success=True, timestamp=datetime.now(UTC)
+    )
+    trace2 = QueryTrace(
+        query="SELECT * FROM users", duration_ms=20.0, success=True, timestamp=datetime.now(UTC)
+    )
+    trace3 = QueryTrace(
+        query="SELECT * FROM users", duration_ms=15.0, success=False, timestamp=datetime.now(UTC)
+    )
 
     stats.add_trace(trace1)
     stats.add_trace(trace2)

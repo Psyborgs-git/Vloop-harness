@@ -110,13 +110,15 @@ class SqliteVecStore(VectorStore):
             if emb is None:
                 raise ValueError(f"Document {doc.id} missing embedding")
             emb_bytes = np.array(emb, dtype=np.float32).tobytes()
-            rows.append((
-                doc.id,
-                emb_bytes,
-                doc.text,
-                doc.source,
-                json.dumps(doc.metadata or {}),
-            ))
+            rows.append(
+                (
+                    doc.id,
+                    emb_bytes,
+                    doc.text,
+                    doc.source,
+                    json.dumps(doc.metadata or {}),
+                )
+            )
 
         self._conn.executemany(
             f"""
@@ -155,20 +157,20 @@ class SqliteVecStore(VectorStore):
             meta = json.loads(meta_json or "{}")
             if filters and not self._matches_filters(meta, filters):
                 continue
-            results.append(Document(
-                id=doc_id,
-                text=text,
-                source=source,
-                metadata={**meta, "distance": distance},
-            ))
+            results.append(
+                Document(
+                    id=doc_id,
+                    text=text,
+                    source=source,
+                    metadata={**meta, "distance": distance},
+                )
+            )
         return results
 
     async def delete(self, doc_id: str) -> bool:
         if self._conn is None:
             return False
-        cursor = self._conn.execute(
-            f"DELETE FROM {self.table_name} WHERE id = ?", (doc_id,)
-        )
+        cursor = self._conn.execute(f"DELETE FROM {self.table_name} WHERE id = ?", (doc_id,))
         self._conn.commit()
         return cursor.rowcount > 0
 

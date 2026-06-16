@@ -15,12 +15,9 @@ Covers:
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
-import pytest
 from httpx import AsyncClient
-
 
 # ── List sessions ─────────────────────────────────────────────────────────────
 
@@ -80,9 +77,7 @@ async def test_get_session_404(client: AsyncClient) -> None:
 
 async def test_rename_session(client: AsyncClient) -> None:
     created = (await client.post("/api/chat/sessions", json={"title": "Old"})).json()
-    resp = await client.patch(
-        f"/api/chat/sessions/{created['id']}", json={"title": "New"}
-    )
+    resp = await client.patch(f"/api/chat/sessions/{created['id']}", json={"title": "New"})
     assert resp.status_code == 200
     assert resp.json()["title"] == "New"
 
@@ -193,9 +188,7 @@ async def test_send_message_jsonl_schema_v1(client: AsyncClient, test_app) -> No
     storage = test_app.state.vloop_storage
     created = (await client.post("/api/chat/sessions", json={})).json()
     session_id = created["id"]
-    await client.post(
-        f"/api/chat/sessions/{session_id}/messages", json={"content": "schema"}
-    )
+    await client.post(f"/api/chat/sessions/{session_id}/messages", json={"content": "schema"})
     lines = storage.read_chat_session(session_id)
     required_keys = {"id", "session_id", "role", "content", "meta", "created_at", "v"}
     for line in lines:
@@ -220,9 +213,7 @@ async def test_transcript_empty_for_new_session(client: AsyncClient) -> None:
     assert resp.json() == []
 
 
-async def test_transcript_returns_jsonl_lines_after_message(
-    client: AsyncClient, test_app
-) -> None:
+async def test_transcript_returns_jsonl_lines_after_message(client: AsyncClient, test_app) -> None:
     created = (await client.post("/api/chat/sessions", json={})).json()
     session_id = created["id"]
     await client.post(

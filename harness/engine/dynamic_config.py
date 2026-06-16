@@ -58,7 +58,9 @@ class TokenCounter:
         # Normalize model name for tiktoken
         tiktoken_model = self._to_tiktoken_model(model_id)
         try:
-            enc = self._encoders.setdefault(tiktoken_model, tiktoken.encoding_for_model(tiktoken_model))
+            enc = self._encoders.setdefault(
+                tiktoken_model, tiktoken.encoding_for_model(tiktoken_model)
+            )
             return len(enc.encode(text))
         except Exception:
             # Heuristic fallback: ~4 chars per token
@@ -161,9 +163,7 @@ class DynamicConfig:
 
     # ── Internal ──────────────────────────────────────────────────────────────
 
-    def _resolve_temperature(
-        self, preferred: float | None, task_type: str
-    ) -> float:
+    def _resolve_temperature(self, preferred: float | None, task_type: str) -> float:
         if preferred is not None:
             return preferred
         mapping = {
@@ -194,7 +194,8 @@ class DynamicConfig:
         self, provider_type: str, current_window: int
     ) -> ModelInfo | None:
         candidates = [
-            m for m in self.registry.list_by_provider(provider_type)
+            m
+            for m in self.registry.list_by_provider(provider_type)
             if m.context_window > current_window
         ]
         if not candidates:

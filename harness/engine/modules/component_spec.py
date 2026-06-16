@@ -45,15 +45,11 @@ class ComponentSpecGeneratorSignature(dspy.Signature):
     description: str = dspy.InputField(
         desc="Natural-language description of what the component should do"
     )
-    context: str = dspy.InputField(
-        desc="Optional additional context or constraints (may be empty)"
-    )
+    context: str = dspy.InputField(desc="Optional additional context or constraints (may be empty)")
     python_code: str = dspy.OutputField(
         desc="Complete Python source — Signature class + Module class, no markdown fences"
     )
-    component_name: str = dspy.OutputField(
-        desc="The Module class name (PascalCase)"
-    )
+    component_name: str = dspy.OutputField(desc="The Module class name (PascalCase)")
     spec_summary: str = dspy.OutputField(
         desc="One-paragraph plain-English summary of inputs, outputs, and purpose"
     )

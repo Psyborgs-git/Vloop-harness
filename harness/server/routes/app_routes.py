@@ -162,8 +162,15 @@ async def update_manifest(
         raise HTTPException(status_code=404, detail="App manifest not found")
 
     updates: dict[str, Any] = {}
-    for field in ("name", "description", "backend_type", "backend_id",
-                  "react_views", "permissions", "state_schema"):
+    for field in (
+        "name",
+        "description",
+        "backend_type",
+        "backend_id",
+        "react_views",
+        "permissions",
+        "state_schema",
+    ):
         val = getattr(body, field, None)
         if val is not None:
             updates[field] = val

@@ -5,11 +5,12 @@ Implements ChatRepositoryPort interface.
 
 from __future__ import annotations
 
-from typing import Sequence
-from sqlalchemy import select, delete, or_
+from collections.abc import Sequence
+
+from sqlalchemy import delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from harness.data.models import UserDB, ChannelDB, ChannelMemberDB, ChannelMessageDB
+from harness.data.models import ChannelDB, ChannelMemberDB, ChannelMessageDB, UserDB
 from harness.modules.chat.domain.entities import Channel, ChannelMember, Message, User
 from harness.modules.chat.ports.outbound import ChatRepositoryPort
 

@@ -91,7 +91,9 @@ async def post_event(component_id: str, body: EventRequest, request: Request) ->
 
 
 @router.post("/api/{component_id}/props")
-async def update_props(component_id: str, body: PropsUpdateRequest, request: Request) -> dict[str, str]:
+async def update_props(
+    component_id: str, body: PropsUpdateRequest, request: Request
+) -> dict[str, str]:
     mp = request.app.state.main_process
     comp = mp.get_component(component_id)
     if comp is None:

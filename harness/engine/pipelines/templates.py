@@ -176,7 +176,9 @@ class AgentLoopPipeline:
         self.observe_module = observe_module
         self.should_continue = should_continue or Condition(
             "should_continue",
-            lambda ctx: ctx.get("should_continue", False) and ctx.get("iteration", 0) < max_iterations,
+            lambda ctx: (
+                ctx.get("should_continue", False) and ctx.get("iteration", 0) < max_iterations
+            ),
         )
         self.max_iterations = max_iterations
 
@@ -187,7 +189,10 @@ class AgentLoopPipeline:
         think_id = graph.add_node(
             NodeType.COMPONENT,
             name="think",
-            config={"module": self.think_module, "inputs": {"goal": "$goal", "context": "$context"}},
+            config={
+                "module": self.think_module,
+                "inputs": {"goal": "$goal", "context": "$context"},
+            },
         )
         act_id = graph.add_node(
             NodeType.COMPONENT,
@@ -277,6 +282,7 @@ class ReflectionPipeline:
 
 
 # ── Utility: build and run in one call ──────────────────────────────────────
+
 
 async def run_pipeline(
     graph: PipelineGraph,

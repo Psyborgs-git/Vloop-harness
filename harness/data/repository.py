@@ -91,9 +91,7 @@ class Repository:
         m = ChatMessage(session_id=session_id, role=role, content=content, meta=meta)
         self.session.add(m)
         await self.session.execute(
-            update(ChatSession)
-            .where(ChatSession.id == session_id)
-            .values(updated_at=_utcnow())
+            update(ChatSession).where(ChatSession.id == session_id).values(updated_at=_utcnow())
         )
         await self.session.commit()
         await self.session.refresh(m)
@@ -113,7 +111,12 @@ class Repository:
         existing = await self.session.get(DSPyComponentDef, component.id)
         if existing:
             for attr in (
-                "name", "description", "signature_fields", "code", "module_type", "is_active"
+                "name",
+                "description",
+                "signature_fields",
+                "code",
+                "module_type",
+                "is_active",
             ):
                 setattr(existing, attr, getattr(component, attr))
             existing.updated_at = _utcnow()
@@ -175,8 +178,13 @@ class Repository:
         existing = await self.session.get(ProviderConfigDB, provider.id)
         if existing:
             for attr in (
-                "name", "provider_type", "model", "base_url",
-                "encrypted_api_key", "extra_config", "is_default",
+                "name",
+                "provider_type",
+                "model",
+                "base_url",
+                "encrypted_api_key",
+                "extra_config",
+                "is_default",
             ):
                 setattr(existing, attr, getattr(provider, attr))
             existing.updated_at = _utcnow()
@@ -204,9 +212,7 @@ class Repository:
 
     async def set_default_provider(self, provider_id: str) -> None:
         """Clear any existing default, then mark the given provider as default."""
-        await self.session.execute(
-            update(ProviderConfigDB).values(is_default=False)
-        )
+        await self.session.execute(update(ProviderConfigDB).values(is_default=False))
         await self.session.execute(
             update(ProviderConfigDB)
             .where(ProviderConfigDB.id == provider_id)
@@ -271,9 +277,7 @@ class Repository:
 
     async def get_agent_run(self, run_id: str) -> AgentRun | None:
         result = await self.session.execute(
-            select(AgentRun)
-            .options(selectinload(AgentRun.steps))
-            .where(AgentRun.id == run_id)
+            select(AgentRun).options(selectinload(AgentRun.steps)).where(AgentRun.id == run_id)
         )
         return result.scalar_one_or_none()
 
@@ -289,9 +293,7 @@ class Repository:
         **kwargs: Any,
     ) -> None:
         kwargs["updated_at"] = _utcnow()
-        await self.session.execute(
-            update(AgentRun).where(AgentRun.id == run_id).values(**kwargs)
-        )
+        await self.session.execute(update(AgentRun).where(AgentRun.id == run_id).values(**kwargs))
         await self.session.commit()
 
     async def delete_agent_run(self, run_id: str) -> None:

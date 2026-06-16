@@ -10,14 +10,14 @@ from typing import Any
 
 
 class NodeType(StrEnum):
-    COMPONENT = "component"      # DSPy Module
-    TOOL = "tool"                # Tool registry call
-    CONDITION = "condition"      # Branching decision
-    LOOP = "loop"              # Iterate over collection
-    MAP = "map"                # Parallel map over collection
-    REDUCE = "reduce"          # Aggregate results
-    INPUT = "input"            # Pipeline entry point
-    OUTPUT = "output"          # Pipeline exit point
+    COMPONENT = "component"  # DSPy Module
+    TOOL = "tool"  # Tool registry call
+    CONDITION = "condition"  # Branching decision
+    LOOP = "loop"  # Iterate over collection
+    MAP = "map"  # Parallel map over collection
+    REDUCE = "reduce"  # Aggregate results
+    INPUT = "input"  # Pipeline entry point
+    OUTPUT = "output"  # Pipeline exit point
 
 
 class Condition:

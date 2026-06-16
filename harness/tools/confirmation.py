@@ -20,11 +20,11 @@ class PendingConfirmation:
 
     token: str
     description: str
-    risk_level: str          # "caution" | "destructive"
-    action_name: str         # e.g. "delete", "terminal"
+    risk_level: str  # "caution" | "destructive"
+    action_name: str  # e.g. "delete", "terminal"
     action_params: dict[str, Any]
-    created_at: float        # time.monotonic()
-    expires_at: float        # created_at + TTL_SECONDS
+    created_at: float  # time.monotonic()
+    expires_at: float  # created_at + TTL_SECONDS
 
 
 class ConfirmationStore:

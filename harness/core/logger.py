@@ -30,6 +30,7 @@ _console = Console(stderr=True)
 
 def _configure_stdlib() -> None:
     import os
+
     harness_debug = os.getenv("HARNESS_DEBUG", "true").lower() in ("true", "1")
     level = logging.DEBUG if harness_debug else logging.INFO
 
@@ -89,7 +90,12 @@ class ComponentLogStream:
         safe_message = redact_any(message)
         safe_kw = redact_any(kw)
 
-        entry = {"level": level.name, "message": safe_message, "component": self.component_id, **safe_kw}
+        entry = {
+            "level": level.name,
+            "message": safe_message,
+            "component": self.component_id,
+            **safe_kw,
+        }
         self._buffer.append(entry)
         fn = getattr(self._log, level.name.lower(), self._log.info)
         fn(safe_message, **safe_kw)

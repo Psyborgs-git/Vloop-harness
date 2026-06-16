@@ -196,8 +196,7 @@ class DatabaseTool(AbstractTool):
                         # Re-key by table_name so we don't depend on the dialect's
                         # default schema key (e.g. 'main', 'public', or None)
                         multi_cols_by_table = {
-                            t_name: cols
-                            for (_schema, t_name), cols in multi_cols.items()
+                            t_name: cols for (_schema, t_name), cols in multi_cols.items()
                         }
 
                         for table_name in table_names:
@@ -207,11 +206,13 @@ class DatabaseTool(AbstractTool):
 
                             columns = []
                             for col in cols:
-                                columns.append({
-                                    "name": col["name"],
-                                    "type": str(col["type"]),
-                                    "nullable": col.get("nullable", True),
-                                })
+                                columns.append(
+                                    {
+                                        "name": col["name"],
+                                        "type": str(col["type"]),
+                                        "nullable": col.get("nullable", True),
+                                    }
+                                )
                             tables[table_name] = {"columns": columns}
                         return tables
                     except (NotImplementedError, AttributeError):
@@ -221,17 +222,20 @@ class DatabaseTool(AbstractTool):
                 for table_name in table_names:
                     columns = []
                     for col in insp.get_columns(table_name):
-                        columns.append({
-                            "name": col["name"],
-                            "type": str(col["type"]),
-                            "nullable": col.get("nullable", True),
-                        })
+                        columns.append(
+                            {
+                                "name": col["name"],
+                                "type": str(col["type"]),
+                                "nullable": col.get("nullable", True),
+                            }
+                        )
                     tables[table_name] = {"columns": columns}
                 return tables
 
             tables = await session.run_sync(_inspect)
 
         import json
+
         return ToolResult(
             success=True,
             output=json.dumps(tables, indent=2),
@@ -257,7 +261,9 @@ class DatabaseTool(AbstractTool):
         validation_error = self._validate_sql_ast(sql, dialect, (exp.Select, exp.SetOperation))
         if validation_error:
             if "Operation only accepts SELECT" in validation_error.error:
-                validation_error.error = "query_read only accepts SELECT statements. Use query_write for mutations."
+                validation_error.error = (
+                    "query_read only accepts SELECT statements. Use query_write for mutations."
+                )
             return validation_error
 
         factory = get_session_factory()
@@ -273,9 +279,7 @@ class DatabaseTool(AbstractTool):
             metadata={"row_count": len(data), "columns": columns},
         )
 
-    async def _query_write(
-        self, params: dict[str, Any], component_id: str | None
-    ) -> ToolResult:
+    async def _query_write(self, params: dict[str, Any], component_id: str | None) -> ToolResult:
         """Execute a parameterized INSERT/UPDATE/DELETE — requires confirmation."""
 
         from sqlalchemy import text

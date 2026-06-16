@@ -103,7 +103,7 @@ def _confirmation_response(exc: Any) -> JSONResponse:
     }
 
     # Include diff preview if available in the exception
-    if hasattr(exc, 'action_params') and exc.action_params:
+    if hasattr(exc, "action_params") and exc.action_params:
         diff_preview = exc.action_params.get("_diff_preview")
         diff_summary = exc.action_params.get("_diff_summary")
         if diff_preview:
@@ -132,6 +132,7 @@ async def get_policy(request: Request) -> dict[str, Any]:
     import os
 
     import httpx
+
     ai_url = os.environ.get("RUST_BASE_AI_URL", "")
     if ai_url:
         rust_url = ai_url.rsplit("/v1", 1)[0]
@@ -147,6 +148,7 @@ async def update_policy(body: PolicyUpdateRequest, request: Request) -> dict[str
     import os
 
     import httpx
+
     ai_url = os.environ.get("RUST_BASE_AI_URL", "")
     if ai_url:
         rust_url = ai_url.rsplit("/v1", 1)[0]
@@ -227,7 +229,8 @@ async def _fs_call(
 @router.post("/filesystem/list")
 async def fs_list(body: FilesystemRequest, request: Request) -> Any:
     return await _fs_call(
-        request, "list",
+        request,
+        "list",
         {"path": body.path, "component_id": body.component_id, "session_id": body.session_id},
     )
 
@@ -235,7 +238,8 @@ async def fs_list(body: FilesystemRequest, request: Request) -> Any:
 @router.post("/filesystem/read")
 async def fs_read(body: FilesystemRequest, request: Request) -> Any:
     return await _fs_call(
-        request, "read",
+        request,
+        "read",
         {"path": body.path, "component_id": body.component_id, "session_id": body.session_id},
     )
 
@@ -243,7 +247,8 @@ async def fs_read(body: FilesystemRequest, request: Request) -> Any:
 @router.post("/filesystem/stat")
 async def fs_stat(body: FilesystemRequest, request: Request) -> Any:
     return await _fs_call(
-        request, "stat",
+        request,
+        "stat",
         {"path": body.path, "component_id": body.component_id, "session_id": body.session_id},
     )
 
@@ -251,7 +256,8 @@ async def fs_stat(body: FilesystemRequest, request: Request) -> Any:
 @router.post("/filesystem/write")
 async def fs_write(body: FilesystemRequest, request: Request) -> Any:
     return await _fs_call(
-        request, "write",
+        request,
+        "write",
         {
             "path": body.path,
             "content": body.content,
@@ -265,7 +271,8 @@ async def fs_write(body: FilesystemRequest, request: Request) -> Any:
 @router.post("/filesystem/create")
 async def fs_create(body: FilesystemRequest, request: Request) -> Any:
     return await _fs_call(
-        request, "create",
+        request,
+        "create",
         {
             "path": body.path,
             "is_dir": body.is_dir,
@@ -278,7 +285,8 @@ async def fs_create(body: FilesystemRequest, request: Request) -> Any:
 @router.post("/filesystem/delete")
 async def fs_delete(body: FilesystemRequest, request: Request) -> Any:
     return await _fs_call(
-        request, "delete",
+        request,
+        "delete",
         {
             "path": body.path,
             "recursive": body.recursive,
@@ -291,7 +299,8 @@ async def fs_delete(body: FilesystemRequest, request: Request) -> Any:
 @router.post("/filesystem/move")
 async def fs_move(body: FilesystemRequest, request: Request) -> Any:
     return await _fs_call(
-        request, "move",
+        request,
+        "move",
         {
             "src": body.src,
             "dest": body.dest,
@@ -372,6 +381,7 @@ async def confirm_action(token: str, request: Request) -> dict[str, Any]:
     import os
 
     import httpx
+
     ai_url = os.environ.get("RUST_BASE_AI_URL", "")
     if ai_url:
         rust_url = ai_url.rsplit("/v1", 1)[0]
@@ -395,7 +405,9 @@ async def confirm_action(token: str, request: Request) -> dict[str, Any]:
 
     try:
         result = await _mp(request).tools.execute(
-            tool_name="filesystem" if pending.action_name in ("delete", "move", "write") else "terminal",
+            tool_name="filesystem"
+            if pending.action_name in ("delete", "move", "write")
+            else "terminal",
             component_id=params.pop("component_id", None),
             session_id=params.pop("session_id", None),
             params={"operation": pending.action_name, **params}
@@ -416,6 +428,7 @@ async def cancel_confirmation(token: str, request: Request) -> None:
     import os
 
     import httpx
+
     ai_url = os.environ.get("RUST_BASE_AI_URL", "")
     if ai_url:
         rust_url = ai_url.rsplit("/v1", 1)[0]
@@ -450,9 +463,14 @@ async def execute_rollback(body: RollbackRequest, request: Request) -> dict[str,
     success = rollback.rollback_file(file_path, backup_index=body.backup_index)
 
     if success:
-        return {"success": True, "message": f"Rolled back {body.path} to backup {body.backup_index}"}
+        return {
+            "success": True,
+            "message": f"Rolled back {body.path} to backup {body.backup_index}",
+        }
     else:
-        raise HTTPException(status_code=400, detail="Rollback failed. Check that the file has backups.")
+        raise HTTPException(
+            status_code=400, detail="Rollback failed. Check that the file has backups."
+        )
 
 
 @router.post("/rollback/cleanup")

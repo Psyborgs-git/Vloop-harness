@@ -18,13 +18,12 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from harness.data.db import Base, get_session
 from harness.data.models import GeneratedView
 from harness.data.repository import Repository
 from harness.vloop.storage import VLoopStorage
-
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -95,7 +94,7 @@ async def views_app_with_ai(tmp_path: Path):
     pred.react_code = (
         'import { Box } from "@mui/material";\n'
         "export default function GreetCard() {\n"
-        '  return <Box>Hello</Box>;\n'
+        "  return <Box>Hello</Box>;\n"
         "}\n"
     )
     pred.component_name = "GreetCard"
@@ -222,9 +221,7 @@ async def test_generate_view_overrides_name_from_request(views_client_with_ai) -
     # component_name (GreetCard) when the caller provides empty string.
     ["lowercase", "with-hyphen", "with_underscore", "1StartsWithDigit"],
 )
-async def test_generate_view_invalid_name_rejected(
-    views_client_with_ai, name: str
-) -> None:
+async def test_generate_view_invalid_name_rejected(views_client_with_ai, name: str) -> None:
     client, *_ = views_client_with_ai
     resp = await client.post(
         "/api/views/generate",
@@ -275,9 +272,7 @@ async def test_delete_view_removes_from_list(views_client_no_ai) -> None:
     assert all(item["id"] != v.id for item in resp.json())
 
 
-async def test_delete_view_cleans_up_tsx_file(
-    views_client_with_ai, tmp_path: Path
-) -> None:
+async def test_delete_view_cleans_up_tsx_file(views_client_with_ai, tmp_path: Path) -> None:
     """Deleting a view whose file_path exists must remove the TSX stub."""
     client, app, factory = views_client_with_ai
     # First generate (creates the file)

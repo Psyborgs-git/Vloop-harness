@@ -60,11 +60,7 @@ class DSPyComponentRegistry:
         # Find the first dspy.Module subclass in the namespace (not dspy.Module itself)
         module_class: type[dspy.Module] | None = None
         for obj in namespace.values():
-            if (
-                isinstance(obj, type)
-                and issubclass(obj, dspy.Module)
-                and obj is not dspy.Module
-            ):
+            if isinstance(obj, type) and issubclass(obj, dspy.Module) and obj is not dspy.Module:
                 module_class = obj
                 break
 

@@ -7,10 +7,15 @@ from __future__ import annotations
 
 import os
 from typing import Any
+
 import httpx
 
-from harness.modules.chat.domain.entities import Channel, Message
-from harness.modules.chat.ports.inbound import SendMessageUseCase, CreateChannelUseCase, JoinChannelUseCase
+from harness.modules.chat.domain.entities import Message
+from harness.modules.chat.ports.inbound import (
+    CreateChannelUseCase,
+    JoinChannelUseCase,
+    SendMessageUseCase,
+)
 from harness.modules.chat.ports.outbound import ChatRepositoryPort
 
 
@@ -27,7 +32,7 @@ class TelegramAdapter:
         self.send_msg_use_case = send_msg_use_case
         self.create_chan_use_case = create_chan_use_case
         self.join_chan_use_case = join_chan_use_case
-        
+
         # Load from environment if not passed explicitly
         self.bot_token = bot_token or os.getenv("TELEGRAM_BOT_TOKEN")
         self.api_url = f"https://api.telegram.org/bot{self.bot_token}" if self.bot_token else None
@@ -50,7 +55,7 @@ class TelegramAdapter:
 
         telegram_chat_id = str(chat_data["id"])
         telegram_user_id = str(from_data["id"])
-        
+
         # Create user display name
         sender_name = from_data.get("first_name", "")
         last_name = from_data.get("last_name", "")
@@ -63,14 +68,14 @@ class TelegramAdapter:
         # We map Telegram chats to VLoop Channels.
         # Channel name will be 'telegram_<chat_id>'
         channel_name = f"telegram_{telegram_chat_id}"
-        
+
         # 1. Resolve or create Channel
         channel = await self.repo.get_channel_by_name(channel_name)
         if not channel:
             # Let's create a public or private channel based on Telegram chat type
             is_private = chat_data.get("type") == "private"
             chat_title = chat_data.get("title", f"Telegram Chat {telegram_chat_id}")
-            
+
             # Use 'system' or creator ID to create
             channel = await self.create_chan_use_case.execute(
                 name=channel_name,

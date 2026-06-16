@@ -5,11 +5,9 @@ Uses an in-memory SQLite database and a mock MainProcess.
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import AsyncIterator
-from unittest.mock import AsyncMock, MagicMock
+from collections.abc import AsyncIterator
+from unittest.mock import MagicMock
 
-import pytest
 import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
@@ -46,9 +44,7 @@ async def app_client() -> AsyncIterator[AsyncClient]:
     app.dependency_overrides[get_session] = _override
     app.state.main_process = _mock_mp()
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
 
     await engine.dispose()
@@ -70,18 +66,14 @@ class TestAgentRunRoutes:
         assert "id" in data
 
     async def test_list_runs(self, app_client: AsyncClient) -> None:
-        await app_client.post(
-            "/api/agents/runs", json={"goal": "First run"}
-        )
+        await app_client.post("/api/agents/runs", json={"goal": "First run"})
         resp = await app_client.get("/api/agents/runs")
         assert resp.status_code == 200
         assert isinstance(resp.json(), list)
         assert len(resp.json()) >= 1
 
     async def test_get_run(self, app_client: AsyncClient) -> None:
-        create_resp = await app_client.post(
-            "/api/agents/runs", json={"goal": "Get me"}
-        )
+        create_resp = await app_client.post("/api/agents/runs", json={"goal": "Get me"})
         run_id = create_resp.json()["id"]
         resp = await app_client.get(f"/api/agents/runs/{run_id}")
         assert resp.status_code == 200
@@ -93,18 +85,14 @@ class TestAgentRunRoutes:
         assert resp.status_code == 404
 
     async def test_cancel_run(self, app_client: AsyncClient) -> None:
-        create_resp = await app_client.post(
-            "/api/agents/runs", json={"goal": "Cancel me"}
-        )
+        create_resp = await app_client.post("/api/agents/runs", json={"goal": "Cancel me"})
         run_id = create_resp.json()["id"]
         resp = await app_client.post(f"/api/agents/runs/{run_id}/cancel")
         assert resp.status_code == 200
         assert resp.json()["status"] == "cancelled"
 
     async def test_delete_run(self, app_client: AsyncClient) -> None:
-        create_resp = await app_client.post(
-            "/api/agents/runs", json={"goal": "Delete me"}
-        )
+        create_resp = await app_client.post("/api/agents/runs", json={"goal": "Delete me"})
         run_id = create_resp.json()["id"]
         del_resp = await app_client.delete(f"/api/agents/runs/{run_id}")
         assert del_resp.status_code == 204
@@ -189,9 +177,7 @@ class TestAppManifestRoutes:
     async def test_filter_manifests_by_status(self, app_client: AsyncClient) -> None:
         create = await app_client.post("/api/apps/manifests", json={"name": "Active one"})
         m_id = create.json()["id"]
-        await app_client.post(
-            f"/api/apps/manifests/{m_id}/promote", json={"status": "active"}
-        )
+        await app_client.post(f"/api/apps/manifests/{m_id}/promote", json={"status": "active"})
         resp = await app_client.get("/api/apps/manifests?status=active")
         assert resp.status_code == 200
         assert all(m["status"] == "active" for m in resp.json())

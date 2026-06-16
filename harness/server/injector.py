@@ -35,11 +35,7 @@ def inject_harness_vars(
         "INITIAL_STATE": config.initial_state,
         "PERMISSIONS": config.permissions,
     }
-    script = (
-        "<script>\n"
-        f"  window.__HARNESS__ = {json.dumps(payload, indent=2)};\n"
-        "</script>\n"
-    )
+    script = f"<script>\n  window.__HARNESS__ = {json.dumps(payload, indent=2)};\n</script>\n"
 
     match = _HEAD_RE.search(html)
     if match:
