@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package vloop.system;
+
+// The System interface is implemented by the Python Control Plane
+// and called by the Rust Microkernel to manage lifecycles and tasks.
+service SystemControl {
+  // Check if the control plane is alive
+  rpc HealthCheck (Ping) returns (Pong);
+  
+  // Update the control plane with a new active configuration
+  rpc ReloadConfig (ReloadRequest) returns (ReloadResponse);
+
+  // Dispatch an agent task to the control plane
+  rpc DispatchTask (TaskRequest) returns (TaskResponse);
+}
+
+message Ping {}
+
+message Pong {
+  string status = 1;
+}
+
+message ReloadRequest {
+  string config_path = 1;
+}
+
+message ReloadResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message TaskRequest {
+  string task_id = 1;
+  string objective = 2;
+  int32 max_iterations = 3;
+}
+
+message TaskResponse {
+  bool success = 1;
+  string message = 2;
+  string artifact_path = 3;
+}
+

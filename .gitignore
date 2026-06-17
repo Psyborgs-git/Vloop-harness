@@ -1,0 +1,38 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Rust & Tauri
+src-tauri/target/
+src-tauri/gen/
+**/*.rs.bk
+
+# Python
+control-plane/.venv/
+control-plane/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.pytest_cache/
+control-plane/.pytest_cache/
+
+# Node.js & React/Vite
+src/node_modules/
+src/dist/
+src/dist-ssr/
+src/.eslintcache
+npm-debug.log*
+
+# VLoop specific runtime data
+.vloop-vault.dat
