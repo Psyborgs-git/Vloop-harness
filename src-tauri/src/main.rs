@@ -5,6 +5,7 @@ mod fs;
 mod sys;
 mod supervisor;
 mod rpc;
+mod context_daemon;
 
 #[tauri::command]
 async fn dispatch_task(task_id: String, objective: String) -> Result<String, String> {
@@ -38,7 +39,10 @@ async fn main() {
     // 3. Start Python Watchdog in background
     supervisor::start_watchdog();
 
-    // 4. Boot Tauri Mission Control UI
+    // 4. Start Context Daemon (Background RAG)
+    context_daemon::start_context_daemon();
+
+    // 5. Boot Tauri Mission Control UI
     tauri::Builder::default()
         .plugin(tauri_plugin_store::Builder::new().build())
         .invoke_handler(tauri::generate_handler![dispatch_task])

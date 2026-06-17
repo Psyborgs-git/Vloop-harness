@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0csystem.proto\x12\x0cvloop.system\"\x06\n\x04Ping\"\x16\n\x04Pong\x12\x0e\n\x06status\x18\x01 \x01(\t\"$\n\rReloadRequest\x12\x13\n\x0b\x63onfig_path\x18\x01 \x01(\t\"2\n\x0eReloadResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"I\n\x0bTaskRequest\x12\x0f\n\x07task_id\x18\x01 \x01(\t\x12\x11\n\tobjective\x18\x02 \x01(\t\x12\x16\n\x0emax_iterations\x18\x03 \x01(\x05\"[\n\x0cTaskResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x15\n\rartifact_path\x18\x03 \x01(\t\x12\x12\n\nserved_url\x18\x04 \x01(\t\"5\n\x10HeartbeatRequest\x12\x11\n\ttimestamp\x18\x01 \x01(\x03\x12\x0e\n\x06status\x18\x02 \x01(\t\")\n\x11HeartbeatResponse\x12\x14\n\x0c\x61\x63knowledged\x18\x01 \x01(\x08\x32\xa6\x02\n\rSystemControl\x12\x35\n\x0bHealthCheck\x12\x12.vloop.system.Ping\x1a\x12.vloop.system.Pong\x12I\n\x0cReloadConfig\x12\x1b.vloop.system.ReloadRequest\x1a\x1c.vloop.system.ReloadResponse\x12\x45\n\x0c\x44ispatchTask\x12\x19.vloop.system.TaskRequest\x1a\x1a.vloop.system.TaskResponse\x12L\n\tHeartbeat\x12\x1e.vloop.system.HeartbeatRequest\x1a\x1f.vloop.system.HeartbeatResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0csystem.proto\x12\x0cvloop.system\"\x06\n\x04Ping\"\x16\n\x04Pong\x12\x0e\n\x06status\x18\x01 \x01(\t\"$\n\rReloadRequest\x12\x13\n\x0b\x63onfig_path\x18\x01 \x01(\t\"2\n\x0eReloadResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"I\n\x0bTaskRequest\x12\x0f\n\x07task_id\x18\x01 \x01(\t\x12\x11\n\tobjective\x18\x02 \x01(\t\x12\x16\n\x0emax_iterations\x18\x03 \x01(\x05\"r\n\x0cSwarmRequest\x12\x16\n\x0eremote_node_id\x18\x01 \x01(\t\x12\'\n\x04task\x18\x02 \x01(\x0b\x32\x19.vloop.system.TaskRequest\x12!\n\x19initial_workspace_tarball\x18\x03 \x01(\x0c\"[\n\x0cTaskResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x15\n\rartifact_path\x18\x03 \x01(\t\x12\x12\n\nserved_url\x18\x04 \x01(\t\"5\n\x10HeartbeatRequest\x12\x11\n\ttimestamp\x18\x01 \x01(\x03\x12\x0e\n\x06status\x18\x02 \x01(\t\")\n\x11HeartbeatResponse\x12\x14\n\x0c\x61\x63knowledged\x18\x01 \x01(\x08\"A\n\rRewindRequest\x12\x14\n\x0cworkspace_id\x18\x01 \x01(\t\x12\x1a\n\x12target_commit_hash\x18\x02 \x01(\t\"2\n\x0eRewindResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"3\n\rIngestRequest\x12\x11\n\tfile_path\x18\x01 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x02 \x01(\t\":\n\x0eIngestResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x17\n\x0f\x63hunks_embedded\x18\x02 \x01(\x05\x32\x86\x04\n\rSystemControl\x12\x35\n\x0bHealthCheck\x12\x12.vloop.system.Ping\x1a\x12.vloop.system.Pong\x12I\n\x0cReloadConfig\x12\x1b.vloop.system.ReloadRequest\x1a\x1c.vloop.system.ReloadResponse\x12\x45\n\x0c\x44ispatchTask\x12\x19.vloop.system.TaskRequest\x1a\x1a.vloop.system.TaskResponse\x12L\n\tHeartbeat\x12\x1e.vloop.system.HeartbeatRequest\x1a\x1f.vloop.system.HeartbeatResponse\x12L\n\x0fRewindWorkspace\x12\x1b.vloop.system.RewindRequest\x1a\x1c.vloop.system.RewindResponse\x12K\n\x0eIngestDocument\x12\x1b.vloop.system.IngestRequest\x1a\x1c.vloop.system.IngestResponse\x12\x43\n\tSwarmTask\x12\x1a.vloop.system.SwarmRequest\x1a\x1a.vloop.system.TaskResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -41,12 +41,22 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_RELOADRESPONSE']._serialized_end=150
   _globals['_TASKREQUEST']._serialized_start=152
   _globals['_TASKREQUEST']._serialized_end=225
-  _globals['_TASKRESPONSE']._serialized_start=227
-  _globals['_TASKRESPONSE']._serialized_end=318
-  _globals['_HEARTBEATREQUEST']._serialized_start=320
-  _globals['_HEARTBEATREQUEST']._serialized_end=373
-  _globals['_HEARTBEATRESPONSE']._serialized_start=375
-  _globals['_HEARTBEATRESPONSE']._serialized_end=416
-  _globals['_SYSTEMCONTROL']._serialized_start=419
-  _globals['_SYSTEMCONTROL']._serialized_end=713
+  _globals['_SWARMREQUEST']._serialized_start=227
+  _globals['_SWARMREQUEST']._serialized_end=341
+  _globals['_TASKRESPONSE']._serialized_start=343
+  _globals['_TASKRESPONSE']._serialized_end=434
+  _globals['_HEARTBEATREQUEST']._serialized_start=436
+  _globals['_HEARTBEATREQUEST']._serialized_end=489
+  _globals['_HEARTBEATRESPONSE']._serialized_start=491
+  _globals['_HEARTBEATRESPONSE']._serialized_end=532
+  _globals['_REWINDREQUEST']._serialized_start=534
+  _globals['_REWINDREQUEST']._serialized_end=599
+  _globals['_REWINDRESPONSE']._serialized_start=601
+  _globals['_REWINDRESPONSE']._serialized_end=651
+  _globals['_INGESTREQUEST']._serialized_start=653
+  _globals['_INGESTREQUEST']._serialized_end=704
+  _globals['_INGESTRESPONSE']._serialized_start=706
+  _globals['_INGESTRESPONSE']._serialized_end=764
+  _globals['_SYSTEMCONTROL']._serialized_start=767
+  _globals['_SYSTEMCONTROL']._serialized_end=1285
 # @@protoc_insertion_point(module_scope)

@@ -92,6 +92,43 @@ class WorkflowManager:
                 cursor.execute('UPDATE dag_nodes SET status = ? WHERE node_id = ?', (status, node_id))
             conn.commit()
 
+    def rewind_workflow(self, workflow_id: str, target_node_id: str):
+        """
+        Time-Travel: Resets the target node to PENDING and deletes all nodes that depend on it.
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            # Fetch all nodes to build the dependency tree
+            cursor.execute('SELECT node_id, dependencies FROM dag_nodes WHERE workflow_id = ?', (workflow_id,))
+            nodes = cursor.fetchall()
+            
+            nodes_to_delete = set()
+            
+            # Simple recursive search to find downstream dependents
+            def find_downstream(current_id):
+                for n in nodes:
+                    deps = json.loads(n['dependencies'])
+                    if current_id in deps and n['node_id'] not in nodes_to_delete:
+                        nodes_to_delete.add(n['node_id'])
+                        find_downstream(n['node_id'])
+            
+            find_downstream(target_node_id)
+            
+            # Delete downstream nodes
+            for node_id in nodes_to_delete:
+                cursor.execute('DELETE FROM dag_nodes WHERE node_id = ?', (node_id,))
+                
+            # Reset target node
+            cursor.execute('UPDATE dag_nodes SET status = ? WHERE node_id = ?', ('PENDING', target_node_id))
+            
+            # Reset workflow status if it was completed/failed
+            cursor.execute('UPDATE workflows SET status = ? WHERE workflow_id = ?', ('RUNNING', workflow_id))
+            
+            conn.commit()
+            print(f"Time-Travel: Rewound workflow {workflow_id[:8]} to node {target_node_id[:8]}. Purged {len(nodes_to_delete)} downstream nodes.")
+
     def mark_workflow_completed(self, workflow_id: str, status: str = 'COMPLETED'):
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()

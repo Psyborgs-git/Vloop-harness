@@ -73,6 +73,63 @@ class SystemControlServicer(system_pb2_grpc.SystemControlServicer):
         # Respond to heartbeat from Rust supervisor
         return system_pb2.HeartbeatResponse(acknowledged=True)
 
+    def RewindWorkspace(self, request, context):
+        workspace_dir = os.path.join(self.config_manager.data_dir, "workspaces", request.workspace_id)
+        print(f"Time-Travel Rewind Requested for workspace {request.workspace_id} to commit {request.target_commit_hash}")
+        
+        # 1. Execute Git Reset
+        try:
+            import subprocess
+            subprocess.run(["git", "reset", "--hard", request.target_commit_hash], cwd=workspace_dir, check=True, capture_output=True)
+            print("Git reset successful.")
+        except Exception as e:
+            print(f"Failed to execute git reset: {e}")
+            return system_pb2.RewindResponse(success=False, message=str(e))
+            
+        # 2. Delete downstream DAG nodes (simulated here as we need the workflow_id, but assuming 1:1 mapping for MVP)
+        # Note: In a full implementation, you'd map workspace_id to workflow_id and target_commit to target_node_id
+        db_path = os.path.join(self.config_manager.data_dir, "db", "workflows.sqlite")
+        try:
+            from core.dag import WorkflowManager
+            wm = WorkflowManager(db_path)
+            # Find workflow and node matching the commit (mocked for scaffolding)
+            # wm.rewind_workflow(workflow_id, target_node_id)
+            pass
+        except Exception as e:
+            pass
+
+        return system_pb2.RewindResponse(success=True, message="Workspace rewound successfully.")
+
+    def IngestDocument(self, request, context):
+        print(f"Background RAG: Ingesting document {request.file_path} ({len(request.content)} bytes)")
+        try:
+            # A real implementation would chunk the document and embed it via LiteLLM/OpenAI
+            # For the MVP, we add the raw text to our dummy vector store
+            self.vector_store.add_document(
+                content=request.content,
+                metadata={"file_path": request.file_path, "source": "background_rag"}
+            )
+            return system_pb2.IngestResponse(success=True, chunks_embedded=1)
+        except Exception as e:
+            print(f"RAG Ingestion failed: {e}")
+            return system_pb2.IngestResponse(success=False, chunks_embedded=0)
+
+    def SwarmTask(self, request, context):
+        print(f"P2P Swarm: Received task from remote node {request.remote_node_id}")
+        
+        # If there's a tarball, unpack it to the workspace
+        workspace_dir = os.path.join(self.config_manager.data_dir, "workspaces", request.task.task_id)
+        if request.initial_workspace_tarball:
+            os.makedirs(workspace_dir, exist_ok=True)
+            import tarfile
+            import io
+            with tarfile.open(fileobj=io.BytesIO(request.initial_workspace_tarball)) as tar:
+                tar.extractall(path=workspace_dir)
+            print(f"Extracted remote workspace payload to {workspace_dir}")
+            
+        # Dispatch the task normally via the existing logic
+        return self.DispatchTask(request.task, context)
+
     def ReloadConfig(self, request, context):
         print(f"Reloading config from {request.config_path}")
         self.config_manager.config_path = request.config_path

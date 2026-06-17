@@ -56,6 +56,21 @@ class SystemControlStub:
                 request_serializer=system__pb2.HeartbeatRequest.SerializeToString,
                 response_deserializer=system__pb2.HeartbeatResponse.FromString,
                 _registered_method=True)
+        self.RewindWorkspace = channel.unary_unary(
+                '/vloop.system.SystemControl/RewindWorkspace',
+                request_serializer=system__pb2.RewindRequest.SerializeToString,
+                response_deserializer=system__pb2.RewindResponse.FromString,
+                _registered_method=True)
+        self.IngestDocument = channel.unary_unary(
+                '/vloop.system.SystemControl/IngestDocument',
+                request_serializer=system__pb2.IngestRequest.SerializeToString,
+                response_deserializer=system__pb2.IngestResponse.FromString,
+                _registered_method=True)
+        self.SwarmTask = channel.unary_unary(
+                '/vloop.system.SystemControl/SwarmTask',
+                request_serializer=system__pb2.SwarmRequest.SerializeToString,
+                response_deserializer=system__pb2.TaskResponse.FromString,
+                _registered_method=True)
 
 
 class SystemControlServicer:
@@ -91,6 +106,27 @@ class SystemControlServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def RewindWorkspace(self, request, context):
+        """Time-Travel: Commands Rust to reset a workspace git repository to a specific commit
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def IngestDocument(self, request, context):
+        """Background RAG: Streams new document text from Rust daemon to Python Vector Store
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SwarmTask(self, request, context):
+        """Swarm Execution: Accept a remote task payload from another VLoop instance in the mesh
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_SystemControlServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -113,6 +149,21 @@ def add_SystemControlServicer_to_server(servicer, server):
                     servicer.Heartbeat,
                     request_deserializer=system__pb2.HeartbeatRequest.FromString,
                     response_serializer=system__pb2.HeartbeatResponse.SerializeToString,
+            ),
+            'RewindWorkspace': grpc.unary_unary_rpc_method_handler(
+                    servicer.RewindWorkspace,
+                    request_deserializer=system__pb2.RewindRequest.FromString,
+                    response_serializer=system__pb2.RewindResponse.SerializeToString,
+            ),
+            'IngestDocument': grpc.unary_unary_rpc_method_handler(
+                    servicer.IngestDocument,
+                    request_deserializer=system__pb2.IngestRequest.FromString,
+                    response_serializer=system__pb2.IngestResponse.SerializeToString,
+            ),
+            'SwarmTask': grpc.unary_unary_rpc_method_handler(
+                    servicer.SwarmTask,
+                    request_deserializer=system__pb2.SwarmRequest.FromString,
+                    response_serializer=system__pb2.TaskResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -225,6 +276,87 @@ class SystemControl:
             '/vloop.system.SystemControl/Heartbeat',
             system__pb2.HeartbeatRequest.SerializeToString,
             system__pb2.HeartbeatResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def RewindWorkspace(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/vloop.system.SystemControl/RewindWorkspace',
+            system__pb2.RewindRequest.SerializeToString,
+            system__pb2.RewindResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def IngestDocument(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/vloop.system.SystemControl/IngestDocument',
+            system__pb2.IngestRequest.SerializeToString,
+            system__pb2.IngestResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SwarmTask(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/vloop.system.SystemControl/SwarmTask',
+            system__pb2.SwarmRequest.SerializeToString,
+            system__pb2.TaskResponse.FromString,
             options,
             channel_credentials,
             insecure,

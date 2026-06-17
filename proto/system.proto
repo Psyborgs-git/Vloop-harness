@@ -16,6 +16,15 @@ service SystemControl {
 
   // Periodic heartbeat from Python to Rust (or vice versa)
   rpc Heartbeat (HeartbeatRequest) returns (HeartbeatResponse);
+
+  // Time-Travel: Commands Rust to reset a workspace git repository to a specific commit
+  rpc RewindWorkspace (RewindRequest) returns (RewindResponse);
+
+  // Background RAG: Streams new document text from Rust daemon to Python Vector Store
+  rpc IngestDocument (IngestRequest) returns (IngestResponse);
+
+  // Swarm Execution: Accept a remote task payload from another VLoop instance in the mesh
+  rpc SwarmTask (SwarmRequest) returns (TaskResponse);
 }
 
 message Ping {}
@@ -39,6 +48,12 @@ message TaskRequest {
   int32 max_iterations = 3;
 }
 
+message SwarmRequest {
+  string remote_node_id = 1;
+  TaskRequest task = 2;
+  bytes initial_workspace_tarball = 3;
+}
+
 message TaskResponse {
   bool success = 1;
   string message = 2;
@@ -53,5 +68,25 @@ message HeartbeatRequest {
 
 message HeartbeatResponse {
   bool acknowledged = 1;
+}
+
+message RewindRequest {
+  string workspace_id = 1;
+  string target_commit_hash = 2;
+}
+
+message RewindResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message IngestRequest {
+  string file_path = 1;
+  string content = 2;
+}
+
+message IngestResponse {
+  bool success = 1;
+  int32 chunks_embedded = 2;
 }
 
