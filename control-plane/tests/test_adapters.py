@@ -1,5 +1,4 @@
 import pytest
-from unittest.mock import MagicMock
 from core.ports import IExecutionManager
 from adapters.docker_exec import LocalDockerAdapter
 from adapters.k8s_exec import RemoteK8sAdapter

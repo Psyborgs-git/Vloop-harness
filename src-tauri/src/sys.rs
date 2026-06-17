@@ -1,5 +1,6 @@
 use sysinfo::System;
 
+#[allow(dead_code)]
 pub struct MemoryLimits {
     pub total_memory: u64,
     pub available_for_sandbox: u64,
@@ -13,7 +14,7 @@ pub fn probe_memory() -> MemoryLimits {
     
     // Safety thresholds (in bytes)
     let os_baseline = 2_u64 * 1024 * 1024 * 1024; // 2GB OS & background apps baseline
-    let safety_buffer = 1_u64 * 1024 * 1024 * 1024; // 1GB safety buffer for microkernel/Tauri
+    let safety_buffer = 1024_u64 * 1024 * 1024; // 1GB safety buffer for microkernel/Tauri
 
     let overhead = os_baseline + safety_buffer;
 

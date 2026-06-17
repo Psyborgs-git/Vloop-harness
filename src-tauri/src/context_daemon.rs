@@ -19,6 +19,7 @@ pub fn start_context_daemon() {
         let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
         
         // notify requires a sync closure/callback, so we use unbounded_send
+        #[allow(clippy::collapsible_if)]
         let mut watcher = match RecommendedWatcher::new(move |res: notify::Result<notify::Event>| {
             if let Ok(event) = res {
                 if event.kind.is_modify() || event.kind.is_create() {

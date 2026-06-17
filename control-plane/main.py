@@ -1,12 +1,10 @@
 import sys
 import os
-import time
 from concurrent import futures
 import threading
 
 import grpc
 import dspy
-import litellm
 
 # Ensure core and adapters are discoverable
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -91,11 +89,11 @@ class SystemControlServicer(system_pb2_grpc.SystemControlServicer):
         db_path = os.path.join(self.config_manager.data_dir, "db", "workflows.sqlite")
         try:
             from core.dag import WorkflowManager
-            wm = WorkflowManager(db_path)
+            _wm = WorkflowManager(db_path)
             # Find workflow and node matching the commit (mocked for scaffolding)
-            # wm.rewind_workflow(workflow_id, target_node_id)
+            # _wm.rewind_workflow(workflow_id, target_node_id)
             pass
-        except Exception as e:
+        except Exception:
             pass
 
         return system_pb2.RewindResponse(success=True, message="Workspace rewound successfully.")

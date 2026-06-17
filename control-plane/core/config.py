@@ -1,5 +1,4 @@
 import os
-import sys
 
 # Support for Python < 3.11 TOML parsing
 try:

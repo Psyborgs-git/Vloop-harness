@@ -4,7 +4,6 @@ from core.ports import IExecutionManager
 from core.dspy_modules import CodeGenerator, PolicyGenerator
 from core.gateway import TokenLimitExceeded
 from core.dag import WorkflowManager
-import os
 
 class AgentLoop:
     def __init__(self, exec_manager: IExecutionManager, db_path: str):
@@ -76,9 +75,12 @@ class AgentLoop:
                     code_result = self.code_gen(objective=payload["objective"], feedback=feedback)
                     
                     python_code = code_result.python_code.strip()
-                    if python_code.startswith("```python"): python_code = python_code[9:]
-                    if python_code.startswith("```"): python_code = python_code[3:]
-                    if python_code.endswith("```"): python_code = python_code[:-3]
+                    if python_code.startswith("```python"):
+                        python_code = python_code[9:]
+                    if python_code.startswith("```"):
+                        python_code = python_code[3:]
+                    if python_code.endswith("```"):
+                        python_code = python_code[:-3]
                     python_code = python_code.strip()
 
                     print("Evaluating security policy...")

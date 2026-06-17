@@ -22,6 +22,7 @@ pub fn start_python_supervisor() -> Child {
     child
 }
 
+#[allow(clippy::zombie_processes)]
 pub fn start_watchdog() {
     let mut child = start_python_supervisor();
 
