@@ -24,6 +24,7 @@ control-plane/__pycache__/
 **/*.pyc
 **/*.pyo
 **/*.pyd
+**/*.log
 .pytest_cache/
 control-plane/.pytest_cache/
 
