@@ -1,9 +1,12 @@
+[tool.setuptools]
+packages = ["core", "adapters"]
+
 [project]
 name = "control-plane"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.11"
 dependencies = [
     "docker>=7.1.0",
     "dspy-ai>=3.2.1",
