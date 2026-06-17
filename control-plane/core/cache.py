@@ -19,30 +19,35 @@ class SemanticCacheInterceptor:
         prompt_text = "\n".join([m.get("content", "") for m in messages])
         
         # 1. Exact hash check (fastest)
-        # Assuming the vector store can do metadata filtering on 'hash'
         try:
             exact_matches = self.vector_store.search(
-                query_text="", 
-                filter_metadata={"hash": prompt_hash},
-                limit=1
+                collection_name="semantic_cache",
+                query=prompt_text,
+                top_k=5
             )
-            if exact_matches and len(exact_matches) > 0:
-                print(f"Exact cache hit for prompt {prompt_hash[:8]}...")
-                return exact_matches[0]["content"]
-        except Exception:
+            for match in exact_matches:
+                metadata = match.get("metadata", {})
+                if metadata.get("hash") == prompt_hash:
+                    print(f"Exact cache hit for prompt {prompt_hash[:8]}...")
+                    return match["text"]
+        except Exception as e:
+            print(f"Exact cache check failed: {e}")
             pass
 
         # 2. Semantic Similarity Check
         try:
             semantic_matches = self.vector_store.search(
-                query_text=prompt_text,
-                limit=1
+                collection_name="semantic_cache",
+                query=prompt_text,
+                top_k=1
             )
             if semantic_matches and len(semantic_matches) > 0:
                 match = semantic_matches[0]
-                if match.get("score", 0) >= self.threshold:
-                    print(f"Semantic cache hit (score: {match.get('score', 0):.2f}) for prompt {prompt_hash[:8]}...")
-                    return match["content"]
+                metadata = match.get("metadata", {})
+                score = metadata.get("score", 1.0)  # Default to 1.0 if not present in dummy
+                if score >= self.threshold:
+                    print(f"Semantic cache hit (score: {score:.2f}) for prompt {prompt_hash[:8]}...")
+                    return match["text"]
         except Exception as e:
             print(f"Semantic cache search failed: {e}")
             pass
@@ -57,9 +62,12 @@ class SemanticCacheInterceptor:
         prompt_text = "\n".join([m.get("content", "") for m in messages])
         
         try:
+            import uuid
             self.vector_store.add_document(
-                content=response_text,
-                metadata={"hash": prompt_hash, "original_prompt": prompt_text}
+                collection_name="semantic_cache",
+                document_id=str(uuid.uuid4()),
+                text=response_text,
+                metadata={"hash": prompt_hash, "original_prompt": prompt_text, "score": 1.0}
             )
         except Exception as e:
             print(f"Failed to update semantic cache: {e}")

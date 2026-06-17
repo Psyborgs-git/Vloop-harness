@@ -25,6 +25,9 @@ service SystemControl {
 
   // Swarm Execution: Accept a remote task payload from another VLoop instance in the mesh
   rpc SwarmTask (SwarmRequest) returns (TaskResponse);
+
+  // UI Bridge: Read the active DAG state for the React Frontend
+  rpc GetWorkflowState (WorkflowStateRequest) returns (WorkflowStateResponse);
 }
 
 message Ping {}
@@ -88,5 +91,24 @@ message IngestRequest {
 message IngestResponse {
   bool success = 1;
   int32 chunks_embedded = 2;
+}
+
+message WorkflowStateRequest {
+  string workflow_id = 1; // Optional
+}
+
+message DAGNode {
+  string node_id = 1;
+  string name = 2;
+  string status = 3;
+  string dependencies = 4;
+  string payload = 5;
+}
+
+message WorkflowStateResponse {
+  string workflow_id = 1;
+  string objective = 2;
+  string status = 3;
+  repeated DAGNode nodes = 4;
 }
 

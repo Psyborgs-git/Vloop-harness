@@ -89,12 +89,13 @@ class SystemControlServicer(system_pb2_grpc.SystemControlServicer):
         db_path = os.path.join(self.config_manager.data_dir, "db", "workflows.sqlite")
         try:
             from core.dag import WorkflowManager
-            _wm = WorkflowManager(db_path)
-            # Find workflow and node matching the commit (mocked for scaffolding)
-            # _wm.rewind_workflow(workflow_id, target_node_id)
-            pass
-        except Exception:
-            pass
+            wm = WorkflowManager(db_path)
+            # In our MVP, we passed workflow_id as workspace_id and node_id as target_commit_hash
+            workflow_id = request.workspace_id
+            target_node_id = request.target_commit_hash
+            wm.rewind_workflow(workflow_id, target_node_id)
+        except Exception as e:
+            print(f"Failed to rewind DAG state: {e}")
 
         return system_pb2.RewindResponse(success=True, message="Workspace rewound successfully.")
 
@@ -103,8 +104,11 @@ class SystemControlServicer(system_pb2_grpc.SystemControlServicer):
         try:
             # A real implementation would chunk the document and embed it via LiteLLM/OpenAI
             # For the MVP, we add the raw text to our dummy vector store
+            import uuid
             self.vector_store.add_document(
-                content=request.content,
+                collection_name="background_rag",
+                document_id=str(uuid.uuid4()),
+                text=request.content,
                 metadata={"file_path": request.file_path, "source": "background_rag"}
             )
             return system_pb2.IngestResponse(success=True, chunks_embedded=1)
@@ -134,6 +138,49 @@ class SystemControlServicer(system_pb2_grpc.SystemControlServicer):
         self.config_manager.load_config()
         self.reinitialize_adapters()
         return system_pb2.ReloadResponse(success=True, message="Config reloaded and adapters reinitialized")
+
+    def GetWorkflowState(self, request, context):
+        db_path = os.path.join(self.config_manager.data_dir, "db", "workflows.sqlite")
+        import sqlite3
+        try:
+            with sqlite3.connect(db_path) as conn:
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+                if request.workflow_id:
+                    cursor.execute("SELECT * FROM workflows WHERE workflow_id=?", (request.workflow_id,))
+                else:
+                    cursor.execute("SELECT * FROM workflows ORDER BY rowid DESC LIMIT 1")
+                
+                wf = cursor.fetchone()
+                if not wf:
+                    return system_pb2.WorkflowStateResponse()
+                
+                workflow_id = wf['workflow_id']
+                objective = wf['objective']
+                status = wf['status']
+                
+                cursor.execute("SELECT * FROM dag_nodes WHERE workflow_id=?", (workflow_id,))
+                nodes = cursor.fetchall()
+                
+                pb_nodes = []
+                for n in nodes:
+                    pb_nodes.append(system_pb2.DAGNode(
+                        node_id=n['node_id'],
+                        name=n['name'],
+                        status=n['status'],
+                        dependencies=n['dependencies'],
+                        payload=n['payload']
+                    ))
+                
+                return system_pb2.WorkflowStateResponse(
+                    workflow_id=workflow_id,
+                    objective=objective,
+                    status=status,
+                    nodes=pb_nodes
+                )
+        except Exception as e:
+            print(f"Error reading workflow state: {e}")
+            return system_pb2.WorkflowStateResponse()
 
     def DispatchTask(self, request, context):
         print(f"Received Task Dispatch: {request.objective}")

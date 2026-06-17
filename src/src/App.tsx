@@ -1,4 +1,5 @@
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 import Header from './components/Header';
 
 // Code splitting: Lazy load heavy components
@@ -7,6 +8,24 @@ const ExecutionFeed = React.lazy(() => import('./components/ExecutionFeed'));
 
 function App() {
   const [devMode, setDevMode] = useState(false);
+  const [workflowState, setWorkflowState] = useState<any>(null);
+
+  useEffect(() => {
+    const pollState = async () => {
+      try {
+        const stateStr = await invoke<string>('get_workflow_state', { workflowId: null });
+        if (stateStr) {
+          setWorkflowState(JSON.parse(stateStr));
+        }
+      } catch (e) {
+        console.error("Failed to poll workflow state:", e);
+      }
+    };
+
+    pollState(); // initial fetch
+    const interval = setInterval(pollState, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div style={{ 
@@ -30,14 +49,14 @@ function App() {
         {/* Left Pane: Interactive DAG */}
         <div style={{ borderRight: '1px solid var(--border-muted)', position: 'relative' }}>
           <Suspense fallback={<div style={{ padding: '24px', color: 'var(--text-muted)' }}>Loading Canvas...</div>}>
-            <WorkflowCanvas />
+            <WorkflowCanvas workflowState={workflowState} />
           </Suspense>
         </div>
 
         {/* Right Pane: Execution Feed / Dev View */}
         <div>
           <Suspense fallback={<div style={{ padding: '24px', color: 'var(--text-muted)' }}>Loading Feed...</div>}>
-            <ExecutionFeed devMode={devMode} />
+            <ExecutionFeed devMode={devMode} workflowState={workflowState} />
           </Suspense>
         </div>
 

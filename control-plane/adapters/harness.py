@@ -44,6 +44,7 @@ class AiderAdapter(LocalDockerAdapter):
                 "OPENAI_API_KEY": "dummy-key-vloop" # The proxy doesn't care about this key, it uses the gateway's real key
             },
             working_dir="/app",
+            extra_hosts={"host.docker.internal": "host-gateway"},
             network_disabled=not policy.get("network", True), # Harnesses typically need network
             runtime="runsc" if policy.get("use_gvisor", False) else None,
             remove=False 
