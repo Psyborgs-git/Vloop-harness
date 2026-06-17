@@ -1,14 +1,23 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import Header from './components/Header';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-// Code splitting: Lazy load heavy components
-const WorkflowCanvas = React.lazy(() => import('./components/WorkflowCanvas'));
+import Header from './components/Header';
+import SidebarNav from './components/SidebarNav';
+import Vault from './components/Vault';
+
+import StudioView from './views/StudioView';
+import AdaptersView from './views/AdaptersView';
+import ProfilesView from './views/ProfilesView';
+import KnowledgeBaseView from './views/KnowledgeBaseView';
+import SwarmFleetView from './views/SwarmFleetView';
+
 const ExecutionFeed = React.lazy(() => import('./components/ExecutionFeed'));
 
 function App() {
   const [devMode, setDevMode] = useState(false);
   const [workflowState, setWorkflowState] = useState<any>(null);
+  const [isVaultOpen, setIsVaultOpen] = useState(false);
 
   useEffect(() => {
     const pollState = async () => {
@@ -28,40 +37,52 @@ function App() {
   }, []);
 
   return (
-    <div style={{ 
-      display: 'grid', 
-      gridTemplateRows: '60px 1fr', 
-      height: '100vh', 
-      width: '100vw',
-      background: 'var(--bg-dark)'
-    }}>
-      {/* Top Header */}
-      <Header devMode={devMode} setDevMode={setDevMode} />
-
-      {/* Split Pane Canvas */}
+    <Router>
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: '60% 40%', 
-        height: '100%', 
-        overflow: 'hidden' 
+        gridTemplateRows: '60px 1fr', 
+        height: '100vh', 
+        width: '100vw',
+        background: 'var(--bg-dark)'
       }}>
-        
-        {/* Left Pane: Interactive DAG */}
-        <div style={{ borderRight: '1px solid var(--border-muted)', position: 'relative' }}>
-          <Suspense fallback={<div style={{ padding: '24px', color: 'var(--text-muted)' }}>Loading Canvas...</div>}>
-            <WorkflowCanvas workflowState={workflowState} />
-          </Suspense>
-        </div>
+        {/* Top Header */}
+        <Header devMode={devMode} setDevMode={setDevMode} />
 
-        {/* Right Pane: Execution Feed / Dev View */}
-        <div>
-          <Suspense fallback={<div style={{ padding: '24px', color: 'var(--text-muted)' }}>Loading Feed...</div>}>
-            <ExecutionFeed devMode={devMode} workflowState={workflowState} />
-          </Suspense>
-        </div>
+        {/* 3-Pane Layout Below Header */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: '5% 65% 30%', 
+          height: '100%', 
+          overflow: 'hidden' 
+        }}>
+          
+          {/* Pane 1: Navigation Dock */}
+          <SidebarNav onOpenVault={() => setIsVaultOpen(true)} />
 
+          {/* Pane 2: Main Workspace (Dynamic Stage) */}
+          <div style={{ position: 'relative' }}>
+            <Routes>
+              <Route path="/" element={<StudioView workflowState={workflowState} />} />
+              <Route path="/adapters" element={<AdaptersView />} />
+              <Route path="/profiles" element={<ProfilesView />} />
+              <Route path="/kb" element={<KnowledgeBaseView />} />
+              <Route path="/swarm" element={<SwarmFleetView />} />
+            </Routes>
+          </div>
+
+          {/* Pane 3: Context/Dev Panel (Execution Feed) */}
+          <div style={{ borderLeft: '1px solid var(--border-muted)' }}>
+            <Suspense fallback={<div style={{ padding: '24px', color: 'var(--text-muted)' }}>Loading Feed...</div>}>
+              <ExecutionFeed devMode={devMode} workflowState={workflowState} />
+            </Suspense>
+          </div>
+
+        </div>
       </div>
-    </div>
+      
+      {/* Global Modals */}
+      {isVaultOpen && <Vault onClose={() => setIsVaultOpen(false)} />}
+    </Router>
   );
 }
 

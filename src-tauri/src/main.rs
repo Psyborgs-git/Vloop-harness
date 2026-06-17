@@ -8,6 +8,7 @@ mod rpc;
 mod context_daemon;
 mod swarm;
 mod litefs_sync;
+mod crud;
 
 use crate::rpc::system::system_control_client::SystemControlClient;
 use crate::rpc::system::{TaskRequest, WorkflowStateRequest, RewindRequest};
@@ -136,7 +137,15 @@ async fn main() {
     // 7. Boot Tauri Mission Control UI
     tauri::Builder::default()
         .plugin(tauri_plugin_store::Builder::new().build())
-        .invoke_handler(tauri::generate_handler![dispatch_task, get_workflow_state, rewind_workflow])
+        .invoke_handler(tauri::generate_handler![
+            dispatch_task, 
+            get_workflow_state, 
+            rewind_workflow,
+            crud::get_adapters, crud::create_adapter, crud::set_active_adapter, crud::delete_adapter,
+            crud::get_profiles, crud::create_profile, crud::delete_profile,
+            crud::get_kb_paths, crud::add_kb_path, crud::delete_kb_path,
+            crud::get_swarm_nodes, crud::add_swarm_node, crud::update_node_rules, crud::delete_swarm_node
+        ])
         .setup(|_app| {
             println!("Tauri UI initialized.");
             Ok(())
