@@ -2,6 +2,7 @@ import sys
 import os
 import time
 from concurrent import futures
+import threading
 
 import grpc
 import dspy
@@ -19,6 +20,7 @@ from adapters.sqlite_db import SQLiteAdapter
 from adapters.dummy_vector import DummyVectorStoreAdapter
 from adapters.docker_exec import LocalDockerAdapter
 from adapters.k8s_exec import RemoteK8sAdapter
+from core.proxy import run_proxy
 
 # Initialize Global Token Gateway
 gateway = LLMGateway(max_tokens=50000)
@@ -80,7 +82,12 @@ class SystemControlServicer(system_pb2_grpc.SystemControlServicer):
 
     def DispatchTask(self, request, context):
         print(f"Received Task Dispatch: {request.objective}")
-        agent = AgentLoop(exec_manager=self.exec_manager)
+        
+        # Determine database path for workflow state
+        data_dir = self.config_manager.data_dir
+        db_path = os.path.join(data_dir, "db", "workflows.sqlite")
+        
+        agent = AgentLoop(exec_manager=self.exec_manager, db_path=db_path)
         
         # Determine iteration cap
         max_iters = request.max_iterations if request.max_iterations > 0 else 3
@@ -114,6 +121,10 @@ def serve():
     # 1. Load config dictated by Rust Microkernel
     config = ConfigManager()
     config.load_config()
+
+    # Start Proxy Server in background thread
+    proxy_thread = threading.Thread(target=run_proxy, args=(gateway,), daemon=True)
+    proxy_thread.start()
 
     # 2. Boot gRPC Server
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
