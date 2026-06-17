@@ -1,5 +1,6 @@
 import Vault from './components/Vault';
 import AuditLog from './components/AuditLog';
+import Settings from './components/Settings';
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
       </p>
 
       <Vault />
+      <Settings />
       <AuditLog />
     </div>
   );

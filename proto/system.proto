@@ -13,6 +13,9 @@ service SystemControl {
 
   // Dispatch an agent task to the control plane
   rpc DispatchTask (TaskRequest) returns (TaskResponse);
+
+  // Periodic heartbeat from Python to Rust (or vice versa)
+  rpc Heartbeat (HeartbeatRequest) returns (HeartbeatResponse);
 }
 
 message Ping {}
@@ -40,5 +43,14 @@ message TaskResponse {
   bool success = 1;
   string message = 2;
   string artifact_path = 3;
+}
+
+message HeartbeatRequest {
+  int64 timestamp = 1;
+  string status = 2;
+}
+
+message HeartbeatResponse {
+  bool acknowledged = 1;
 }
 

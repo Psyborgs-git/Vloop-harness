@@ -51,6 +51,11 @@ class SystemControlStub:
                 request_serializer=system__pb2.TaskRequest.SerializeToString,
                 response_deserializer=system__pb2.TaskResponse.FromString,
                 _registered_method=True)
+        self.Heartbeat = channel.unary_unary(
+                '/vloop.system.SystemControl/Heartbeat',
+                request_serializer=system__pb2.HeartbeatRequest.SerializeToString,
+                response_deserializer=system__pb2.HeartbeatResponse.FromString,
+                _registered_method=True)
 
 
 class SystemControlServicer:
@@ -79,6 +84,13 @@ class SystemControlServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def Heartbeat(self, request, context):
+        """Periodic heartbeat from Python to Rust (or vice versa)
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_SystemControlServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -96,6 +108,11 @@ def add_SystemControlServicer_to_server(servicer, server):
                     servicer.DispatchTask,
                     request_deserializer=system__pb2.TaskRequest.FromString,
                     response_serializer=system__pb2.TaskResponse.SerializeToString,
+            ),
+            'Heartbeat': grpc.unary_unary_rpc_method_handler(
+                    servicer.Heartbeat,
+                    request_deserializer=system__pb2.HeartbeatRequest.FromString,
+                    response_serializer=system__pb2.HeartbeatResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -181,6 +198,33 @@ class SystemControl:
             '/vloop.system.SystemControl/DispatchTask',
             system__pb2.TaskRequest.SerializeToString,
             system__pb2.TaskResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def Heartbeat(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/vloop.system.SystemControl/Heartbeat',
+            system__pb2.HeartbeatRequest.SerializeToString,
+            system__pb2.HeartbeatResponse.FromString,
             options,
             channel_credentials,
             insecure,

@@ -33,6 +33,7 @@ class LocalDockerAdapter(IExecutionManager):
             detach=True,
             mem_limit=self.max_memory_bytes,
             network_disabled=network_disabled,
+            runtime="runsc", # v1.1 Upgrade: Enforce gVisor MicroVM isolation
             remove=False # Keep it around briefly so we can stream logs
         )
         

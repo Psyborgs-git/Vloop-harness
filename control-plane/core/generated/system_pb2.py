@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0csystem.proto\x12\x0cvloop.system\"\x06\n\x04Ping\"\x16\n\x04Pong\x12\x0e\n\x06status\x18\x01 \x01(\t\"$\n\rReloadRequest\x12\x13\n\x0b\x63onfig_path\x18\x01 \x01(\t\"2\n\x0eReloadResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"I\n\x0bTaskRequest\x12\x0f\n\x07task_id\x18\x01 \x01(\t\x12\x11\n\tobjective\x18\x02 \x01(\t\x12\x16\n\x0emax_iterations\x18\x03 \x01(\x05\"G\n\x0cTaskResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x15\n\rartifact_path\x18\x03 \x01(\t2\xd8\x01\n\rSystemControl\x12\x35\n\x0bHealthCheck\x12\x12.vloop.system.Ping\x1a\x12.vloop.system.Pong\x12I\n\x0cReloadConfig\x12\x1b.vloop.system.ReloadRequest\x1a\x1c.vloop.system.ReloadResponse\x12\x45\n\x0c\x44ispatchTask\x12\x19.vloop.system.TaskRequest\x1a\x1a.vloop.system.TaskResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0csystem.proto\x12\x0cvloop.system\"\x06\n\x04Ping\"\x16\n\x04Pong\x12\x0e\n\x06status\x18\x01 \x01(\t\"$\n\rReloadRequest\x12\x13\n\x0b\x63onfig_path\x18\x01 \x01(\t\"2\n\x0eReloadResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"I\n\x0bTaskRequest\x12\x0f\n\x07task_id\x18\x01 \x01(\t\x12\x11\n\tobjective\x18\x02 \x01(\t\x12\x16\n\x0emax_iterations\x18\x03 \x01(\x05\"G\n\x0cTaskResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x15\n\rartifact_path\x18\x03 \x01(\t\"5\n\x10HeartbeatRequest\x12\x11\n\ttimestamp\x18\x01 \x01(\x03\x12\x0e\n\x06status\x18\x02 \x01(\t\")\n\x11HeartbeatResponse\x12\x14\n\x0c\x61\x63knowledged\x18\x01 \x01(\x08\x32\xa6\x02\n\rSystemControl\x12\x35\n\x0bHealthCheck\x12\x12.vloop.system.Ping\x1a\x12.vloop.system.Pong\x12I\n\x0cReloadConfig\x12\x1b.vloop.system.ReloadRequest\x1a\x1c.vloop.system.ReloadResponse\x12\x45\n\x0c\x44ispatchTask\x12\x19.vloop.system.TaskRequest\x1a\x1a.vloop.system.TaskResponse\x12L\n\tHeartbeat\x12\x1e.vloop.system.HeartbeatRequest\x1a\x1f.vloop.system.HeartbeatResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -43,6 +43,10 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_TASKREQUEST']._serialized_end=225
   _globals['_TASKRESPONSE']._serialized_start=227
   _globals['_TASKRESPONSE']._serialized_end=298
-  _globals['_SYSTEMCONTROL']._serialized_start=301
-  _globals['_SYSTEMCONTROL']._serialized_end=517
+  _globals['_HEARTBEATREQUEST']._serialized_start=300
+  _globals['_HEARTBEATREQUEST']._serialized_end=353
+  _globals['_HEARTBEATRESPONSE']._serialized_start=355
+  _globals['_HEARTBEATRESPONSE']._serialized_end=396
+  _globals['_SYSTEMCONTROL']._serialized_start=399
+  _globals['_SYSTEMCONTROL']._serialized_end=693
 # @@protoc_insertion_point(module_scope)

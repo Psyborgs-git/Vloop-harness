@@ -4,6 +4,7 @@
 mod fs;
 mod sys;
 mod supervisor;
+mod rpc;
 
 #[tauri::command]
 async fn dispatch_task(task_id: String, objective: String) -> Result<String, String> {
@@ -15,7 +16,8 @@ async fn dispatch_task(task_id: String, objective: String) -> Result<String, Str
     Ok(format!("Task {} dispatched successfully.", task_id))
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     println!("VLoop Microkernel Booting...");
 
     // 1. Probe Memory Limits
@@ -33,8 +35,8 @@ fn main() {
         std::process::exit(1);
     }
 
-    // 3. Start Python Supervisor in background
-    supervisor::start_python_supervisor();
+    // 3. Start Python Watchdog in background
+    supervisor::start_watchdog();
 
     // 4. Boot Tauri Mission Control UI
     tauri::Builder::default()

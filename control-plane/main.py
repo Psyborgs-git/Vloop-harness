@@ -49,6 +49,10 @@ class SystemControlServicer(system_pb2_grpc.SystemControlServicer):
         self.vector_store = DummyVectorStoreAdapter(vec_path)
         print(f"Vector Store initialized at {vec_path}")
         
+        # Update global gateway with new vector store
+        global gateway
+        gateway.cache = __import__('core.cache', fromlist=['SemanticCacheInterceptor']).SemanticCacheInterceptor(self.vector_store)
+        
         # Determine execution environment (default to local docker)
         use_k8s = self.config_manager.config_data.get("use_k8s", False)
         if use_k8s:
@@ -62,6 +66,10 @@ class SystemControlServicer(system_pb2_grpc.SystemControlServicer):
     def HealthCheck(self, request, context):
         print("Received Ping from Microkernel")
         return system_pb2.Pong(status="Alive and Ready")
+
+    def Heartbeat(self, request, context):
+        # Respond to heartbeat from Rust supervisor
+        return system_pb2.HeartbeatResponse(acknowledged=True)
 
     def ReloadConfig(self, request, context):
         print(f"Reloading config from {request.config_path}")
@@ -113,10 +121,29 @@ def serve():
         SystemControlServicer(config), server
     )
     
-    # 3. Bind and start
-    port = 50051
-    server.add_insecure_port(f'[::]:{port}')
-    print(f"Python Control Plane (gRPC) booting on port {port}...")
+    # 3. Bind and start (UDS with TCP Fallback for Windows)
+    is_windows = sys.platform == 'win32'
+    
+    if not is_windows:
+        vloop_home = config.data_dir
+        if not vloop_home:
+            vloop_home = os.path.expanduser("~/.vloop")
+        
+        rust_dir = os.path.join(vloop_home, "rust")
+        os.makedirs(rust_dir, exist_ok=True)
+        socket_path = os.path.join(rust_dir, "ipc.sock")
+        
+        if os.path.exists(socket_path):
+            os.remove(socket_path)
+            
+        bind_address = f"unix://{socket_path}"
+        server.add_insecure_port(bind_address)
+        print(f"VLoop Python Control Plane listening on UDS: {bind_address}")
+    else:
+        bind_address = "127.0.0.1:50051"
+        server.add_insecure_port(bind_address)
+        print(f"VLoop Python Control Plane listening on TCP: {bind_address}")
+
     server.start()
     
     try:
