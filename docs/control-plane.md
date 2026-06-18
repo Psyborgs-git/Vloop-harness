@@ -29,3 +29,12 @@ The orchestrator avoids raw prompting in favor of structural DSPy signatures:
 Because VLoop utilizes LLMs (via `litellm`), it includes a strict token-tracking middleware. 
 * **Mechanism:** Wraps `litellm.completion`.
 * **Enforcement:** If `total_tokens_used` exceeds `max_tokens` (default 50,000), a `TokenLimitExceeded` exception is thrown, immediately halting the agent loop to prevent runaway costs.
+
+### 5. UI Rendering & PyWebView
+The Control Plane acts as the active router and window manager. Using `pywebview`, it natively renders the React Frontend (served via FastAPI). It listens for `NotifyUserAction` gRPC commands from the Rust System Tray to show, hide, or terminate windows.
+
+### 6. AI Context Management (Background RAG)
+The Control Plane runs a `watchdog` daemon in a background thread to index the user's `~/.vloop/workspace/`. Newly created or modified documents are automatically chunked and embedded directly into the active Vector Store, providing up-to-date context for the DSPy agent loops.
+
+### 7. Infrastructure Delegation
+While the CP determines *when* a container should be spawned or a Swarm node engaged, it does not hold the secure credentials. Instead, it delegates physical execution by calling the `InfrastructureControl` gRPC service hosted by the Rust Microkernel.

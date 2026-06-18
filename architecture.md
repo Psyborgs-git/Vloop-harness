@@ -43,9 +43,9 @@ title Container diagram for VLoop System
 Person(user, "User", "Developer or Operator")
 
 System_Boundary(vloop_boundary, "VLoop Application") {
-    Container(ui, "Tauri UI", "React / Vite / TypeScript", "IPC Interface, visualizer, HITL interceptor, and secure credential vault.")
-    Container(kernel, "Rust Microkernel", "Rust", "Hypervisor, process supervisor, gRPC interface, and hardware resource prober.")
-    Container(cp, "Python Control Plane", "Python, DSPy, LiteLLM", "Stateless agent orchestration, Local LLM Proxy, and prompt compiler.")
+    Container(ui, "React Frontend", "React / Vite / TypeScript", "Visualizer, HITL interceptor, loaded natively by PyWebView.")
+    Container(kernel, "Rust Microkernel", "Rust / Tauri", "Headless Daemon, Hypervisor, Swarm Mesh, Secure Vault, System Tray.")
+    Container(cp, "Python Control Plane", "Python, PyWebView, DSPy", "Stateless agent orchestration, UI Renderer, Context RAG, Proxy.")
 }
 
 System_Ext(sandbox, "Execution Sandbox", "Docker daemon or Managed K8s", "Ephemeral task execution (e.g. Aider harness)")
@@ -58,6 +58,11 @@ Rel(cp, kernel, "Sends status, heartbeats, and audit logs via", "Unix Socket/gRP
 Rel(cp, llm, "Routes model requests via LiteLLM Gateway to", "HTTPS")
 Rel(cp, sandbox, "Dispatches jobs using hexagonal adapter policies to", "Docker SDK / K8s SDK")
 ```
+
+### Documentation Links
+- [Tauri UI](docs/container/Tauri-UI.md)
+- [Rust Microkernel](docs/container/Rust-Microkernel.md)
+- [Python Control Plane](docs/container/Python-Control-Plane.md)
 
 ---
 
@@ -205,6 +210,24 @@ AgentLoop --> PolicyGenerator : "uses"
 WorkflowManager --> IRelationalDB : "depends on (Port)"
 ```
 
+### Documentation Links
+
+#### Ports (Interfaces)
+- [IExecutionManager](docs/code/IExecutionManager.md)
+- [IRelationalDB](docs/code/IRelationalDB.md)
+- [IVectorStore](docs/code/IVectorStore.md)
+
+#### Adapters
+- [LocalDockerAdapter](docs/code/LocalDockerAdapter.md)
+- [AiderAdapter](docs/code/AiderAdapter.md)
+- [RemoteK8sAdapter](docs/code/RemoteK8sAdapter.md)
+- [SQLiteAdapter](docs/code/SQLiteAdapter.md)
+- [DummyVectorStoreAdapter](docs/code/DummyVectorStoreAdapter.md)
+
+#### Core Logic
+- [CodeGenerator](docs/code/CodeGenerator.md)
+- [PolicyGenerator](docs/code/PolicyGenerator.md)
+
 ---
 
 ## Operational Workflow Highlights
@@ -212,5 +235,9 @@ WorkflowManager --> IRelationalDB : "depends on (Port)"
 1. **Boot**: The Tauri UI initiates the Rust microkernel. Rust determines hardware limits (`sys`), sets up `fs`, and spawns the Python Control Plane via `supervisor`. Inter-process communication leverages gRPC (`rpc`).
 2. **Task Ingestion**: The CP takes a prompt, leverages DSPy + `LLMGateway` (LiteLLM) to compile it into executable code alongside a generated strict security policy via `PolicyGenerator`.
 3. **Sandboxed Execution**: The CP routes the job via the `IExecutionManager` port to either local Docker (or a specialized `AiderAdapter`) or remote K8s. 
+4. **Proxy & Limits**: Executing harnesses do not have direct access to external API keys. They point to the `FastAPI Proxy`, which intercepts the calls and routes them through the `LLMGateway` for strict token budget enforcement.
+5. **Validation**: The job completes. If it fails, standard error output is captured and routed back to DSPy to refine the code until success or the loop threshold limit is met.
+ routed back to DSPy to refine the code until success or the loop threshold limit is met.
+b via the `IExecutionManager` port to either local Docker (or a specialized `AiderAdapter`) or remote K8s. 
 4. **Proxy & Limits**: Executing harnesses do not have direct access to external API keys. They point to the `FastAPI Proxy`, which intercepts the calls and routes them through the `LLMGateway` for strict token budget enforcement.
 5. **Validation**: The job completes. If it fails, standard error output is captured and routed back to DSPy to refine the code until success or the loop threshold limit is met.

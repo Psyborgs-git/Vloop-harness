@@ -28,6 +28,64 @@ service SystemControl {
 
   // UI Bridge: Read the active DAG state for the React Frontend
   rpc GetWorkflowState (WorkflowStateRequest) returns (WorkflowStateResponse);
+
+  // IPC Triggers from Rust Tray to Python CP (e.g. OpenWindow, Quit)
+  rpc NotifyUserAction (UserActionRequest) returns (UserActionResponse);
+
+  // Commands from Python CP to Rust Infra (Not UI anymore, infra commands)
+  // We keep this open for CP -> Rust infra management later.
+}
+
+// The Infrastructure interface is implemented by the Rust Microkernel
+// and called by the Python Control Plane to deploy sandboxes and retrieve secrets securely.
+service InfrastructureControl {
+  // Spawn a container or sandbox execution environment
+  rpc SpawnContainer (ContainerRequest) returns (ContainerResponse);
+  
+  // Retrieve a secret or credential securely stored by Rust
+  rpc GetVaultSecret (SecretRequest) returns (SecretResponse);
+  
+  // Deploy a workload to Kubernetes
+  rpc DeployK8sPod (K8sRequest) returns (K8sResponse);
+}
+
+message ContainerRequest {
+  string image_name = 1;
+  int32 memory_limit_mb = 2;
+  repeated string env_vars = 3;
+}
+
+message ContainerResponse {
+  bool success = 1;
+  string container_id = 2;
+  string error_message = 3;
+}
+
+message SecretRequest {
+  string key_name = 1;
+}
+
+message SecretResponse {
+  bool success = 1;
+  string value = 2;
+}
+
+message K8sRequest {
+  string pod_manifest_yaml = 1;
+}
+
+message K8sResponse {
+  bool success = 1;
+  string pod_name = 2;
+  string error_message = 3;
+}
+
+message UserActionRequest {
+  string action = 1; // "open_home", "open_settings", "quit"
+}
+
+message UserActionResponse {
+  bool success = 1;
 }
 
 message Ping {}

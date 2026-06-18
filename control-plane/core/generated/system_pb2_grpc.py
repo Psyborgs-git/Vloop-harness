@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from . import system_pb2 as system__pb2
+import system_pb2 as system__pb2
 
 GRPC_GENERATED_VERSION = '1.81.1'
 GRPC_VERSION = grpc.__version__
@@ -76,6 +76,11 @@ class SystemControlStub:
                 request_serializer=system__pb2.WorkflowStateRequest.SerializeToString,
                 response_deserializer=system__pb2.WorkflowStateResponse.FromString,
                 _registered_method=True)
+        self.NotifyUserAction = channel.unary_unary(
+                '/vloop.system.SystemControl/NotifyUserAction',
+                request_serializer=system__pb2.UserActionRequest.SerializeToString,
+                response_deserializer=system__pb2.UserActionResponse.FromString,
+                _registered_method=True)
 
 
 class SystemControlServicer:
@@ -139,6 +144,13 @@ class SystemControlServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def NotifyUserAction(self, request, context):
+        """IPC Triggers from Rust Tray to Python CP (e.g. OpenWindow, Quit)
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_SystemControlServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -181,6 +193,11 @@ def add_SystemControlServicer_to_server(servicer, server):
                     servicer.GetWorkflowState,
                     request_deserializer=system__pb2.WorkflowStateRequest.FromString,
                     response_serializer=system__pb2.WorkflowStateResponse.SerializeToString,
+            ),
+            'NotifyUserAction': grpc.unary_unary_rpc_method_handler(
+                    servicer.NotifyUserAction,
+                    request_deserializer=system__pb2.UserActionRequest.FromString,
+                    response_serializer=system__pb2.UserActionResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -401,6 +418,200 @@ class SystemControl:
             '/vloop.system.SystemControl/GetWorkflowState',
             system__pb2.WorkflowStateRequest.SerializeToString,
             system__pb2.WorkflowStateResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def NotifyUserAction(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/vloop.system.SystemControl/NotifyUserAction',
+            system__pb2.UserActionRequest.SerializeToString,
+            system__pb2.UserActionResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+
+class InfrastructureControlStub:
+    """The Infrastructure interface is implemented by the Rust Microkernel
+    and called by the Python Control Plane to deploy sandboxes and retrieve secrets securely.
+    """
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.SpawnContainer = channel.unary_unary(
+                '/vloop.system.InfrastructureControl/SpawnContainer',
+                request_serializer=system__pb2.ContainerRequest.SerializeToString,
+                response_deserializer=system__pb2.ContainerResponse.FromString,
+                _registered_method=True)
+        self.GetVaultSecret = channel.unary_unary(
+                '/vloop.system.InfrastructureControl/GetVaultSecret',
+                request_serializer=system__pb2.SecretRequest.SerializeToString,
+                response_deserializer=system__pb2.SecretResponse.FromString,
+                _registered_method=True)
+        self.DeployK8sPod = channel.unary_unary(
+                '/vloop.system.InfrastructureControl/DeployK8sPod',
+                request_serializer=system__pb2.K8sRequest.SerializeToString,
+                response_deserializer=system__pb2.K8sResponse.FromString,
+                _registered_method=True)
+
+
+class InfrastructureControlServicer:
+    """The Infrastructure interface is implemented by the Rust Microkernel
+    and called by the Python Control Plane to deploy sandboxes and retrieve secrets securely.
+    """
+
+    def SpawnContainer(self, request, context):
+        """Spawn a container or sandbox execution environment
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetVaultSecret(self, request, context):
+        """Retrieve a secret or credential securely stored by Rust
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeployK8sPod(self, request, context):
+        """Deploy a workload to Kubernetes
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_InfrastructureControlServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'SpawnContainer': grpc.unary_unary_rpc_method_handler(
+                    servicer.SpawnContainer,
+                    request_deserializer=system__pb2.ContainerRequest.FromString,
+                    response_serializer=system__pb2.ContainerResponse.SerializeToString,
+            ),
+            'GetVaultSecret': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetVaultSecret,
+                    request_deserializer=system__pb2.SecretRequest.FromString,
+                    response_serializer=system__pb2.SecretResponse.SerializeToString,
+            ),
+            'DeployK8sPod': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeployK8sPod,
+                    request_deserializer=system__pb2.K8sRequest.FromString,
+                    response_serializer=system__pb2.K8sResponse.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'vloop.system.InfrastructureControl', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('vloop.system.InfrastructureControl', rpc_method_handlers)
+
+
+ # This class is part of an EXPERIMENTAL API.
+class InfrastructureControl:
+    """The Infrastructure interface is implemented by the Rust Microkernel
+    and called by the Python Control Plane to deploy sandboxes and retrieve secrets securely.
+    """
+
+    @staticmethod
+    def SpawnContainer(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/vloop.system.InfrastructureControl/SpawnContainer',
+            system__pb2.ContainerRequest.SerializeToString,
+            system__pb2.ContainerResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetVaultSecret(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/vloop.system.InfrastructureControl/GetVaultSecret',
+            system__pb2.SecretRequest.SerializeToString,
+            system__pb2.SecretResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DeployK8sPod(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/vloop.system.InfrastructureControl/DeployK8sPod',
+            system__pb2.K8sRequest.SerializeToString,
+            system__pb2.K8sResponse.FromString,
             options,
             channel_credentials,
             insecure,

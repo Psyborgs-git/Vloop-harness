@@ -1,13 +1,22 @@
 import sys
 import os
+import time
 from concurrent import futures
 import threading
+import uuid
 
 import grpc
 import dspy
+import webview
+import uvicorn
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 # Ensure core and adapters are discoverable
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "core", "generated"))
 
 from core.generated import system_pb2
 from core.generated import system_pb2_grpc
@@ -26,6 +35,34 @@ gateway = LLMGateway(max_tokens=50000)
 # Configure DSPy to use LiteLLM via our Gateway
 lm = dspy.LM('openai/gpt-4o-mini', api_key=os.environ.get("OPENAI_API_KEY", "dummy"))
 dspy.settings.configure(lm=lm)
+
+# Global PyWebview Window Reference
+main_window = None
+
+class ContextHandler(FileSystemEventHandler):
+    def __init__(self, servicer):
+        self.servicer = servicer
+
+    def on_created(self, event):
+        if not event.is_directory:
+            self._ingest(event.src_path)
+
+    def on_modified(self, event):
+        if not event.is_directory:
+            self._ingest(event.src_path)
+
+    def _ingest(self, path):
+        # Only ingest text/code files
+        ext = os.path.splitext(path)[1]
+        if ext in ['.txt', '.md', '.py', '.js', '.rs']:
+            try:
+                with open(path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                # Use the servicer's ingest method directly
+                req = system_pb2.IngestRequest(file_path=path, content=content)
+                self.servicer.IngestDocument(req, None)
+            except Exception as e:
+                print(f"Error reading file {path} for background context: {e}")
 
 class SystemControlServicer(system_pb2_grpc.SystemControlServicer):
     def __init__(self, config_manager: ConfigManager):
@@ -64,47 +101,52 @@ class SystemControlServicer(system_pb2_grpc.SystemControlServicer):
             print(f"Execution Sandbox: Local Docker (Memory Limit: {mem_limit / 1024 / 1024} MB)")
 
     def HealthCheck(self, request, context):
-        print("Received Ping from Microkernel")
         return system_pb2.Pong(status="Alive and Ready")
 
     def Heartbeat(self, request, context):
-        # Respond to heartbeat from Rust supervisor
         return system_pb2.HeartbeatResponse(acknowledged=True)
+
+    def NotifyUserAction(self, request, context):
+        global main_window
+        action = request.action
+        print(f"Received User Action from Rust Tray: {action}")
+        
+        if action == "quit":
+            print("Shutting down CP via safe quit command...")
+            if main_window:
+                main_window.destroy()
+            os._exit(0)
+        elif action == "open_home":
+            if main_window:
+                main_window.load_url("http://localhost:8000/")
+                main_window.show()
+        elif action == "open_settings":
+            if main_window:
+                main_window.load_url("http://localhost:8000/settings")
+                main_window.show()
+                
+        return system_pb2.UserActionResponse(success=True)
 
     def RewindWorkspace(self, request, context):
         workspace_dir = os.path.join(self.config_manager.data_dir, "workspaces", request.workspace_id)
-        print(f"Time-Travel Rewind Requested for workspace {request.workspace_id} to commit {request.target_commit_hash}")
-        
-        # 1. Execute Git Reset
         try:
             import subprocess
             subprocess.run(["git", "reset", "--hard", request.target_commit_hash], cwd=workspace_dir, check=True, capture_output=True)
-            print("Git reset successful.")
         except Exception as e:
-            print(f"Failed to execute git reset: {e}")
             return system_pb2.RewindResponse(success=False, message=str(e))
             
-        # 2. Delete downstream DAG nodes (simulated here as we need the workflow_id, but assuming 1:1 mapping for MVP)
-        # Note: In a full implementation, you'd map workspace_id to workflow_id and target_commit to target_node_id
         db_path = os.path.join(self.config_manager.data_dir, "db", "workflows.sqlite")
         try:
             from core.dag import WorkflowManager
             wm = WorkflowManager(db_path)
-            # In our MVP, we passed workflow_id as workspace_id and node_id as target_commit_hash
-            workflow_id = request.workspace_id
-            target_node_id = request.target_commit_hash
-            wm.rewind_workflow(workflow_id, target_node_id)
+            wm.rewind_workflow(request.workspace_id, request.target_commit_hash)
         except Exception as e:
             print(f"Failed to rewind DAG state: {e}")
 
         return system_pb2.RewindResponse(success=True, message="Workspace rewound successfully.")
 
     def IngestDocument(self, request, context):
-        print(f"Background RAG: Ingesting document {request.file_path} ({len(request.content)} bytes)")
         try:
-            # A real implementation would chunk the document and embed it via LiteLLM/OpenAI
-            # For the MVP, we add the raw text to our dummy vector store
-            import uuid
             self.vector_store.add_document(
                 collection_name="background_rag",
                 document_id=str(uuid.uuid4()),
@@ -117,9 +159,6 @@ class SystemControlServicer(system_pb2_grpc.SystemControlServicer):
             return system_pb2.IngestResponse(success=False, chunks_embedded=0)
 
     def SwarmTask(self, request, context):
-        print(f"P2P Swarm: Received task from remote node {request.remote_node_id}")
-        
-        # If there's a tarball, unpack it to the workspace
         workspace_dir = os.path.join(self.config_manager.data_dir, "workspaces", request.task.task_id)
         if request.initial_workspace_tarball:
             os.makedirs(workspace_dir, exist_ok=True)
@@ -127,13 +166,10 @@ class SystemControlServicer(system_pb2_grpc.SystemControlServicer):
             import io
             with tarfile.open(fileobj=io.BytesIO(request.initial_workspace_tarball)) as tar:
                 tar.extractall(path=workspace_dir)
-            print(f"Extracted remote workspace payload to {workspace_dir}")
             
-        # Dispatch the task normally via the existing logic
         return self.DispatchTask(request.task, context)
 
     def ReloadConfig(self, request, context):
-        print(f"Reloading config from {request.config_path}")
         self.config_manager.config_path = request.config_path
         self.config_manager.load_config()
         self.reinitialize_adapters()
@@ -178,29 +214,20 @@ class SystemControlServicer(system_pb2_grpc.SystemControlServicer):
                     status=status,
                     nodes=pb_nodes
                 )
-        except Exception as e:
-            print(f"Error reading workflow state: {e}")
+        except Exception:
             return system_pb2.WorkflowStateResponse()
 
     def DispatchTask(self, request, context):
-        print(f"Received Task Dispatch: {request.objective}")
-        
-        # Determine database path for workflow state
         data_dir = self.config_manager.data_dir
         db_path = os.path.join(data_dir, "db", "workflows.sqlite")
         
         agent = AgentLoop(exec_manager=self.exec_manager, db_path=db_path)
-        
-        # Determine iteration cap
         max_iters = request.max_iterations if request.max_iterations > 0 else 3
         
-        # Run the agent
         result = agent.run(objective=request.objective, max_iterations=max_iters)
         
-        # Return response
         if result["success"]:
-            # Write artifact out
-            artifacts_dir = os.path.join(self.config_manager.data_dir, "artifacts")
+            artifacts_dir = os.path.join(data_dir, "artifacts")
             os.makedirs(artifacts_dir, exist_ok=True)
             artifact_path = os.path.join(artifacts_dir, f"{request.task_id}_output.txt")
             
@@ -219,29 +246,13 @@ class SystemControlServicer(system_pb2_grpc.SystemControlServicer):
                 artifact_path=""
             )
 
-def serve():
-    # 1. Load config dictated by Rust Microkernel
-    config = ConfigManager()
-    config.load_config()
-
-    # Start Proxy Server in background thread
-    proxy_thread = threading.Thread(target=run_proxy, args=(gateway,), daemon=True)
-    proxy_thread.start()
-
-    # 2. Boot gRPC Server
+def run_grpc_server(config, servicer):
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    system_pb2_grpc.add_SystemControlServicer_to_server(
-        SystemControlServicer(config), server
-    )
+    system_pb2_grpc.add_SystemControlServicer_to_server(servicer, server)
     
-    # 3. Bind and start (UDS with TCP Fallback for Windows)
     is_windows = sys.platform == 'win32'
-    
     if not is_windows:
-        vloop_home = config.data_dir
-        if not vloop_home:
-            vloop_home = os.path.expanduser("~/.vloop")
-        
+        vloop_home = config.data_dir or os.path.expanduser("~/.vloop")
         rust_dir = os.path.join(vloop_home, "rust")
         os.makedirs(rust_dir, exist_ok=True)
         socket_path = os.path.join(rust_dir, "ipc.sock")
@@ -251,19 +262,66 @@ def serve():
             
         bind_address = f"unix://{socket_path}"
         server.add_insecure_port(bind_address)
-        print(f"VLoop Python Control Plane listening on UDS: {bind_address}")
     else:
         bind_address = "127.0.0.1:50051"
         server.add_insecure_port(bind_address)
-        print(f"VLoop Python Control Plane listening on TCP: {bind_address}")
 
     server.start()
+    server.wait_for_termination()
+
+def run_fastapi_server():
+    app = FastAPI()
     
+    # Try to serve the built React app if the dist folder exists
+    dist_dir = os.path.join(os.path.dirname(__file__), "..", "src", "dist")
+    if os.path.exists(dist_dir):
+        app.mount("/", StaticFiles(directory=dist_dir, html=True), name="static")
+    else:
+        @app.get("/")
+        def read_root():
+            return {"message": "VLoop UI is building or not available. Please run npm run build in src/"}
+            
+    uvicorn.run(app, host="127.0.0.1", port=8000, log_level="error")
+
+def run_context_daemon(servicer, watch_dir):
+    os.makedirs(watch_dir, exist_ok=True)
+    event_handler = ContextHandler(servicer)
+    observer = Observer()
+    observer.schedule(event_handler, path=watch_dir, recursive=True)
+    observer.start()
     try:
-        server.wait_for_termination()
-    except KeyboardInterrupt:
-        print("Shutting down Control Plane...")
-        server.stop(0)
+        while True:
+            time.sleep(1)
+    except Exception:
+        observer.stop()
+    observer.join()
+
+def serve():
+    global main_window
+    
+    # 1. Load config dictated by Rust Microkernel
+    config = ConfigManager()
+    config.load_config()
+    
+    servicer = SystemControlServicer(config)
+
+    # Start Proxy Server
+    threading.Thread(target=run_proxy, args=(gateway,), daemon=True).start()
+
+    # Start gRPC Server
+    threading.Thread(target=run_grpc_server, args=(config, servicer), daemon=True).start()
+    
+    # Start FastAPI UI Server
+    threading.Thread(target=run_fastapi_server, daemon=True).start()
+    
+    # Start Background RAG Context Daemon
+    vloop_home = config.data_dir or os.path.expanduser("~/.vloop")
+    workspace_dir = os.path.join(vloop_home, "workspace")
+    threading.Thread(target=run_context_daemon, args=(servicer, workspace_dir), daemon=True).start()
+
+    # Create PyWebView Window (Main Thread)
+    main_window = webview.create_window('VLoop', 'http://localhost:8000', hidden=True, width=1024, height=768)
+    webview.start()
 
 if __name__ == '__main__':
     serve()

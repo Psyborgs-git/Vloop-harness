@@ -5,10 +5,9 @@ mod fs;
 mod sys;
 mod supervisor;
 mod rpc;
-mod context_daemon;
 mod swarm;
 mod litefs_sync;
-mod crud;
+mod infra;
 
 use crate::rpc::system::system_control_client::SystemControlClient;
 use crate::rpc::system::{TaskRequest, WorkflowStateRequest, RewindRequest};
@@ -102,6 +101,11 @@ async fn rewind_workflow(workflow_id: String, target_node_id: String) -> Result<
     Ok("Rewound successfully".to_string())
 }
 
+use tauri::menu::{Menu, MenuItem};
+use tauri::tray::{MouseButton, TrayIconBuilder, MouseButtonState, TrayIconEvent};
+use tauri::Manager;
+use crate::rpc::system::UserActionRequest;
+
 #[tokio::main]
 async fn main() {
     println!("VLoop Microkernel Booting...");
@@ -128,28 +132,72 @@ async fn main() {
     // 4. Start Python Watchdog in background
     supervisor::start_watchdog();
 
-    // 5. Start Context Daemon (Background RAG)
-    context_daemon::start_context_daemon();
+    // 5. Start Context Daemon (Background RAG) - Handed over to Python
+    // context_daemon::start_context_daemon();
 
     // 6. Start Swarm TCP Listener (P2P Mesh)
     swarm::start_swarm_listener();
 
-    // 7. Boot Tauri Mission Control UI
+    // 7. Boot Tauri System Tray Daemon
     tauri::Builder::default()
-        .plugin(tauri_plugin_store::Builder::new().build())
-        .invoke_handler(tauri::generate_handler![
-            dispatch_task, 
-            get_workflow_state, 
-            rewind_workflow,
-            crud::get_adapters, crud::create_adapter, crud::set_active_adapter, crud::delete_adapter,
-            crud::get_profiles, crud::create_profile, crud::delete_profile,
-            crud::get_kb_paths, crud::add_kb_path, crud::delete_kb_path,
-            crud::get_swarm_nodes, crud::add_swarm_node, crud::update_node_rules, crud::delete_swarm_node
-        ])
-        .setup(|_app| {
-            println!("Tauri UI initialized.");
+        .setup(|app| {
+            let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+            let cp_i = MenuItem::with_id(app, "open_cp", "Open Control Plane", true, None::<&str>)?;
+            let settings_i = MenuItem::with_id(app, "open_settings", "Settings", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&cp_i, &settings_i, &quit_i])?;
+
+            let _tray = TrayIconBuilder::new()
+                .menu(&menu)
+                .icon(app.default_window_icon().unwrap().clone())
+                .on_menu_event(|app, event| {
+                    match event.id.as_ref() {
+                        "quit" => {
+                            // Send Quit action to Python CP
+                            let app_handle = app.clone();
+                            tokio::spawn(async move {
+                                if let Ok(mut client) = connect_to_python().await {
+                                    let req = tonic::Request::new(UserActionRequest {
+                                        action: "quit".to_string(),
+                                    });
+                                    let _ = client.notify_user_action(req).await;
+                                }
+                                app_handle.exit(0);
+                            });
+                        }
+                        "open_cp" => {
+                            tokio::spawn(async move {
+                                if let Ok(mut client) = connect_to_python().await {
+                                    let req = tonic::Request::new(UserActionRequest {
+                                        action: "open_home".to_string(),
+                                    });
+                                    let _ = client.notify_user_action(req).await;
+                                }
+                            });
+                        }
+                        "open_settings" => {
+                            tokio::spawn(async move {
+                                if let Ok(mut client) = connect_to_python().await {
+                                    let req = tonic::Request::new(UserActionRequest {
+                                        action: "open_settings".to_string(),
+                                    });
+                                    let _ = client.notify_user_action(req).await;
+                                }
+                            });
+                        }
+                        _ => {}
+                    }
+                })
+                .build(app)?;
+
+            println!("Tauri Daemon initialized.");
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|_app_handle, event| match event {
+            tauri::RunEvent::ExitRequested { api, .. } => {
+                api.prevent_exit();
+            }
+            _ => {}
+        });
 }

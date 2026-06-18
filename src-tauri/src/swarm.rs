@@ -1,5 +1,7 @@
 use crate::rpc::system::system_control_client::SystemControlClient;
 use crate::rpc::system::system_control_server::{SystemControl, SystemControlServer};
+use crate::rpc::system::infrastructure_control_server::InfrastructureControlServer;
+use crate::infra::InfraService;
 use crate::rpc::system::{
     HeartbeatRequest, HeartbeatResponse, IngestRequest, IngestResponse, Ping, Pong, ReloadRequest,
     ReloadResponse, RewindRequest, RewindResponse, SwarmRequest, TaskRequest, TaskResponse,
@@ -54,6 +56,11 @@ impl SystemControl for SwarmService {
         let mut client = self.get_client().await?;
         client.get_workflow_state(req).await
     }
+
+    async fn notify_user_action(&self, req: Request<crate::rpc::system::UserActionRequest>) -> Result<Response<crate::rpc::system::UserActionResponse>, Status> {
+        let mut client = self.get_client().await?;
+        client.notify_user_action(req).await
+    }
 }
 
 impl SwarmService {
@@ -98,18 +105,20 @@ impl SwarmService {
 
 pub fn start_swarm_listener() {
     tokio::spawn(async move {
-        println!("Starting Swarm TCP Listener on 0.0.0.0:50052...");
+        println!("Starting Swarm & Infra TCP Listener on 0.0.0.0:50052...");
         let addr = "0.0.0.0:50052".parse().unwrap();
         let service = SwarmService {
             client: Arc::new(Mutex::new(None)),
         };
+        let infra_service = InfraService {};
 
         if let Err(e) = Server::builder()
             .add_service(SystemControlServer::new(service))
+            .add_service(InfrastructureControlServer::new(infra_service))
             .serve(addr)
             .await
         {
-            eprintln!("Swarm TCP listener failed: {}", e);
+            eprintln!("Swarm/Infra TCP listener failed: {}", e);
         }
     });
 }

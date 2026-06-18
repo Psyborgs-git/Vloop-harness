@@ -37,3 +37,14 @@ The Python Control Plane runs as a stateless child process supervised directly b
 *   **Boot:** The kernel spawns `python3` (to be bundled or resolved from `$PATH`) using `std::process::Command`.
 *   **Monitor:** It captures and streams `stdout` and `stderr` natively.
 *   **Resilience:** If the Python control plane exits unexpectedly or crashes due to an unhandled exception, the Rust supervisor catches the exit code and automatically restarts it after a 3-second backoff.
+
+## 4. Headless System Tray Daemon
+
+Tauri is used exclusively to package the application and provide a cross-platform system tray. The microkernel does not render the React UI. Instead, it exposes a tray icon with options to open the Control Plane or quit the application. Interacting with the tray sends IPC signals (`NotifyUserAction`) to the Python Control Plane, which natively handles UI rendering via `pywebview`.
+
+## 5. Infrastructure RPC (`infra.rs` & `swarm.rs`)
+
+While the Python Control Plane manages AI loops and context, the Rust Microkernel securely manages the infrastructure. It exposes an `InfrastructureControl` gRPC server (port 50052) allowing the Python daemon to securely:
+- `SpawnContainer`: Request isolated execution sandboxes.
+- `GetVaultSecret`: Safely retrieve credentials without keeping them in Python's memory.
+- `DeployK8sPod`: Forward deployment specs to an active cluster.
