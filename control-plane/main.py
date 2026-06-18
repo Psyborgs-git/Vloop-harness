@@ -72,7 +72,11 @@ class SystemControlServicer(system_pb2_grpc.SystemControlServicer):
         return system_pb2.HeartbeatResponse(acknowledged=True)
 
     def RewindWorkspace(self, request, context):
-        workspace_dir = os.path.join(self.config_manager.data_dir, "workspaces", request.workspace_id)
+        base_dir = os.path.abspath(os.path.join(self.config_manager.data_dir, "workspaces"))
+        workspace_dir = os.path.abspath(os.path.join(base_dir, request.workspace_id))
+        if os.path.commonpath([base_dir, workspace_dir]) != base_dir:
+            print(f"Path traversal detected in RewindWorkspace: {request.workspace_id}")
+            return system_pb2.RewindResponse(success=False, message="Invalid workspace_id")
         print(f"Time-Travel Rewind Requested for workspace {request.workspace_id} to commit {request.target_commit_hash}")
         
         # 1. Execute Git Reset
@@ -120,12 +124,23 @@ class SystemControlServicer(system_pb2_grpc.SystemControlServicer):
         print(f"P2P Swarm: Received task from remote node {request.remote_node_id}")
         
         # If there's a tarball, unpack it to the workspace
-        workspace_dir = os.path.join(self.config_manager.data_dir, "workspaces", request.task.task_id)
+        base_dir = os.path.abspath(os.path.join(self.config_manager.data_dir, "workspaces"))
+        workspace_dir = os.path.abspath(os.path.join(base_dir, request.task.task_id))
+        if os.path.commonpath([base_dir, workspace_dir]) != base_dir:
+            print(f"Path traversal detected in SwarmTask task_id: {request.task.task_id}")
+            return system_pb2.TaskResponse(success=False, message="Invalid task_id", artifact_path="")
+
         if request.initial_workspace_tarball:
             os.makedirs(workspace_dir, exist_ok=True)
             import tarfile
             import io
             with tarfile.open(fileobj=io.BytesIO(request.initial_workspace_tarball)) as tar:
+                # Prevent Zip Slip by checking each member's resolved path
+                for member in tar.getmembers():
+                    member_path = os.path.abspath(os.path.join(workspace_dir, member.name))
+                    if os.path.commonpath([workspace_dir, member_path]) != workspace_dir:
+                        print(f"Path traversal detected in tarball member: {member.name}")
+                        return system_pb2.TaskResponse(success=False, message="Invalid tarball member", artifact_path="")
                 tar.extractall(path=workspace_dir)
             print(f"Extracted remote workspace payload to {workspace_dir}")
             
