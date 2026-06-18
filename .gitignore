@@ -14,8 +14,8 @@ Thumbs.db
 *.swo
 
 # Rust & Tauri
-src-tauri/target/
-src-tauri/gen/
+kernel/target/
+kernel/gen/
 **/*.rs.bk
 
 # Python

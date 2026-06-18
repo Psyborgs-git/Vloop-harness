@@ -1,0 +1,37 @@
+[package]
+name = "vloop-kernel"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1"
+thiserror = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
+tokio = { version = "1", features = ["full"] }
+
+tonic = "0.12"
+tower = "0.5"
+hyper-util = "0.1"
+prost = "0.13"
+prost-types = "0.13"
+
+[build-dependencies]
+tonic-build = "0.12"
+
+[package.metadata]
+# Placeholder for future dependency management + feature flags.
+
+[[bin]]
+name = "vloopd"
+path = "src/bin/vloopd.rs"
+
+[[bin]]
+name = "vloopctl"
+path = "src/bin/vloopctl.rs"
+
+[[bin]]
+name = "vloop-launcher"
+path = "src/bin/vloop-launcher.rs"

@@ -1,40 +1,122 @@
-# Python Control Plane (The Brain)
+# Python Control Plane Specification
 
-The Python Control Plane serves as the cognitive orchestrator for VLoop. Designed using a Hexagonal Architecture, it is a stateless gRPC daemon supervised directly by the Rust microkernel.
+The Python Control Plane is the cognitive authority in VLoop. It owns agent orchestration, inference, workflow state, windows, and user interaction. It does **not** own infrastructure execution.
 
-## Architecture
+---
 
-The Control Plane lives in the `control-plane/` directory and relies on `uv` for ultra-fast dependency management and environment isolation.
+## 1. Responsibilities
 
-### 1. gRPC Interface (`proto/system.proto`)
-The system communicates with the Rust microkernel via gRPC. 
-* **Endpoints:**
-  * `HealthCheck`: Confirms the Python daemon is running.
-  * `ReloadConfig`: Tells Python to re-read `~/.vloop/rust/active.toml`.
-  * `DispatchTask`: Accepts an objective string from the UI/Rust and initiates the Agent Loop.
+The CP is responsible for:
 
-### 2. Hexagonal Ports & Adapters (`core/ports.py`)
-To prevent vendor lock-in, the core logic binds to interfaces:
-* **`IVectorStore`:** Manages agent memory. Currently implemented via `DummyVectorStoreAdapter`, but designed for ChromaDB/pgvector.
-* **`IRelationalDB`:** Manages structured data and audit trails. Implemented via `SQLiteAdapter`.
-* **`IExecutionManager`:** Abstracts sandbox execution (see `sandboxes.md`).
+- bootstrapping and registering with `vloopd`;
+- serving the frontend and owning user-visible windows;
+- exposing HTTP/WebSocket APIs to the frontend;
+- running the agent orchestration engine;
+- planning workflows and persisting workflow state;
+- managing inference policy, budgets, and provider routing;
+- translating kernel event streams into user-facing workflow state.
 
-### 3. DSPy Agent Integration (`core/agent.py` & `core/dspy_modules.py`)
-The orchestrator avoids raw prompting in favor of structural DSPy signatures:
-1. **`CodeGenerator`:** Takes an objective (e.g., "Scrape HackerNews") and outputs a self-contained Python script.
-2. **`PolicyGenerator`:** Evaluates the generated script and outputs a strict JSON security policy (e.g., restricting network access if unnecessary).
-3. **`AgentLoop`:** Dispatches the code to the sandbox, reads the stdout/stderr logs, and if it fails, iterates with the feedback up to a `max_iterations` limit.
+## 2. Non-responsibilities
 
-### 4. Cost/Token Gateway (`core/gateway.py`)
-Because VLoop utilizes LLMs (via `litellm`), it includes a strict token-tracking middleware. 
-* **Mechanism:** Wraps `litellm.completion`.
-* **Enforcement:** If `total_tokens_used` exceeds `max_tokens` (default 50,000), a `TokenLimitExceeded` exception is thrown, immediately halting the agent loop to prevent runaway costs.
+The CP does **not**:
 
-### 5. UI Rendering & PyWebView
-The Control Plane acts as the active router and window manager. Using `pywebview`, it natively renders the React Frontend (served via FastAPI). It listens for `NotifyUserAction` gRPC commands from the Rust System Tray to show, hide, or terminate windows.
+- call Docker or Kubernetes directly in the production path;
+- store or return raw secrets by default;
+- own local resource truth for files, networks, databases, or workloads;
+- bypass the kernel for arbitrary execution.
 
-### 6. AI Context Management (Background RAG)
-The Control Plane runs a `watchdog` daemon in a background thread to index the user's `~/.vloop/workspace/`. Newly created or modified documents are automatically chunked and embedded directly into the active Vector Store, providing up-to-date context for the DSPy agent loops.
+---
 
-### 7. Infrastructure Delegation
-While the CP determines *when* a container should be spawned or a Swarm node engaged, it does not hold the secure credentials. Instead, it delegates physical execution by calling the `InfrastructureControl` gRPC service hosted by the Rust Microkernel.
+## 3. Internal structure
+
+| Module | Role |
+|---|---|
+| `cp/bootstrap.py` | Starts the CP runtime, config loading, kernel registration, and service startup. |
+| `cp/http_api.py` | Frontend-facing HTTP and WebSocket API. |
+| `cp/window.py` | PyWebView or equivalent window management. |
+| `cp/config_service.py` | Typed config from kernel-injected active config and user preferences. |
+| `cp/events.py` | Kernel event subscription and fan-out to frontend and workflow state. |
+| `core/agent.py` | Agent orchestration runtime. |
+| `core/planner.py` | Goal compilation into workflows/DAGs/plans. |
+| `core/dag.py` | Workflow persistence, state transitions, rewind/retry rules. |
+| `core/gateway.py` | Inference gateway, budgets, model routing, caching, provider policies. |
+| `adapters/rust_infra.py` | Production execution port backed by kernel gRPC. |
+
+---
+
+## 4. External APIs
+
+### Frontend-facing APIs
+
+The CP should expose:
+
+- health and version endpoints;
+- session and window-state endpoints;
+- workflow create/read/cancel/retry endpoints;
+- resource status streams;
+- settings, vault UX, and support surfaces;
+- WebSocket event feeds for logs, progress, and approvals.
+
+### Kernel-facing APIs
+
+The CP should:
+
+- register with the kernel at startup;
+- maintain a session and heartbeat;
+- request workloads, filesystems, databases, networks, and secret grants through kernel gRPC only;
+- subscribe to kernel event streams.
+
+---
+
+## 5. Workflow model
+
+A workflow should include:
+
+- a user objective;
+- an execution plan or DAG;
+- one or more agents/tools/steps;
+- infrastructure requests;
+- event history;
+- artifacts;
+- retry/cancel state;
+- approval checkpoints where required.
+
+The CP owns workflow meaning. The kernel owns resource reality.
+
+---
+
+## 6. Inference model
+
+The inference gateway should centralize:
+
+- provider selection;
+- model profiles;
+- budgets and rate limits;
+- retries and fallbacks;
+- tool-call and prompt policies;
+- secret-backed provider authentication through kernel-granted capabilities.
+
+---
+
+## 7. Window ownership model
+
+The CP owns window lifecycle:
+
+- main application window;
+- future modal or approval surfaces;
+- open/focus/close behavior;
+- initial boot/failure states before workflows are available.
+
+The launcher gets the user to the CP. The CP owns the visible experience.
+
+---
+
+## 8. Validation requirements
+
+The CP is complete when it can:
+
+- register with `vloopd` successfully;
+- serve the frontend and open a window;
+- dispatch a workflow that requests a kernel-managed workload;
+- stream status/logs/events back to the frontend;
+- enforce inference budgets and request secret grants without handling raw secret values.

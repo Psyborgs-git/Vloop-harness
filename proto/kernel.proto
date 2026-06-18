@@ -1,0 +1,11 @@
+syntax = "proto3";
+package vloop.kernel;
+
+// NOTE: scaffold proto. Replace with full kernel/control-plane API.
+
+service KernelControl {
+  rpc GetKernelStatus (Ping) returns (Pong);
+}
+
+message Ping {}
+message Pong { string status = 1; }
