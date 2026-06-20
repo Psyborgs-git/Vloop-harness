@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: control-plane
+Version: 0.1.0
+Summary: Python Control Plane (scaffold)
+Requires-Python: >=3.11
+Requires-Dist: fastapi>=0.110.0
+Requires-Dist: uvicorn>=0.30.0
+Requires-Dist: grpcio>=1.60.0
+Requires-Dist: grpcio-tools>=1.60.0
+Requires-Dist: uv>=0.2.0
+Requires-Dist: pywebview>=5.0.0
+Requires-Dist: litellm>=1.0.0
+Requires-Dist: dspy-ai>=3.0.0
+Requires-Dist: watchdog>=4.0.0
+Requires-Dist: tomli>=2.0.0

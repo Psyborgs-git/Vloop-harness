@@ -1,0 +1,10 @@
+fastapi>=0.110.0
+uvicorn>=0.30.0
+grpcio>=1.60.0
+grpcio-tools>=1.60.0
+uv>=0.2.0
+pywebview>=5.0.0
+litellm>=1.0.0
+dspy-ai>=3.0.0
+watchdog>=4.0.0
+tomli>=2.0.0
