@@ -1,11 +1,245 @@
 syntax = "proto3";
 package vloop.kernel;
 
-// NOTE: scaffold proto. Replace with full kernel/control-plane API.
-
-service KernelControl {
-  rpc GetKernelStatus (Ping) returns (Pong);
+service KernelLifecycle {
+  rpc GetStatus(GetStatusRequest) returns (GetStatusResponse);
+  rpc GetDependencies(GetDependenciesRequest) returns (GetDependenciesResponse);
+  rpc RegisterControlPlane(RegisterControlPlaneRequest) returns (RegisterControlPlaneResponse);
+  rpc ControlPlaneHeartbeat(ControlPlaneHeartbeatRequest) returns (ControlPlaneHeartbeatResponse);
+  rpc WatchKernelEvents(WatchKernelEventsRequest) returns (stream KernelEvent);
+  rpc OpenUi(OpenUiRequest) returns (OpenUiResponse);
+  rpc Shutdown(ShutdownRequest) returns (ShutdownResponse);
 }
 
-message Ping {}
-message Pong { string status = 1; }
+enum KernelHealth {
+  KERNEL_HEALTH_UNSPECIFIED = 0;
+  KERNEL_HEALTH_STARTING = 1;
+  KERNEL_HEALTH_READY = 2;
+  KERNEL_HEALTH_DEGRADED = 3;
+  KERNEL_HEALTH_DEPENDENCY_MISSING = 4;
+  KERNEL_HEALTH_CP_UNREGISTERED = 5;
+  KERNEL_HEALTH_CP_RESTARTING = 6;
+  KERNEL_HEALTH_SHUTTING_DOWN = 7;
+}
+
+enum DependencyState {
+  DEPENDENCY_STATE_UNSPECIFIED = 0;
+  DEPENDENCY_STATE_READY = 1;
+  DEPENDENCY_STATE_MISSING = 2;
+  DEPENDENCY_STATE_INSTALLED_BUT_NOT_RUNNING = 3;
+  DEPENDENCY_STATE_VERSION_MISMATCH = 4;
+  DEPENDENCY_STATE_DEGRADED = 5;
+  DEPENDENCY_STATE_DISABLED = 6;
+}
+
+message GetStatusRequest {}
+
+message GetStatusResponse {
+  KernelSnapshot snapshot = 1;
+}
+
+message KernelSnapshot {
+  string version = 1;
+  string boot_id = 2;
+  KernelHealth health = 3;
+  string status_message = 4;
+  string runtime_root = 5;
+  string ipc_endpoint = 6;
+  int64 started_at_unix_ms = 7;
+  int64 updated_at_unix_ms = 8;
+  repeated DependencyStatus dependencies = 9;
+  ControlPlaneStatus control_plane = 10;
+}
+
+message DependencyStatus {
+  string name = 1;
+  DependencyState state = 2;
+  string message = 3;
+  string detected_version = 4;
+  string remediation = 5;
+}
+
+message ControlPlaneStatus {
+  bool registered = 1;
+  string session_id = 2;
+  string version = 3;
+  int64 registered_at_unix_ms = 4;
+  int64 last_heartbeat_at_unix_ms = 5;
+  repeated string granted_scopes = 6;
+  repeated string announced_capabilities = 7;
+  string launch_mode = 8;
+  string status_message = 9;
+  uint32 restart_count = 10;
+}
+
+message RegisterControlPlaneRequest {
+  string version = 1;
+  repeated string capabilities = 2;
+  map<string, string> metadata = 3;
+}
+
+message RegisterControlPlaneResponse {
+  string session_id = 1;
+  repeated string granted_scopes = 2;
+  KernelActiveConfig active_config = 3;
+}
+
+message KernelActiveConfig {
+  string ipc_endpoint = 1;
+  string boot_id = 2;
+  string runtime_root = 3;
+  repeated string available_runtimes = 4;
+  map<string, string> features = 5;
+}
+
+message ControlPlaneHeartbeatRequest {
+  string session_id = 1;
+}
+
+message ControlPlaneHeartbeatResponse {
+  bool acknowledged = 1;
+  KernelHealth kernel_health = 2;
+}
+
+message WatchKernelEventsRequest {
+  string session_id = 1;
+}
+
+message KernelEvent {
+  string event_id = 1;
+  string event_type = 2;
+  string resource_type = 3;
+  string resource_id = 4;
+  string status = 5;
+  string message = 6;
+  int64 timestamp_unix_ms = 7;
+  map<string, string> attributes = 8;
+}
+
+message OpenUiRequest {
+  string reason = 1;
+  string requestor = 2;
+}
+
+message OpenUiResponse {
+  bool accepted = 1;
+  string message = 2;
+}
+
+message ShutdownRequest {
+  string reason = 1;
+}
+
+message ShutdownResponse {
+  bool accepted = 1;
+  string message = 2;
+}
+
+message GetDependenciesRequest {}
+
+message GetDependenciesResponse {
+  repeated DependencyStatus dependencies = 1;
+}
+
+// ---- Workload orchestration ----
+
+service WorkloadControl {
+  rpc ListWorkloads(ListWorkloadsRequest) returns (ListWorkloadsResponse);
+  rpc CreateWorkload(CreateWorkloadRequest) returns (CreateWorkloadResponse);
+  rpc StartWorkload(StartWorkloadRequest) returns (StartWorkloadResponse);
+  rpc StopWorkload(StopWorkloadRequest) returns (StopWorkloadResponse);
+  rpc WatchWorkloadLogs(WatchWorkloadLogsRequest) returns (stream WorkloadLogLine);
+  rpc GetWorkload(GetWorkloadRequest) returns (GetWorkloadResponse);
+}
+
+enum WorkloadClass {
+  WORKLOAD_CLASS_UNSPECIFIED = 0;
+  WORKLOAD_CLASS_HARNESS = 1;
+  WORKLOAD_CLASS_WORKER = 2;
+  WORKLOAD_CLASS_PREVIEW = 3;
+  WORKLOAD_CLASS_SERVICE = 4;
+}
+
+enum WorkloadState {
+  WORKLOAD_STATE_UNSPECIFIED = 0;
+  WORKLOAD_STATE_CREATED = 1;
+  WORKLOAD_STATE_PREPARED = 2;
+  WORKLOAD_STATE_STARTING = 3;
+  WORKLOAD_STATE_RUNNING = 4;
+  WORKLOAD_STATE_COMPLETED = 5;
+  WORKLOAD_STATE_FAILED = 6;
+  WORKLOAD_STATE_CANCELLING = 7;
+  WORKLOAD_STATE_CANCELLED = 8;
+  WORKLOAD_STATE_GARBAGE_COLLECTED = 9;
+}
+
+message WorkloadSpec {
+  string image = 1;
+  repeated string command = 2;
+  repeated uint32 ports = 3;
+  map<string, string> environment = 4;
+  WorkloadClass class = 5;
+}
+
+message WorkloadRecord {
+  string workload_id = 1;
+  WorkloadClass class = 2;
+  WorkloadState state = 3;
+  WorkloadSpec spec = 4;
+  int64 created_at_unix_ms = 5;
+  int64 updated_at_unix_ms = 6;
+  optional int32 exit_code = 7;
+  string termination_reason = 8;
+  repeated uint32 exposed_ports = 9;
+  string preview_url = 10;
+}
+
+message ListWorkloadsRequest {}
+
+message ListWorkloadsResponse {
+  repeated WorkloadRecord workloads = 1;
+}
+
+message CreateWorkloadRequest {
+  WorkloadSpec spec = 1;
+  string workflow_id = 2;
+}
+
+message CreateWorkloadResponse {
+  WorkloadRecord workload = 1;
+}
+
+message StartWorkloadRequest {
+  string workload_id = 1;
+}
+
+message StartWorkloadResponse {
+  WorkloadRecord workload = 1;
+}
+
+message StopWorkloadRequest {
+  string workload_id = 1;
+}
+
+message StopWorkloadResponse {
+  WorkloadRecord workload = 1;
+}
+
+message WatchWorkloadLogsRequest {
+  string workload_id = 1;
+}
+
+message WorkloadLogLine {
+  string workload_id = 1;
+  string stream = 2;
+  string line = 3;
+  int64 timestamp_unix_ms = 4;
+}
+
+message GetWorkloadRequest {
+  string workload_id = 1;
+}
+
+message GetWorkloadResponse {
+  WorkloadRecord workload = 1;
+}
