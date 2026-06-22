@@ -433,6 +433,18 @@ def _handler_factory(runtime: Any):
                 "internal control-plane error",
             )
 
+        def _send_security_headers(self) -> None:
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.send_header("X-Frame-Options", "DENY")
+            self.send_header("X-XSS-Protection", "1; mode=block")
+            self.send_header(
+                "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
+            )
+            self.send_header(
+                "Content-Security-Policy",
+                "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';",
+            )
+
         def _write_json(
             self,
             payload: dict[str, Any] | list[Any] | str | int | float | bool | None,
@@ -444,6 +456,7 @@ def _handler_factory(runtime: Any):
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Cache-Control", "no-store")
             self.send_header("Content-Length", str(len(body)))
+            self._send_security_headers()
             self.end_headers()
             self.wfile.write(body)
 
@@ -469,6 +482,7 @@ def _handler_factory(runtime: Any):
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Cache-Control", "no-store")
             self.send_header("Content-Length", str(len(body)))
+            self._send_security_headers()
             self.end_headers()
             self.wfile.write(body)
 
@@ -484,6 +498,7 @@ def _handler_factory(runtime: Any):
                 self.send_header("Content-Encoding", encoding)
             self.send_header("Cache-Control", "no-store")
             self.send_header("Content-Length", str(len(body)))
+            self._send_security_headers()
             self.end_headers()
             self.wfile.write(body)
 
