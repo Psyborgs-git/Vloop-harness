@@ -76,6 +76,7 @@ class WindowManager:
         self._allow_destroy = False
         self._webview: Any | None = None
         self._window: Any | None = None
+        self._on_quit_requested: Callable[[], None] | None = None
         self._snapshot = WindowSnapshot(
             backend="pywebview",
             is_open=not config.window_hidden_until_open,
@@ -170,6 +171,11 @@ class WindowManager:
         )
         return current
 
+    def set_quit_callback(self, callback: Callable[[], None]) -> None:
+        """Register a callback invoked when the user requests quit (title-bar X or equivalent)."""
+        with self._lock:
+            self._on_quit_requested = callback
+
     def shutdown(self, reason: str = "shutdown requested") -> None:
         with self._lock:
             self._allow_destroy = True
@@ -192,15 +198,32 @@ class WindowManager:
         with self._lock:
             if self._allow_destroy:
                 self._snapshot.is_open = False
-                return None
+                return None  # let pywebview close the window
 
             self._snapshot.is_open = False
+            on_quit = self._on_quit_requested
 
-        LOGGER.info(
-            "hiding VLoop main window instead of closing the control-plane process"
-        )
-        with suppress(Exception):
-            window.hide()
+        if on_quit is not None:
+            LOGGER.info(
+                "user requested quit via title-bar — dispatching shutdown cascade"
+            )
+            # Allow destroy so the quit cascade can close the window cleanly.
+            # The quit callback is responsible for stopping HTTP + signalling shutdown.
+            with self._lock:
+                self._allow_destroy = True
+            # Let pywebview close the window; the quit callback handles the rest.
+            # We invoke it after returning True so pywebview's close completes.
+            # Use a 0-delay timer so the event loop processes the close first.
+            import threading
+
+            threading.Thread(target=on_quit, daemon=True).start()
+            return None  # allow pywebview to destroy the window
+        else:
+            LOGGER.info(
+                "hiding VLoop main window instead of closing the control-plane process"
+            )
+            with suppress(Exception):
+                window.hide()
         return False
 
     def _on_closed(self, _window: Any) -> None:

@@ -1,4 +1,6 @@
+import { useCallback, useEffect, useState } from "react";
 import type { DependencySnapshot, SystemSnapshot } from "../lib/api";
+import { getBootstrap } from "../lib/api";
 import {
   EmptyState,
   InlineNotice,
@@ -40,11 +42,15 @@ function depTone(state: string): "good" | "warn" | "bad" | "neutral" {
 }
 
 /** Known install guides the UI can link to. */
-const INSTALL_GUIDES: Record<string, { title: string; body: string; url?: string }> = {
+const INSTALL_GUIDES: Record<
+  string,
+  { title: string; body: string; url?: string; automated?: boolean }
+> = {
   docker: {
     title: "Docker Engine / Docker Desktop",
-    body: "Docker lets VLoop run containerised workloads.  Install Docker Desktop (macOS / Windows) or Docker Engine (Linux), then refresh the Setup view.",
+    body: "Docker lets VLoop run containerised workloads.  Docker is optional — workloads requiring containers will be unavailable without it, but all other features work fine.  Install Docker Desktop (macOS / Windows) or Docker Engine (Linux).",
     url: "https://docs.docker.com/engine/install/",
+    automated: true,
   },
   python_runtime: {
     title: "Python 3",
@@ -62,13 +68,24 @@ const INSTALL_GUIDES: Record<string, { title: string; body: string; url?: string
 };
 
 /** Render a single dependency card. */
-function DependencyCard({ dep }: { dep: DependencySnapshot["dependencies"][number] }) {
+function DependencyCard({
+  dep,
+}: {
+  dep: DependencySnapshot["dependencies"][number];
+}) {
   const tone = depTone(dep.state);
   const guide = INSTALL_GUIDES[dep.name];
 
   return (
     <Panel title={dep.name} key={dep.name}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          marginBottom: 8,
+        }}
+      >
         <StatusBadge
           status={dep.state}
           label={STATE_LABELS[dep.state] ?? dep.state}
@@ -91,7 +108,10 @@ function DependencyCard({ dep }: { dep: DependencySnapshot["dependencies"][numbe
 
       {guide && tone !== "good" ? (
         <div style={{ marginTop: 10 }}>
-          <InlineNotice tone="neutral" title="Install guide: {guide.title}">
+          <InlineNotice
+            tone={guide.automated ? "warn" : "neutral"}
+            title={guide.title}
+          >
             <p>{guide.body}</p>
             {guide.url ? (
               <a
@@ -102,6 +122,19 @@ function DependencyCard({ dep }: { dep: DependencySnapshot["dependencies"][numbe
               >
                 Open install guide →
               </a>
+            ) : null}
+            {guide.automated ? (
+              <p
+                style={{
+                  marginTop: 8,
+                  fontSize: "0.9em",
+                  color: "var(--muted)",
+                }}
+              >
+                Docker is optional. All other features (agents, providers, chat,
+                AI workflows) work without Docker. Only the Workloads tab
+                requires Docker to run containers.
+              </p>
             ) : null}
           </InlineNotice>
         </div>
@@ -145,7 +178,12 @@ export function SetupView({ system, systemError }: SetupViewProps) {
         />
       ) : (
         <div
-          style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 20 }}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 16,
+            marginTop: 20,
+          }}
         >
           {depList.map((dep) => (
             <DependencyCard dep={dep} key={dep.name} />

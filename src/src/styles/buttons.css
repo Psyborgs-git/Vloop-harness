@@ -1,0 +1,152 @@
+/* === Buttons, Badges & Notices === */
+
+/* ---- Buttons ---- */
+.button-row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.button-row--end {
+  justify-content: flex-end;
+}
+
+.button {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.7rem 1rem;
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 600;
+  line-height: 1.1;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.button:disabled {
+  opacity: 0.62;
+}
+
+.button--primary {
+  border-color: color-mix(in oklab, var(--accent) 48%, var(--border) 52%);
+  background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+  color: var(--accent-contrast);
+}
+
+.button--secondary {
+  background: var(--surface);
+}
+
+.button--danger {
+  border-color: color-mix(in oklab, var(--bad) 34%, var(--border) 66%);
+  color: var(--bad);
+  background: var(--bad-wash);
+}
+
+.button--quiet {
+  border-color: transparent;
+  background: transparent;
+  padding-inline: 0;
+  color: var(--ink-soft);
+}
+
+/* ---- Badges ---- */
+.badge {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.32rem 0.68rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--neutral-wash);
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.badge__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.badge--neutral {
+  background: var(--neutral-wash);
+  color: var(--ink-soft);
+}
+
+.badge--accent {
+  background: var(--accent-wash);
+  color: var(--accent-strong);
+  border-color: color-mix(in oklab, var(--accent) 24%, var(--border) 76%);
+}
+
+.badge--good {
+  background: var(--good-wash);
+  color: color-mix(in oklab, var(--good) 82%, black 18%);
+  border-color: color-mix(in oklab, var(--good) 26%, var(--border) 74%);
+}
+
+.badge--warn {
+  background: var(--warn-wash);
+  color: color-mix(in oklab, var(--warn) 72%, black 28%);
+  border-color: color-mix(in oklab, var(--warn) 26%, var(--border) 74%);
+}
+
+.badge--bad {
+  background: var(--bad-wash);
+  color: color-mix(in oklab, var(--bad) 82%, black 18%);
+  border-color: color-mix(in oklab, var(--bad) 24%, var(--border) 76%);
+}
+
+/* ---- Notices ---- */
+.notice {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  padding: var(--space-4);
+  display: grid;
+  gap: var(--space-2);
+}
+
+.notice strong {
+  font-size: 0.95rem;
+}
+
+.notice__body p,
+.notice p {
+  margin: 0;
+}
+
+.notice--neutral {
+  background: var(--neutral-wash);
+}
+
+.notice--accent {
+  background: var(--accent-wash);
+  border-color: color-mix(in oklab, var(--accent) 28%, var(--border) 72%);
+}
+
+.notice--good {
+  background: var(--good-wash);
+  border-color: color-mix(in oklab, var(--good) 26%, var(--border) 74%);
+}
+
+.notice--warn {
+  background: var(--warn-wash);
+  border-color: color-mix(in oklab, var(--warn) 28%, var(--border) 72%);
+}
+
+.notice--bad {
+  background: var(--bad-wash);
+  border-color: color-mix(in oklab, var(--bad) 28%, var(--border) 72%);
+}

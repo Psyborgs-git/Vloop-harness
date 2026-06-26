@@ -5,14 +5,16 @@ VLoop is a cross-platform, local-first AI orchestration platform built from the 
 - **`vloopd`** — the Rust infrastructure daemon;
 - **Python Control Plane** — the orchestration, inference, and GUI authority.
 
-The repository is now organized as a greenfield build:
+The repository is organized as a greenfield build:
 
-- `kernel/` — Rust daemon, service control, IPC, and infrastructure managers
-- `control-plane/` — Python Control Plane
-- `src/` — React frontend served by the CP
-- `proto/` — canonical gRPC contracts
-- `packaging/` — OS-native packaging assets
-- `docs/` — architecture blueprint and subsystem specifications
+| Directory | Technology | Role |
+|---|---|---|
+| `kernel/` | Rust | Daemon, service control, IPC, infrastructure managers |
+| `control-plane/` | Python | Orchestration, inference, HTTP API, GUI authority |
+| `src/` | React + TypeScript | Frontend UI served by the control plane |
+| `proto/` | Protobuf | Canonical gRPC contracts |
+| `packaging/` | — | OS-native packaging assets |
+| `docs/` | Markdown | Architecture blueprint and subsystem specifications |
 
 ## Start here
 

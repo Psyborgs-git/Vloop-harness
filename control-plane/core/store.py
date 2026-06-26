@@ -1,4 +1,8 @@
-"""SQLite-backed persistence for control-plane provider, agent, and invocation state."""
+"""Legacy SQLite state store and persistence helpers (shim).
+
+``SQLiteState`` is kept for backward compatibility.
+``now_iso``, ``to_json``, ``from_json`` now delegate to ``core.helpers``.
+"""
 
 from __future__ import annotations
 
@@ -9,8 +13,12 @@ import time
 from pathlib import Path
 from typing import Any, Iterable
 
+from core.helpers import from_json, now_iso, to_json  # noqa: F401
+
 
 class SQLiteState:
+    """Legacy SQLite state store — prefer ``core.database.DatabaseBackend``."""
+
     def __init__(self, db_path: Path) -> None:
         self.db_path = db_path
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -115,23 +123,21 @@ class SQLiteState:
                     type TEXT NOT NULL,
                     message TEXT NOT NULL,
                     payload_json TEXT NOT NULL,
+                    elapsed_ms INTEGER,
                     created_at TEXT NOT NULL,
                     PRIMARY KEY (invocation_id, seq)
+                );
+
+                CREATE TABLE IF NOT EXISTS usage_logs (
+                    invocation_id TEXT NOT NULL,
+                    phase TEXT NOT NULL,
+                    prompt_tokens INTEGER NOT NULL DEFAULT 0,
+                    completion_tokens INTEGER NOT NULL DEFAULT 0,
+                    total_tokens INTEGER NOT NULL DEFAULT 0,
+                    model TEXT,
+                    created_at TEXT NOT NULL,
+                    PRIMARY KEY (invocation_id, phase)
                 );
                 """
             )
             connection.commit()
-
-
-def now_iso() -> str:
-    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-
-
-def to_json(value: Any) -> str:
-    return json.dumps(value, ensure_ascii=False)
-
-
-def from_json(value: str | None, default: Any) -> Any:
-    if not value:
-        return default
-    return json.loads(value)

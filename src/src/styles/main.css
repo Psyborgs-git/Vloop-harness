@@ -1,0 +1,28 @@
+/* === Main stylesheet — consolidated for VLoop === */
+
+/* === 1. Design Tokens & Theme Variables === */
+@import "./tokens.css";
+
+/* === 2. Reset & Base === */
+@import "./reset.css";
+
+/* === 3. Layout — App Shell, Sidebar, Toolbar, Content === */
+@import "./layout.css";
+
+/* === 4. Panels, Cards & Components === */
+@import "./panels.css";
+
+/* === 5. Buttons, Badges & Notices === */
+@import "./buttons.css";
+
+/* === 6. Forms & Inputs === */
+@import "./forms.css";
+
+/* === 7. Chat View === */
+@import "./chat.css";
+
+/* === 8. Page Layout Helpers === */
+@import "./pages.css";
+
+/* === 9. Accessibility & Motion === */
+@import "./accessibility.css";

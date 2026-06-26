@@ -60,6 +60,9 @@ class ControlPlaneConfig:
     window_height: int = 860
     window_hidden_until_open: bool = True
     window_debug: bool = False
+    # Database configuration
+    database_url: str | None = None
+    vector_db_url: str | None = None
 
     def registration_metadata(self) -> dict[str, str]:
         return {
@@ -113,6 +116,8 @@ def load_active_config() -> ControlPlaneConfig:
         window_height=int(os.environ.get("VLOOP_CP_WINDOW_HEIGHT", "860")),
         window_hidden_until_open=_env_flag("VLOOP_CP_WINDOW_HIDDEN", default=True),
         window_debug=_env_flag("VLOOP_CP_WINDOW_DEBUG", default=False),
+        database_url=os.environ.get("VLOOP_DATABASE_URL"),
+        vector_db_url=os.environ.get("VLOOP_VECTOR_DB_URL"),
     )
 
 

@@ -1,0 +1,80 @@
+/* === Page Layout Helpers === */
+
+.page-stack {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-6);
+  align-items: flex-start;
+}
+
+.page-header__content h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+.page-header__content p {
+  margin: 0.6rem 0 0;
+  max-width: 72ch;
+  color: var(--muted);
+}
+
+.page-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: var(--space-4);
+}
+
+.page-grid {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.page-grid--sidebar {
+  grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
+}
+
+.page-grid--playground {
+  grid-template-columns: minmax(0, 0.98fr) minmax(0, 1.02fr);
+}
+
+@media (max-width: 1180px) {
+  .page-grid--sidebar,
+  .page-grid--playground {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .page-header__actions {
+    justify-content: flex-start;
+  }
+}
+
+/* Touch targets */
+@media (pointer: coarse) {
+  .button,
+  .nav-item,
+  .resource-row,
+  .list-action,
+  .segmented__button {
+    min-height: 44px;
+  }
+}

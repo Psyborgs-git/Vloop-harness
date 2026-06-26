@@ -17,5 +17,17 @@ dependencies = [
   "tomli>=2.0.0",
 ]
 
+[project.optional-dependencies]
+postgres = ["psycopg2-binary>=2.9"]
+duckdb = ["duckdb>=1.0"]
+pgvector = ["pgvector>=0.3"]
+pinecone = ["pinecone-client>=5.0"]
+all-db = [
+  "psycopg2-binary>=2.9",
+  "duckdb>=1.0",
+  "pgvector>=0.3",
+  "pinecone-client>=5.0",
+]
+
 [tool.setuptools]
 packages = ["cp", "core", "adapters"]
