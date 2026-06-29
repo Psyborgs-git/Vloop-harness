@@ -72,6 +72,7 @@ struct LogsView {
 #[tokio::main]
 async fn main() -> Result<()> {
     daemon::init_tracing();
+    vloop_kernel::config::load_config_to_env();
     let exit_code = run().await?;
     std::process::exit(exit_code);
 }
@@ -149,9 +150,10 @@ async fn start(paths: RuntimePaths, output_mode: OutputMode) -> Result<i32> {
     }
 
     let repo_root = vloop_kernel::orchestrator::dependencies::detect_repo_root();
+    let cp_autostart_str = if control_plane_autostart_enabled() { "true" } else { "false" };
 
     Command::new(&daemon_binary)
-        .env("VLOOP_CP_AUTOSTART", "true")
+        .env("VLOOP_CP_AUTOSTART", cp_autostart_str)
         .env("VLOOP_REPO_ROOT", repo_root.display().to_string())
         .stdin(Stdio::null())
         .stdout(Stdio::null())

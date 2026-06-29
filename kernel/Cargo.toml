@@ -21,6 +21,8 @@ tower = "0.5"
 hyper-util = "0.1"
 prost = "0.13"
 prost-types = "0.13"
+tray-icon = "0.14"
+tao = "0.25"
 
 [build-dependencies]
 protoc-bin-vendored = "3"
@@ -40,3 +42,7 @@ path = "src/bin/vloopctl.rs"
 [[bin]]
 name = "vloop-launcher"
 path = "src/bin/vloop-launcher.rs"
+
+[[bin]]
+name = "vloop-menu"
+path = "src/bin/vloop-menu.rs"

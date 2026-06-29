@@ -17,6 +17,7 @@ struct LauncherStatus {
 #[tokio::main]
 async fn main() -> Result<()> {
     daemon::init_tracing();
+    vloop_kernel::config::load_config_to_env();
     let exit_code = run().await?;
     std::process::exit(exit_code);
 }
