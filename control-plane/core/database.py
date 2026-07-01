@@ -12,6 +12,7 @@ import os
 import re
 import threading
 from abc import ABC, abstractmethod
+from contextlib import closing
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -106,6 +107,99 @@ _SCHEMA_STATEMENTS = [
         created_at TEXT NOT NULL,
         PRIMARY KEY (invocation_id, phase)
     )""",
+    # ------------------------------------------------------------------
+    # Orchestration engine tables
+    # ------------------------------------------------------------------
+    # workflow_definitions
+    """CREATE TABLE IF NOT EXISTS workflow_definitions (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        objective TEXT,
+        definition_json TEXT NOT NULL,
+        revision INTEGER NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+    )""",
+    # workflow_runs
+    """CREATE TABLE IF NOT EXISTS workflow_runs (
+        id TEXT PRIMARY KEY,
+        definition_id TEXT NOT NULL,
+        state TEXT NOT NULL,
+        concurrency_limit INTEGER NOT NULL,
+        budget_json TEXT,
+        created_at TEXT NOT NULL,
+        started_at TEXT,
+        finished_at TEXT
+    )""",
+    # workflow_steps
+    """CREATE TABLE IF NOT EXISTS workflow_steps (
+        run_id TEXT NOT NULL,
+        step_id TEXT NOT NULL,
+        step_type TEXT NOT NULL,
+        state TEXT NOT NULL,
+        depends_on_json TEXT NOT NULL,
+        inputs_json TEXT,
+        output_json TEXT,
+        error_message TEXT,
+        started_at TEXT,
+        finished_at TEXT,
+        PRIMARY KEY (run_id, step_id)
+    )""",
+    # workflow_events
+    """CREATE TABLE IF NOT EXISTS workflow_events (
+        run_id TEXT NOT NULL,
+        seq INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        step_id TEXT,
+        message TEXT NOT NULL,
+        payload_json TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        PRIMARY KEY (run_id, seq)
+    )""",
+    # scheduled_tasks
+    """CREATE TABLE IF NOT EXISTS scheduled_tasks (
+        id TEXT PRIMARY KEY,
+        definition_id TEXT NOT NULL,
+        cron_expression TEXT NOT NULL,
+        state TEXT NOT NULL,
+        next_run_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+    )""",
+    # memory_entries
+    """CREATE TABLE IF NOT EXISTS memory_entries (
+        id TEXT PRIMARY KEY,
+        category TEXT NOT NULL,
+        content TEXT NOT NULL,
+        size_bytes INTEGER NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+    )""",
+    # checkpoints
+    """CREATE TABLE IF NOT EXISTS checkpoints (
+        id TEXT PRIMARY KEY,
+        run_id TEXT NOT NULL,
+        workspace_id TEXT NOT NULL,
+        kernel_snapshot_ref TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    )""",
+    # toolsets
+    """CREATE TABLE IF NOT EXISTS toolsets (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        tools_json TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    )""",
+    # mcp_servers
+    """CREATE TABLE IF NOT EXISTS mcp_servers (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        transport TEXT NOT NULL,
+        tool_filter_json TEXT,
+        grant_ref TEXT,
+        status TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    )""",
 ]
 
 
@@ -161,22 +255,22 @@ class SQLiteBackend(DatabaseBackend):
         self._sqlite3 = sqlite3
 
     def fetch_all(self, sql: str, params: Iterable[Any] = ()) -> list[dict[str, Any]]:
-        with self._lock, self._connect() as conn:
+        with self._lock, closing(self._connect()) as conn:
             rows = conn.execute(sql, tuple(params)).fetchall()
         return [dict(row) for row in rows]
 
     def fetch_one(self, sql: str, params: Iterable[Any] = ()) -> dict[str, Any] | None:
-        with self._lock, self._connect() as conn:
+        with self._lock, closing(self._connect()) as conn:
             row = conn.execute(sql, tuple(params)).fetchone()
         return dict(row) if row is not None else None
 
     def execute(self, sql: str, params: Iterable[Any] = ()) -> None:
-        with self._lock, self._connect() as conn:
+        with self._lock, closing(self._connect()) as conn:
             conn.execute(sql, tuple(params))
             conn.commit()
 
     def executemany(self, sql: str, params: Iterable[Iterable[Any]]) -> None:
-        with self._lock, self._connect() as conn:
+        with self._lock, closing(self._connect()) as conn:
             conn.executemany(sql, [tuple(row) for row in params])
             conn.commit()
 
@@ -186,7 +280,7 @@ class SQLiteBackend(DatabaseBackend):
         return conn
 
     def initialize(self) -> None:
-        with self._lock, self._connect() as conn:
+        with self._lock, closing(self._connect()) as conn:
             conn.execute("PRAGMA journal_mode=WAL")
             for statement in _SCHEMA_STATEMENTS:
                 conn.execute(statement)

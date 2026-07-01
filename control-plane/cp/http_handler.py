@@ -10,7 +10,7 @@ from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
 from cp.handlers import route  # the central router
-from cp.http_responders import write_error_json
+from cp.http_responders import log_internal_error, write_error_json
 from cp.http_utils import (
     clean_exception_message,
     read_json_body,
@@ -109,7 +109,15 @@ def handler_factory(runtime: Any):
                 )
                 return
 
-            LOGGER.exception("control-plane HTTP request failed: %s", exc)
+            # Unexpected / server-side failure. Retain full detail (with
+            # traceback, secret-redacted) in the server log, but return only a
+            # generic non-technical message to the user (Requirement 20.3). The
+            # generic substitution is enforced centrally by write_error_json.
+            log_internal_error(
+                exc,
+                logger=LOGGER,
+                context="control-plane HTTP request failed",
+            )
             write_error_json(
                 self,
                 HTTPStatus.INTERNAL_SERVER_ERROR,

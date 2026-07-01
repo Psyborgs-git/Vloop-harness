@@ -396,6 +396,11 @@ class WorkloadControlStub:
                 request_serializer=kernel__pb2.GetWorkloadRequest.SerializeToString,
                 response_deserializer=kernel__pb2.GetWorkloadResponse.FromString,
                 _registered_method=True)
+        self.Exec = channel.unary_unary(
+                '/vloop.kernel.WorkloadControl/Exec',
+                request_serializer=kernel__pb2.ExecWorkloadRequest.SerializeToString,
+                response_deserializer=kernel__pb2.ExecWorkloadResponse.FromString,
+                _registered_method=True)
 
 
 class WorkloadControlServicer:
@@ -439,6 +444,14 @@ class WorkloadControlServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def Exec(self, request, context):
+        """Dispatch a job into a Kernel-managed sandbox and capture its result.
+        The Control_Plane never executes on the host; this is the only exec path.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_WorkloadControlServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -471,6 +484,11 @@ def add_WorkloadControlServicer_to_server(servicer, server):
                     servicer.GetWorkload,
                     request_deserializer=kernel__pb2.GetWorkloadRequest.FromString,
                     response_serializer=kernel__pb2.GetWorkloadResponse.SerializeToString,
+            ),
+            'Exec': grpc.unary_unary_rpc_method_handler(
+                    servicer.Exec,
+                    request_deserializer=kernel__pb2.ExecWorkloadRequest.FromString,
+                    response_serializer=kernel__pb2.ExecWorkloadResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -637,6 +655,312 @@ class WorkloadControl:
             '/vloop.kernel.WorkloadControl/GetWorkload',
             kernel__pb2.GetWorkloadRequest.SerializeToString,
             kernel__pb2.GetWorkloadResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def Exec(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/vloop.kernel.WorkloadControl/Exec',
+            kernel__pb2.ExecWorkloadRequest.SerializeToString,
+            kernel__pb2.ExecWorkloadResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+
+class FilesystemControlStub:
+    """---- Filesystem snapshot / restore ----
+
+    Workspace snapshot/restore for checkpoints. The Kernel owns and persists
+    snapshot contents; the Control_Plane retains only the returned opaque
+    snapshot reference and never stores file contents (Req 13.4).
+    """
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.Snapshot = channel.unary_unary(
+                '/vloop.kernel.FilesystemControl/Snapshot',
+                request_serializer=kernel__pb2.SnapshotWorkspaceRequest.SerializeToString,
+                response_deserializer=kernel__pb2.SnapshotWorkspaceResponse.FromString,
+                _registered_method=True)
+        self.Restore = channel.unary_unary(
+                '/vloop.kernel.FilesystemControl/Restore',
+                request_serializer=kernel__pb2.RestoreWorkspaceRequest.SerializeToString,
+                response_deserializer=kernel__pb2.RestoreWorkspaceResponse.FromString,
+                _registered_method=True)
+
+
+class FilesystemControlServicer:
+    """---- Filesystem snapshot / restore ----
+
+    Workspace snapshot/restore for checkpoints. The Kernel owns and persists
+    snapshot contents; the Control_Plane retains only the returned opaque
+    snapshot reference and never stores file contents (Req 13.4).
+    """
+
+    def Snapshot(self, request, context):
+        """Snapshot a sandbox workspace before a filesystem mutation and return an
+        opaque snapshot reference owned by the Kernel (Req 13.1).
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Restore(self, request, context):
+        """Restore a sandbox workspace to a previously captured snapshot (Req 13.2).
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_FilesystemControlServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'Snapshot': grpc.unary_unary_rpc_method_handler(
+                    servicer.Snapshot,
+                    request_deserializer=kernel__pb2.SnapshotWorkspaceRequest.FromString,
+                    response_serializer=kernel__pb2.SnapshotWorkspaceResponse.SerializeToString,
+            ),
+            'Restore': grpc.unary_unary_rpc_method_handler(
+                    servicer.Restore,
+                    request_deserializer=kernel__pb2.RestoreWorkspaceRequest.FromString,
+                    response_serializer=kernel__pb2.RestoreWorkspaceResponse.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'vloop.kernel.FilesystemControl', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('vloop.kernel.FilesystemControl', rpc_method_handlers)
+
+
+ # This class is part of an EXPERIMENTAL API.
+class FilesystemControl:
+    """---- Filesystem snapshot / restore ----
+
+    Workspace snapshot/restore for checkpoints. The Kernel owns and persists
+    snapshot contents; the Control_Plane retains only the returned opaque
+    snapshot reference and never stores file contents (Req 13.4).
+    """
+
+    @staticmethod
+    def Snapshot(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/vloop.kernel.FilesystemControl/Snapshot',
+            kernel__pb2.SnapshotWorkspaceRequest.SerializeToString,
+            kernel__pb2.SnapshotWorkspaceResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def Restore(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/vloop.kernel.FilesystemControl/Restore',
+            kernel__pb2.RestoreWorkspaceRequest.SerializeToString,
+            kernel__pb2.RestoreWorkspaceResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+
+class SecretControlStub:
+    """---- Secret grants ----
+
+    Secret grant issuance/revocation for provider sessions, credential pools,
+    and MCP server credentials. The Kernel owns and stores raw secret values and
+    injects them into trusted runtime paths (env/file/session). The
+    Control_Plane consumes secrets by reference only: a Grant returns a grant id
+    and an opaque session reference, never a raw secret value (Req 6.5, 16.4,
+    18.4). When no grant can be issued the call fails; the Control_Plane never
+    falls back to raw secret values (Req 18.5).
+    """
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.Grant = channel.unary_unary(
+                '/vloop.kernel.SecretControl/Grant',
+                request_serializer=kernel__pb2.GrantSecretRequest.SerializeToString,
+                response_deserializer=kernel__pb2.GrantSecretResponse.FromString,
+                _registered_method=True)
+        self.Revoke = channel.unary_unary(
+                '/vloop.kernel.SecretControl/Revoke',
+                request_serializer=kernel__pb2.RevokeSecretRequest.SerializeToString,
+                response_deserializer=kernel__pb2.RevokeSecretResponse.FromString,
+                _registered_method=True)
+
+
+class SecretControlServicer:
+    """---- Secret grants ----
+
+    Secret grant issuance/revocation for provider sessions, credential pools,
+    and MCP server credentials. The Kernel owns and stores raw secret values and
+    injects them into trusted runtime paths (env/file/session). The
+    Control_Plane consumes secrets by reference only: a Grant returns a grant id
+    and an opaque session reference, never a raw secret value (Req 6.5, 16.4,
+    18.4). When no grant can be issued the call fails; the Control_Plane never
+    falls back to raw secret values (Req 18.5).
+    """
+
+    def Grant(self, request, context):
+        """Issue a scoped grant binding a referenced secret to a target (workload,
+        model session, or service). Returns a grant id and an opaque session
+        reference; the response never carries a raw secret value.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Revoke(self, request, context):
+        """Revoke a previously issued grant by id.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_SecretControlServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'Grant': grpc.unary_unary_rpc_method_handler(
+                    servicer.Grant,
+                    request_deserializer=kernel__pb2.GrantSecretRequest.FromString,
+                    response_serializer=kernel__pb2.GrantSecretResponse.SerializeToString,
+            ),
+            'Revoke': grpc.unary_unary_rpc_method_handler(
+                    servicer.Revoke,
+                    request_deserializer=kernel__pb2.RevokeSecretRequest.FromString,
+                    response_serializer=kernel__pb2.RevokeSecretResponse.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'vloop.kernel.SecretControl', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('vloop.kernel.SecretControl', rpc_method_handlers)
+
+
+ # This class is part of an EXPERIMENTAL API.
+class SecretControl:
+    """---- Secret grants ----
+
+    Secret grant issuance/revocation for provider sessions, credential pools,
+    and MCP server credentials. The Kernel owns and stores raw secret values and
+    injects them into trusted runtime paths (env/file/session). The
+    Control_Plane consumes secrets by reference only: a Grant returns a grant id
+    and an opaque session reference, never a raw secret value (Req 6.5, 16.4,
+    18.4). When no grant can be issued the call fails; the Control_Plane never
+    falls back to raw secret values (Req 18.5).
+    """
+
+    @staticmethod
+    def Grant(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/vloop.kernel.SecretControl/Grant',
+            kernel__pb2.GrantSecretRequest.SerializeToString,
+            kernel__pb2.GrantSecretResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def Revoke(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/vloop.kernel.SecretControl/Revoke',
+            kernel__pb2.RevokeSecretRequest.SerializeToString,
+            kernel__pb2.RevokeSecretResponse.FromString,
             options,
             channel_credentials,
             insecure,

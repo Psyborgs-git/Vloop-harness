@@ -7,11 +7,13 @@ import importlib
 import json
 import time
 import uuid
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 from core.helpers import now_iso, to_json
+from core.orchestration_types import ModelRequest, RoutingPolicy, RunScope
 
 if TYPE_CHECKING:
+    from core.inference_gateway import InferenceGateway
     from core.provider_service import ProviderService
 
     from core.database import DatabaseBackend
@@ -27,10 +29,20 @@ def execute_invocation(
     providers: ProviderService,
     state: DatabaseBackend,
     append_event: AppendEventFn,
+    gateway: "InferenceGateway | None" = None,
 ) -> None:
     """Run a DSPy agent invocation in a background thread.
 
     Updates the invocation row through each stage and posts events.
+
+    When an :class:`~core.inference_gateway.InferenceGateway` is supplied, the
+    model call is routed through :meth:`InferenceGateway.call` so the gateway's
+    policy layer (routing, budgets, rate limits, prompt cache, retries, and
+    fallback) wraps the real DSPy/``build_lm`` execution (Req 6.1). The
+    per-invocation DSPy execution is passed to the gateway as the provider call,
+    so no orphaned direct provider call remains. When no gateway is supplied the
+    invocation runs the DSPy program directly, preserving the original behavior.
+    Invocation and usage recording is unchanged in both paths (Req 5.4).
     """
     trace_id = str(uuid.uuid4())
     started_at = now_iso()
@@ -80,14 +92,23 @@ def execute_invocation(
         trace_id=trace_id,
     )
 
-    try:
+    request_text = _build_request_text(agent, inputs)
+
+    def _run_model_call(
+        resolved_provider_id: str,
+    ) -> tuple[str, dict[str, Any] | None, str | None, dict[str, Any] | None]:
+        """Build the LM and run the DSPy program for ``resolved_provider_id``.
+
+        This is the real provider invocation. It is shared by both the direct
+        path and the gateway-routed path so the model call is identical whether
+        or not a gateway wraps it with policy.
+        """
         lm = providers.build_lm(
-            provider["id"],
+            resolved_provider_id,
             model_override=resolved_model,
             temperature=resolved_temperature,
             max_tokens=resolved_max_tokens,
         )
-        _ = int(time.time() * 1000)
         append_event(
             invocation_id,
             "provider_resolved",
@@ -97,8 +118,6 @@ def execute_invocation(
             trace_id=trace_id,
         )
 
-        request_text = _build_request_text(agent, inputs)
-        _ = int(time.time() * 1000)
         append_event(
             invocation_id,
             "validated",
@@ -118,9 +137,7 @@ def execute_invocation(
             trace_id=trace_id,
         )
 
-        output_text, output_json, reasoning_text, usage = _run_dspy_program(
-            agent, lm, request_text
-        )
+        result = _run_dspy_program(agent, lm, request_text)
 
         lm_call_finished_ms = int(time.time() * 1000)
         append_event(
@@ -131,6 +148,22 @@ def execute_invocation(
             started_at_ms=started_at_ms,
             trace_id=trace_id,
         )
+        return result
+
+    try:
+        if gateway is not None:
+            output_text, output_json, reasoning_text, usage = _invoke_via_gateway(
+                gateway,
+                provider_id=provider["id"],
+                agent_id=str(agent["id"]),
+                resolved_model=resolved_model,
+                request_text=request_text,
+                run_model_call=_run_model_call,
+            )
+        else:
+            output_text, output_json, reasoning_text, usage = _run_model_call(
+                provider["id"]
+            )
 
         if usage:
             state.execute(
@@ -187,6 +220,73 @@ def execute_invocation(
             started_at_ms=started_at_ms,
             trace_id=trace_id,
         )
+
+
+def _invoke_via_gateway(
+    gateway: "InferenceGateway",
+    *,
+    provider_id: str,
+    agent_id: str,
+    resolved_model: str,
+    request_text: str,
+    run_model_call: Callable[
+        [str], tuple[str, dict[str, Any] | None, str | None, dict[str, Any] | None]
+    ],
+) -> tuple[str, dict[str, Any] | None, str | None, dict[str, Any] | None]:
+    """Route an agent model call through :meth:`InferenceGateway.call`.
+
+    Wraps the per-invocation DSPy execution (``run_model_call``) in a
+    :data:`~core.inference_gateway.ProviderCall` and hands it to the gateway so
+    routing, budgets, rate limits, prompt cache, retries, and fallback apply
+    around the real provider call (Req 6.1). The DSPy program's structured
+    outputs are carried back on :attr:`ModelResponse.raw` so invocation and
+    usage recording in :func:`execute_invocation` is unchanged (Req 5.4).
+
+    Ad-hoc agent invocations have no Workflow_Run, so a synthetic
+    :class:`RunScope` (no budget) and a single-provider routing policy are used;
+    the gateway therefore routes to the agent's configured provider while still
+    applying its policy pipeline.
+    """
+    # Import here to avoid a module-level import cycle and to keep the direct
+    # (no-gateway) path free of the gateway's import cost.
+    from core.inference_gateway import ModelResponse
+
+    def _provider_call(
+        routed_provider_id: str,
+        _request: ModelRequest,
+        _scope: RunScope,
+        **_kwargs: Any,
+    ) -> ModelResponse:
+        output_text, output_json, reasoning_text, usage = run_model_call(
+            routed_provider_id
+        )
+        token_usage = int(usage.get("total_tokens") or 0) if usage else None
+        return ModelResponse(
+            text=output_text,
+            provider_id=routed_provider_id,
+            model=resolved_model,
+            token_usage=token_usage,
+            raw=(output_text, output_json, reasoning_text, usage),
+        )
+
+    request = ModelRequest(
+        messages=[{"role": "user", "content": request_text}],
+        model_hint=resolved_model or None,
+    )
+    scope = RunScope(run_id=invocation_scope_id(provider_id, agent_id), definition_id=agent_id)
+    policy = RoutingPolicy(
+        preference="cost", fallback_order=[provider_id], max_retries=0
+    )
+
+    response = gateway.call(
+        request, scope, policy=policy, provider_call=_provider_call
+    )
+    return response.raw
+
+
+def invocation_scope_id(provider_id: str, agent_id: str) -> str:
+    """Build a stable RunScope id for an ad-hoc (non-workflow) agent invocation."""
+    return f"agent:{agent_id}:{provider_id}"
 
 
 def _run_dspy_program(

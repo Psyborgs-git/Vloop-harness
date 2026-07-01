@@ -12,6 +12,11 @@ import { SettingsView } from "./views/SettingsView";
 import { SetupView } from "./views/SetupView";
 import { SystemView } from "./views/SystemView";
 import { WorkloadsView } from "./views/WorkloadsView";
+import { WorkflowsView } from "./views/workflows/WorkflowsView";
+import { ApprovalsView } from "./views/approvals/ApprovalsView";
+import { BudgetsView } from "./views/budgets/BudgetsView";
+import { CheckpointsView } from "./views/checkpoints/CheckpointsView";
+import { ScheduleView } from "./views/schedule/ScheduleView";
 import { UsageView } from "./views/UsageView";
 import type { AgentConfig, InvocationRecord, ProviderConfig } from "./lib/api";
 
@@ -25,6 +30,11 @@ export type AppView =
   | "setup"
   | "system"
   | "workloads"
+  | "workflows"
+  | "approvals"
+  | "budgets"
+  | "checkpoints"
+  | "schedule"
   | "usage";
 
 export default function App() {
@@ -221,6 +231,16 @@ function ActiveView({
       );
     case "workloads":
       return <WorkloadsView />;
+    case "workflows":
+      return <WorkflowsView />;
+    case "approvals":
+      return <ApprovalsView />;
+    case "budgets":
+      return <BudgetsView />;
+    case "checkpoints":
+      return <CheckpointsView />;
+    case "schedule":
+      return <ScheduleView />;
     case "setup":
       return <SetupView system={system} systemError={null} />;
     case "settings":

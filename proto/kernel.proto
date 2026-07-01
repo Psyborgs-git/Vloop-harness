@@ -150,6 +150,9 @@ service WorkloadControl {
   rpc StopWorkload(StopWorkloadRequest) returns (StopWorkloadResponse);
   rpc WatchWorkloadLogs(WatchWorkloadLogsRequest) returns (stream WorkloadLogLine);
   rpc GetWorkload(GetWorkloadRequest) returns (GetWorkloadResponse);
+  // Dispatch a job into a Kernel-managed sandbox and capture its result.
+  // The Control_Plane never executes on the host; this is the only exec path.
+  rpc Exec(ExecWorkloadRequest) returns (ExecWorkloadResponse);
 }
 
 enum WorkloadClass {
@@ -242,4 +245,95 @@ message GetWorkloadRequest {
 
 message GetWorkloadResponse {
   WorkloadRecord workload = 1;
+}
+
+// Sandbox script execution: dispatch a job into a Kernel-managed sandbox.
+// The Kernel creates/starts the sandbox workload, runs the command, and the
+// returned job_id is used for log streaming and teardown. No host fallback.
+message ExecWorkloadRequest {
+  WorkloadSpec spec = 1;
+  string workflow_id = 2;
+  uint32 timeout_seconds = 3;
+}
+
+message ExecWorkloadResponse {
+  string job_id = 1;
+  WorkloadRecord workload = 2;
+  string stdout = 3;
+  string stderr = 4;
+  optional int32 exit_code = 5;
+}
+
+// ---- Filesystem snapshot / restore ----
+
+// Workspace snapshot/restore for checkpoints. The Kernel owns and persists
+// snapshot contents; the Control_Plane retains only the returned opaque
+// snapshot reference and never stores file contents (Req 13.4).
+service FilesystemControl {
+  // Snapshot a sandbox workspace before a filesystem mutation and return an
+  // opaque snapshot reference owned by the Kernel (Req 13.1).
+  rpc Snapshot(SnapshotWorkspaceRequest) returns (SnapshotWorkspaceResponse);
+  // Restore a sandbox workspace to a previously captured snapshot (Req 13.2).
+  rpc Restore(RestoreWorkspaceRequest) returns (RestoreWorkspaceResponse);
+}
+
+message SnapshotWorkspaceRequest {
+  string workspace_id = 1;
+}
+
+message SnapshotWorkspaceResponse {
+  // Opaque, Kernel-owned reference to the captured snapshot. The Control_Plane
+  // stores only this reference, never the snapshot's file contents.
+  string snapshot_ref = 1;
+}
+
+message RestoreWorkspaceRequest {
+  string workspace_id = 1;
+  string snapshot_ref = 2;
+}
+
+message RestoreWorkspaceResponse {
+  bool restored = 1;
+}
+
+// ---- Secret grants ----
+
+// Secret grant issuance/revocation for provider sessions, credential pools,
+// and MCP server credentials. The Kernel owns and stores raw secret values and
+// injects them into trusted runtime paths (env/file/session). The
+// Control_Plane consumes secrets by reference only: a Grant returns a grant id
+// and an opaque session reference, never a raw secret value (Req 6.5, 16.4,
+// 18.4). When no grant can be issued the call fails; the Control_Plane never
+// falls back to raw secret values (Req 18.5).
+service SecretControl {
+  // Issue a scoped grant binding a referenced secret to a target (workload,
+  // model session, or service). Returns a grant id and an opaque session
+  // reference; the response never carries a raw secret value.
+  rpc Grant(GrantSecretRequest) returns (GrantSecretResponse);
+  // Revoke a previously issued grant by id.
+  rpc Revoke(RevokeSecretRequest) returns (RevokeSecretResponse);
+}
+
+message GrantSecretRequest {
+  // Reference to the secret to be granted; never the raw secret value.
+  string secret_ref = 1;
+  // Identity of the target receiving the grant (e.g. a workload id, model
+  // session id, or service id).
+  string target = 2;
+}
+
+message GrantSecretResponse {
+  // Kernel-issued identifier for the grant, used for later revocation.
+  string grant_id = 1;
+  // Opaque reference to the granted session/runtime path. Carries no raw
+  // secret value; the Control_Plane uses it only by reference.
+  string session_ref = 2;
+}
+
+message RevokeSecretRequest {
+  string grant_id = 1;
+}
+
+message RevokeSecretResponse {
+  bool revoked = 1;
 }

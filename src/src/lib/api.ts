@@ -34,6 +34,17 @@ export type {
   WorkloadRecord,
   WorkloadLogLine,
   WorkloadLogsResponse,
+  WorkflowDefinition,
+  WorkflowValidationResult,
+  WorkflowTemplate,
+  WorkflowRun,
+  WorkflowStep,
+  WorkflowEventFrame,
+  WorkflowRunObservation,
+  PendingApproval,
+  Checkpoint,
+  ScheduledTask,
+  ScheduledTaskState,
   DatabaseSettings,
 } from "./types";
 
@@ -86,3 +97,41 @@ export {
   stopWorkload,
   getWorkloadLogs,
 } from "./endpoints/workloads";
+
+// Workflow orchestration endpoints
+export {
+  listWorkflows,
+  getWorkflow,
+  createWorkflow,
+  validateWorkflow,
+  listWorkflowTemplates,
+  getWorkflowTemplate,
+  instantiateWorkflowTemplate,
+  startWorkflowRun,
+  listWorkflowRuns,
+  getWorkflowRun,
+  cancelWorkflowRun,
+  retryWorkflowRun,
+} from "./endpoints/workflows";
+
+// Approval decision endpoints
+export {
+  listPendingApprovals,
+  approveCheckpoint,
+  rejectCheckpoint,
+} from "./endpoints/approvals";
+
+// Checkpoint listing + rollback endpoints
+export {
+  listCheckpoints,
+  rollbackCheckpoint,
+} from "./endpoints/checkpoints";
+
+// Scheduled-task endpoints
+export type { CreateScheduledTaskInput } from "./endpoints/schedules";
+export {
+  listScheduledTasks,
+  createScheduledTask,
+  pauseScheduledTask,
+  resumeScheduledTask,
+} from "./endpoints/schedules";

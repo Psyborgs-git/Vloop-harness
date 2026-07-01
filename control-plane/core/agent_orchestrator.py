@@ -17,6 +17,7 @@ from core.agent_templates import TEMPLATES
 from core.helpers import from_json, now_iso, to_json
 
 if TYPE_CHECKING:
+    from core.inference_gateway import InferenceGateway
     from core.provider_service import ProviderService
 
     from core.database import DatabaseBackend
@@ -31,10 +32,12 @@ class AgentOrchestrator:
         state: DatabaseBackend,
         providers: ProviderService,
         vector_store: VectorStore | None = None,
+        gateway: "InferenceGateway | None" = None,
     ) -> None:
         self._state = state
         self._providers = providers
         self._vector_store = vector_store
+        self._gateway = gateway
 
     # -- agent CRUD ----------------------------------------------------------
 
@@ -260,6 +263,7 @@ class AgentOrchestrator:
                 "providers": self._providers,
                 "state": self._state,
                 "append_event": lambda *a, **kw: append_event(self._state, *a, **kw),
+                "gateway": self._gateway,
             },
             name=f"vloop-agent-invocation-{invocation_id}",
             daemon=True,

@@ -15,6 +15,7 @@ from core.vector_store import create_vector_store
 from cp.config_service import ControlPlaneConfig, KernelActiveConfig
 from cp.events import KernelEventRouter, start_event_router
 from cp.http_api import HttpShellServer
+from cp.orchestration import OrchestrationMixin, resume_pending_runs_at_startup
 from cp.session import make_metadata, now_unix_ms
 from cp.snapshots import (
     build_bootstrap_payload,
@@ -38,7 +39,7 @@ from cp.workloads import (
 LOGGER = logging.getLogger("vloop.control_plane")
 
 
-class ControlPlaneRuntime:
+class ControlPlaneRuntime(OrchestrationMixin):
     """Runs the control plane: kernel registration, HTTP shell, workload pass-through."""
 
     def __init__(
@@ -70,6 +71,11 @@ class ControlPlaneRuntime:
             self.db, self.provider_service, self.vector_store
         )
 
+        # Construct and wire the orchestration subsystems (planner, dag_executor,
+        # scheduler, checkpoint/approval/memory managers, tool registry, ...) and
+        # the runtime accessors the orchestration handlers call.
+        self._init_orchestration()
+
         self.status = "starting"
         self.session_id: str | None = None
         self.granted_scopes: list[str] = []
@@ -91,6 +97,11 @@ class ControlPlaneRuntime:
         self.window_manager.set_quit_callback(self._quit_cascade)
         try:
             await self._start_http_shell_if_enabled()
+
+            # Resume any non-terminal Workflow_Runs left by a prior process so
+            # they survive a Control_Plane restart (Requirements 3.7, 8.5). A
+            # resume failure is logged and swallowed so it never blocks boot.
+            self._resume_pending_runs_at_startup()
 
             backoff = self.config.reconnect_backoff_seconds
             while not self.shutdown_event.is_set():
@@ -131,6 +142,15 @@ class ControlPlaneRuntime:
         self.status = "serving_http"
         LOGGER.info("control-plane HTTP shell ready at %s", self.config.shell_url())
 
+    def _resume_pending_runs_at_startup(self) -> list[str]:
+        """Resume non-terminal Workflow_Runs at boot (Requirements 3.7, 8.5).
+
+        Delegates to the orchestration helper, which guards against any failure
+        so a resume problem never prevents the Control_Plane from booting
+        (Requirement 20.1).
+        """
+        return resume_pending_runs_at_startup(getattr(self, "dag_executor", None))
+
     # -- kernel session ------------------------------------------------------
 
     async def _run_kernel_session(self) -> None:
@@ -142,6 +162,7 @@ class ControlPlaneRuntime:
         )
         self._grpc_channel = channel
         self._workload_stub = self.kernel_pb2_grpc.WorkloadControlStub(channel)
+        self._wire_execution_manager()
         try:
             await asyncio.wait_for(
                 channel.channel_ready(),
@@ -361,6 +382,29 @@ class ControlPlaneRuntime:
             raise RuntimeError("control-plane event loop is not available")
         future = asyncio.run_coroutine_threadsafe(coro, self._loop)
         return future.result(timeout=self.config.rpc_timeout_seconds)
+
+    def _wire_execution_manager(self) -> None:
+        """Build the kernel-backed execution manager once a workload stub exists.
+
+        The orchestration subsystems (Checkpoint_Manager snapshots, DAG_Executor
+        workload teardown, secret grants) reach this through a lazy adapter, so
+        wiring it here makes those operations live after kernel registration. The
+        production stub is async, so awaitables are resolved on the CP event loop
+        from the executor's worker threads via :meth:`_run_on_loop`.
+        """
+        from adapters.rust_infra import RustInfraExecutionManager
+
+        try:
+            self._execution_manager = RustInfraExecutionManager(
+                self._workload_stub,
+                self.kernel_pb2,
+                run_sync=self._run_on_loop,
+                metadata_provider=lambda: self._metadata(include_session=True),
+                rpc_timeout=self.config.rpc_timeout_seconds,
+            )
+        except Exception as exc:  # noqa: BLE001 - never block the kernel session
+            LOGGER.exception("failed to wire kernel execution manager: %s", exc)
+            self._execution_manager = None
 
     def _metadata(
         self,

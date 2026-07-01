@@ -343,6 +343,123 @@ export interface WorkloadLogsResponse {
   logs: WorkloadLogLine[];
 }
 
+// -- Workflow orchestration types --
+// These mirror the Control_Plane workflow APIs (cp/handlers/workflows.py) and
+// the normalized WorkflowEvent frames streamed over the WebSocket channel
+// (core/event_router.py). Run/step/event payloads come straight from the
+// Control_Plane as snake_case dicts, so those shapes are kept snake_case to
+// match the wire format exactly.
+
+export interface WorkflowDefinition {
+  id: string;
+  name: string;
+  objective: string;
+  definition: Record<string, unknown>;
+  revision: number;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface WorkflowValidationResult {
+  valid: boolean;
+  problems: unknown[];
+}
+
+export interface WorkflowTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  definition: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export interface WorkflowRun {
+  id: string;
+  definition_id: string;
+  state: string;
+  concurrency_limit: number;
+  budget_json: string | null;
+  created_at: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+}
+
+export interface WorkflowStep {
+  run_id: string;
+  step_id: string;
+  step_type: string;
+  state: string;
+  depends_on_json: string;
+  inputs_json: string | null;
+  output_json: string | null;
+  error_message: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+}
+
+/** A normalized workflow event frame as streamed over the WebSocket channel. */
+export interface WorkflowEventFrame {
+  run_id: string;
+  seq: number;
+  type: string;
+  step_id: string | null;
+  message: string;
+  payload: Record<string, unknown>;
+  created_at: string;
+}
+
+/** The run-observation response: current state, step states, and history. */
+export interface WorkflowRunObservation {
+  run: WorkflowRun;
+  steps: WorkflowStep[];
+  events: WorkflowEventFrame[];
+}
+
+/**
+ * A checkpoint awaiting a user decision, as returned by the Control_Plane
+ * pending-approvals API (cp/handlers/approvals.py). `context` mirrors the
+ * checkpoint context streamed with the `approval.required` event.
+ */
+export interface PendingApproval {
+  run_id: string;
+  step_id: string;
+  context: Record<string, unknown>;
+}
+
+/**
+ * A recorded workspace Checkpoint for a Workflow_Run, as returned by the
+ * Control_Plane checkpoints API (cp/handlers/checkpoints.py). The
+ * Checkpoint_Manager records only metadata plus the opaque kernel snapshot
+ * reference — never file contents (Req 13.1, 13.4). Fields are snake_case to
+ * match the wire format exactly.
+ */
+export interface Checkpoint {
+  id: string;
+  run_id: string;
+  workspace_id: string;
+  kernel_snapshot_ref: string;
+  created_at: string | null;
+}
+
+/**
+ * A Scheduled_Task as returned by the Control_Plane schedules API
+ * (cp/handlers/schedules.py). A schedule triggers Workflow_Runs for a workflow
+ * definition on a cron cadence and may be `active` or `paused` (Req 14.1, 14.3).
+ * Fields are snake_case to match the wire format exactly. `next_run_at` is the
+ * informational next trigger time (null while paused or when nothing matches).
+ */
+export type ScheduledTaskState = "active" | "paused";
+
+export interface ScheduledTask {
+  id: string;
+  definition_id: string;
+  cron_expression: string;
+  state: ScheduledTaskState | string;
+  next_run_at: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
 // -- Database settings --
 
 export interface DatabaseSettings {
