@@ -13,3 +13,16 @@ Requires-Dist: litellm>=1.0.0
 Requires-Dist: dspy-ai>=3.0.0
 Requires-Dist: watchdog>=4.0.0
 Requires-Dist: tomli>=2.0.0
+Provides-Extra: postgres
+Requires-Dist: psycopg2-binary>=2.9; extra == "postgres"
+Provides-Extra: duckdb
+Requires-Dist: duckdb>=1.0; extra == "duckdb"
+Provides-Extra: pgvector
+Requires-Dist: pgvector>=0.3; extra == "pgvector"
+Provides-Extra: pinecone
+Requires-Dist: pinecone-client>=5.0; extra == "pinecone"
+Provides-Extra: all-db
+Requires-Dist: psycopg2-binary>=2.9; extra == "all-db"
+Requires-Dist: duckdb>=1.0; extra == "all-db"
+Requires-Dist: pgvector>=0.3; extra == "all-db"
+Requires-Dist: pinecone-client>=5.0; extra == "all-db"
