@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from http import HTTPStatus
 from typing import Any
 
 from cp.handlers.router import register
 
-from cp.http_responders import write_error_json, write_json
-from cp.http_utils import require_method, split_segments
+from cp.http_responders import write_json
+from cp.http_utils import require_method
 
 # These handlers assume they are called from within a
 # `BaseHTTPRequestHandler` instance — i.e. the first positional arg
