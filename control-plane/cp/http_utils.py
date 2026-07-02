@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Any
-from urllib.parse import unquote, urlsplit
 
 from cp.http_responders import write_file, write_html
 
