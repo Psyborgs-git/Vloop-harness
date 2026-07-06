@@ -93,6 +93,15 @@ def log_internal_error(
     return redacted
 
 
+def _send_security_headers(handler: Any) -> None:
+    handler.send_header("X-Content-Type-Options", "nosniff")
+    handler.send_header("X-Frame-Options", "DENY")
+    handler.send_header(
+        "Content-Security-Policy",
+        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' ws: wss:;",
+    )
+
+
 def write_json(
     handler: Any,
     payload: dict[str, Any] | list[Any] | str | int | float | bool | None,
@@ -103,6 +112,7 @@ def write_json(
     handler.send_response(status)
     handler.send_header("Content-Type", "application/json; charset=utf-8")
     handler.send_header("Cache-Control", "no-store")
+    _send_security_headers(handler)
     handler.send_header("Content-Length", str(len(body)))
     handler.end_headers()
     handler.wfile.write(body)
@@ -130,6 +140,7 @@ def write_html(handler: Any, html: str) -> None:
     handler.send_response(HTTPStatus.OK)
     handler.send_header("Content-Type", "text/html; charset=utf-8")
     handler.send_header("Cache-Control", "no-store")
+    _send_security_headers(handler)
     handler.send_header("Content-Length", str(len(body)))
     handler.end_headers()
     handler.wfile.write(body)
@@ -146,6 +157,7 @@ def write_file(handler: Any, path: Path) -> None:
     if encoding:
         handler.send_header("Content-Encoding", encoding)
     handler.send_header("Cache-Control", "no-store")
+    _send_security_headers(handler)
     handler.send_header("Content-Length", str(len(body)))
     handler.end_headers()
     handler.wfile.write(body)
