@@ -93,6 +93,15 @@ def log_internal_error(
     return redacted
 
 
+def _send_security_headers(handler: Any) -> None:
+    handler.send_header("X-Content-Type-Options", "nosniff")
+    handler.send_header("X-Frame-Options", "DENY")
+    handler.send_header("X-XSS-Protection", "1; mode=block")
+    handler.send_header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+    # Allow 'unsafe-inline' for both scripts and styles to support Vite's setup and Python's fallback HTML shells.
+    handler.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' ws: wss: http: https:;")
+
+
 def write_json(
     handler: Any,
     payload: dict[str, Any] | list[Any] | str | int | float | bool | None,
@@ -104,6 +113,7 @@ def write_json(
     handler.send_header("Content-Type", "application/json; charset=utf-8")
     handler.send_header("Cache-Control", "no-store")
     handler.send_header("Content-Length", str(len(body)))
+    _send_security_headers(handler)
     handler.end_headers()
     handler.wfile.write(body)
 
@@ -131,6 +141,7 @@ def write_html(handler: Any, html: str) -> None:
     handler.send_header("Content-Type", "text/html; charset=utf-8")
     handler.send_header("Cache-Control", "no-store")
     handler.send_header("Content-Length", str(len(body)))
+    _send_security_headers(handler)
     handler.end_headers()
     handler.wfile.write(body)
 
@@ -147,5 +158,6 @@ def write_file(handler: Any, path: Path) -> None:
         handler.send_header("Content-Encoding", encoding)
     handler.send_header("Cache-Control", "no-store")
     handler.send_header("Content-Length", str(len(body)))
+    _send_security_headers(handler)
     handler.end_headers()
     handler.wfile.write(body)

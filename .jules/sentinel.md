@@ -1,0 +1,4 @@
+## 2024-06-28 - Missing Security Headers in Python HTTP Handlers
+**Vulnerability:** The `control-plane` HTTP server implemented directly on `http.server.BaseHTTPRequestHandler` was missing Defense-in-Depth security headers (CSP, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security), exposing it to basic web vulnerabilities like framing and MIME-sniffing.
+**Learning:** When using low-level HTTP servers (like `BaseHTTPRequestHandler`) rather than full frameworks like FastAPI or Django, security headers must be injected manually into every response. Additionally, the CSP must allow `'unsafe-inline'` for styles and scripts to not break Vite setups and fallback shell HTML.
+**Prevention:** Standardize a responder wrapper or injection function (e.g., `_send_security_headers`) that gets called before `handler.end_headers()` in all custom HTTP response generators.
